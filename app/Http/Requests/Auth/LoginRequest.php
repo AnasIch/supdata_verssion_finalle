@@ -50,6 +50,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+
+        if (! $user || ! $user->is_admin) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Seul l’administrateur peut se connecter.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

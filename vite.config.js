@@ -10,4 +10,13 @@ export default defineConfig({
         }),
         react(),
     ],
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        cors: true,
+    },
+    optimizeDeps: {
+        include: ['@radix-ui/react-tooltip'],
+    },
 });
