@@ -9,12 +9,14 @@ import {
     DropdownMenuTrigger,
 } from "@/Components/UI/DropdownMenu";
 import { LogOut, Settings, User, ChevronDown } from "lucide-react";
+import { getDashboardPath } from "@/lib/mockAuth";
 
 export default function UserDropdown({ user }) {
     const name = user?.name || "Super Admin";
     const email = user?.email || "admin@supdata.fr";
     const role = user?.role || "Super Admin";
     const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    const dashboardPath = getDashboardPath(role);
 
     return (
         <DropdownMenu>
@@ -45,7 +47,7 @@ export default function UserDropdown({ user }) {
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="rounded-lg mx-1 my-0.5 cursor-pointer px-3 py-2">
-                    <Link href="/parametres">
+                    <Link href={`${dashboardPath}/parametres`}>
                         <Settings className="size-4 text-slate-400" />
                         Paramètres
                     </Link>

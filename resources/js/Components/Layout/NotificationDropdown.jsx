@@ -8,6 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/Components/UI/DropdownMenu";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { cn } from "@/lib/utils";
 
 const notifications = [
@@ -97,7 +98,10 @@ export default function NotificationDropdown() {
                 <div className="px-2 py-2">
                     <button
                         className="w-full rounded-xl py-2 text-center text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                        onClick={() => window.location.href = "/notifications"}
+                        onClick={() => {
+                            const user = getCurrentUser();
+                            window.location.href = `${getDashboardPath(user.role)}/notifications`;
+                        }}
                     >
                         Voir toutes les notifications
                     </button>

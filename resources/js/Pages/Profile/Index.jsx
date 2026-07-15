@@ -59,7 +59,7 @@ export default function ProfileIndex() {
                     }
                 />
 
-                <ProfileStatistics />
+                <ProfileStatistics profileStats={profile.stats} />
 
                 <Tabs defaultValue="info">
                     <TabsList className="w-full justify-start rounded-xl border border-slate-100 bg-white p-1">

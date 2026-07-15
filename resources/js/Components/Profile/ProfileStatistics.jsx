@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { LogIn, Clock, Activity, Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const stats = [
+const defaultStats = [
     {
         label: "Connexions",
         value: "347",
@@ -46,7 +46,16 @@ const item = {
     show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
 };
 
-export default function ProfileStatistics() {
+export default function ProfileStatistics({ profileStats }) {
+    const stats = profileStats
+        ? [
+              { ...defaultStats[0], value: String(profileStats.totalLogins) },
+              { ...defaultStats[1], value: profileStats.lastLogin?.split(" ")[1] || "09:45" },
+              { ...defaultStats[2], value: profileStats.avgSessionDuration },
+              { ...defaultStats[3], value: profileStats.lastActivity?.replace("Il y a ", "") || "12 min" },
+          ]
+        : defaultStats;
+
     return (
         <motion.div
             variants={container}

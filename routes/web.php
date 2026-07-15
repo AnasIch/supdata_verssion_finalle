@@ -270,6 +270,10 @@ Route::get('/dashboard-admin-local/historique', function () {
     return Inertia::render('Dashboard/LocalAdmin/History/Index');
 })->name('al.history');
 
+Route::get('/dashboard-admin-local/parametres', function () {
+    return Inertia::render('Dashboard/LocalAdmin/Settings/Index');
+})->name('al.settings');
+
 /*
 |--------------------------------------------------------------------------
 | Role-Specific Routes — Gestion Administrative

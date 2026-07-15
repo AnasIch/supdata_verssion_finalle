@@ -1,6 +1,6 @@
 import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
-import { Search, RotateCcw } from "lucide-react";
+import { RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useLocalAdminHistory } from "@/Hooks/useLocalAdminHistory";
@@ -9,7 +9,6 @@ import HistoryTable from "@/Components/LocalAdmin/History/HistoryTable";
 import { SearchInput } from "@/Components/UI/SearchInput";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/UI/Select";
 import { Button } from "@/Components/UI/Button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function LocalAdminHistory() {
     const user = getCurrentUser();

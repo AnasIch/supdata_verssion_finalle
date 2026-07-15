@@ -41,8 +41,10 @@ export function useSettingsForm({
 
     const [notifications, setNotifications] = useState(initialNotifications);
     const [appearance, setAppearance] = useState(initialAppearance);
+    const [notificationsDirty, setNotificationsDirty] = useState(false);
+    const [appearanceDirty, setAppearanceDirty] = useState(false);
 
-    const isDirty = generalForm.formState.isDirty || securityForm.formState.isDirty;
+    const isDirty = generalForm.formState.isDirty || securityForm.formState.isDirty || notificationsDirty || appearanceDirty;
 
     const resetAll = useCallback(() => {
         const d = defaultsRef.current;
@@ -50,14 +52,18 @@ export function useSettingsForm({
         securityForm.reset(d.initialSecurity);
         setNotifications(d.initialNotifications);
         setAppearance(d.initialAppearance);
+        setNotificationsDirty(false);
+        setAppearanceDirty(false);
     }, [generalForm, securityForm]);
 
     const toggleNotification = useCallback((key) => {
         setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
+        setNotificationsDirty(true);
     }, []);
 
     const updateAppearance = useCallback((key, value) => {
         setAppearance((prev) => ({ ...prev, [key]: value }));
+        setAppearanceDirty(true);
     }, []);
 
     return {

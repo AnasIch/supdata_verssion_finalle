@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { setCurrentUser } from "@/lib/mockAuth";
+import { setCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useLocalAdminDashboard } from "@/Hooks/useLocalAdminDashboard";
 import DashboardHeader from "@/Components/LocalAdmin/DashboardHeader";
 import KpiCards from "@/Components/LocalAdmin/KpiCards";
@@ -31,7 +31,7 @@ export default function LocalAdminDashboard({ user }) {
         <DashboardLayout
             title="Dashboard Administrateur Local"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-admin-local" },
+                { label: "Dashboard", href: getDashboardPath(user?.role || "Administrateur Local") },
                 { label: "Administrateur Local" },
             ]}
             user={user || localUser}

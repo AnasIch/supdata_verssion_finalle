@@ -67,6 +67,7 @@ const sidebarMenus = {
                     { title: "Rapports", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                     { title: "Historique", href: "historique", icon: FileText },
+                    { title: "Paramètres", href: "parametres", icon: Settings },
                 ],
             },
         ],

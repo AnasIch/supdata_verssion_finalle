@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import DashboardLayout from "@/Layouts/DashboardLayout";
