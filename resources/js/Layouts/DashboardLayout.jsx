@@ -14,7 +14,7 @@ export default function DashboardLayout({ children, title, breadcrumbs = [], use
         <TooltipProvider>
             <Head title={title ? `${title} — SUPDATA ERP` : "SUPDATA ERP"} />
 
-            <div className="relative flex min-h-screen bg-[#f8fafc]">
+            <div className="relative flex min-h-screen bg-[#f5f4f0]">
                 <Sidebar
                     collapsed={collapsed}
                     onToggle={() => setCollapsed(!collapsed)}

@@ -23,7 +23,7 @@ const sidebarMenus = {
             {
                 title: "Principal",
                 items: [
-                    { title: "Dashboard", href: ".", icon: LayoutDashboard },
+                    { title: "Dashboard", href: ".", icon: LayoutDashboard, exact: true },
                 ],
             },
             {
@@ -51,7 +51,7 @@ const sidebarMenus = {
             {
                 title: "Principal",
                 items: [
-                    { title: "Dashboard", href: ".", icon: LayoutDashboard },
+                    { title: "Dashboard", href: ".", icon: LayoutDashboard, exact: true },
                 ],
             },
             {
@@ -78,7 +78,7 @@ const sidebarMenus = {
             {
                 title: "Principal",
                 items: [
-                    { title: "Dashboard", href: ".", icon: LayoutDashboard },
+                    { title: "Dashboard", href: ".", icon: LayoutDashboard, exact: true },
                 ],
             },
             {
@@ -105,7 +105,7 @@ const sidebarMenus = {
             {
                 title: "Principal",
                 items: [
-                    { title: "Dashboard", href: ".", icon: LayoutDashboard },
+                    { title: "Dashboard", href: ".", icon: LayoutDashboard, exact: true },
                 ],
             },
             {
@@ -131,13 +131,13 @@ const sidebarMenus = {
             {
                 title: "Principal",
                 items: [
-                    { title: "Dashboard", href: ".", icon: LayoutDashboard },
+                    { title: "Dashboard", href: ".", icon: LayoutDashboard, exact: true },
                 ],
             },
             {
                 title: "Gestion",
                 items: [
-                    { title: "Stock", href: "stock", icon: Package },
+                    { title: "Stock", href: "stock", icon: Package, exact: true },
                     { title: "Entrées de stock", href: "stock/entrees", icon: ArrowUpDown },
                     { title: "Sorties de stock", href: "stock/sorties", icon: Package },
                     { title: "Alertes stock", href: "stock/alertes", icon: AlertTriangle },
