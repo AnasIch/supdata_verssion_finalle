@@ -266,6 +266,10 @@ Route::get('/dashboard-admin-local/notifications', function () {
     return Inertia::render('Dashboard/LocalAdmin/Notifications/Index');
 })->name('al.notifications');
 
+Route::get('/dashboard-admin-local/historique', function () {
+    return Inertia::render('Dashboard/LocalAdmin/History/Index');
+})->name('al.history');
+
 /*
 |--------------------------------------------------------------------------
 | Role-Specific Routes — Gestion Administrative
