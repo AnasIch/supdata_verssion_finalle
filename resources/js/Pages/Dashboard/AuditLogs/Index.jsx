@@ -12,6 +12,7 @@ import {
     AlertTriangle,
     FileText,
 } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
@@ -267,6 +268,7 @@ export default function AuditLogsIndex() {
             title="Journaux d'audit"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Journaux d'audit" }]}
         >
+            <Head title="Journaux d'audit — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div {...fadeUp} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <PageTitle

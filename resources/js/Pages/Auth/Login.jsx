@@ -50,7 +50,7 @@ export default function Login({ status, canResetPassword }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="space-y-2"
+                        className="flex flex-col gap-2"
                     >
                         <Label htmlFor="email">Adresse email</Label>
                         <AuthInput
@@ -79,7 +79,7 @@ export default function Login({ status, canResetPassword }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="space-y-2"
+                        className="flex flex-col gap-2"
                     >
                         <div className="flex items-center justify-between">
                             <Label htmlFor="password">Mot de passe</Label>

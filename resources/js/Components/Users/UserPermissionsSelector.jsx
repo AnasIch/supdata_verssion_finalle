@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Square, CheckSquare, MinusSquare } from "lucide-react";
+import { Check, CheckSquare, MinusSquare } from "lucide-react";
 
 const categories = {
     Utilisateurs: ["Créer utilisateur", "Modifier utilisateur", "Supprimer utilisateur", "Consulter utilisateurs"],

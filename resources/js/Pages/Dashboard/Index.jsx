@@ -1,3 +1,4 @@
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import WelcomeBanner from "@/Components/Dashboard/WelcomeBanner";
 import DashboardStats from "@/Components/Dashboard/DashboardStats";
@@ -16,6 +17,7 @@ export default function Dashboard({ user }) {
             breadcrumbs={[{ label: "Dashboard" }]}
             user={user}
         >
+            <Head title="Dashboard — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <WelcomeBanner />
 

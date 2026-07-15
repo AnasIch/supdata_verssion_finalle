@@ -8,6 +8,7 @@ import {
     BarChart3,
     FileText,
     Settings,
+    Bell,
     X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const managementNav = [
 
 const systemNav = [
     { title: "Rapports & Analytics", href: "/rapports", icon: BarChart3 },
+    { title: "Notifications", href: "/notifications", icon: Bell },
     { title: "Audit Logs", href: "/audit-logs", icon: FileText },
     { title: "Paramètres", href: "/parametres", icon: Settings },
 ];

@@ -69,15 +69,3 @@ export const kpiData = [
         color: "bg-rose-50 text-rose-600",
     },
 ];
-
-export const statsOverview = {
-    totalStockValue: 2458320,
-    totalUsers: 48,
-    totalAgencies: 12,
-    totalProducts: 1248,
-    totalCategories: 24,
-    totalRequests: 356,
-    stockGrowth: 12.5,
-    userGrowth: 6.7,
-    requestGrowth: 14.2,
-};

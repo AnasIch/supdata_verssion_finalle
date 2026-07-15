@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Pencil, ArrowLeft } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
@@ -33,6 +34,7 @@ export default function UserShow() {
                 { label: "Détail utilisateur" },
             ]}
         >
+            <Head title="Détail utilisateur — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -51,9 +53,11 @@ export default function UserShow() {
                                 Retour à la liste
                             </a>
                         </Button>
-                        <Button>
-                            <Pencil className="size-4" />
-                            Modifier
+                        <Button asChild>
+                            <a href={`/utilisateurs/${mockUser.id}/modifier`}>
+                                <Pencil className="size-4" />
+                                Modifier
+                            </a>
                         </Button>
                     </div>
                 </motion.div>

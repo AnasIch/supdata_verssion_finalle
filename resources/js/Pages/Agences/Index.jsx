@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { Building2 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
@@ -44,6 +45,7 @@ export default function AgencesIndex() {
             title="Agences"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Agences" }]}
         >
+            <Head title="Gestion des agences — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}

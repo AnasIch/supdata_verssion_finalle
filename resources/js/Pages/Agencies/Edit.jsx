@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save, RotateCcw, Building2 } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
@@ -109,6 +110,7 @@ export default function AgencyEdit({ agencyId }) {
                 { label: "Modifier" },
             ]}
         >
+            <Head title="Modifier agence — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div {...fadeUp} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <PageTitle title={`Modifier — ${agence.name}`} description="Modifiez les informations de cette agence." />

@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react";
+import { Link } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { FileQuestion, ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/Components/UI/Button";

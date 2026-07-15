@@ -39,7 +39,7 @@ export default function ResetPassword({ email, token }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="space-y-2"
+                        className="flex flex-col gap-2"
                     >
                         <Label htmlFor="email">Adresse email</Label>
                         <AuthInput
@@ -68,7 +68,7 @@ export default function ResetPassword({ email, token }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="space-y-2"
+                        className="flex flex-col gap-2"
                     >
                         <Label htmlFor="password">Nouveau mot de passe</Label>
                         <PasswordInput
@@ -94,7 +94,7 @@ export default function ResetPassword({ email, token }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="space-y-2"
+                        className="flex flex-col gap-2"
                     >
                         <Label htmlFor="password_confirmation">
                             Confirmer le mot de passe

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { Head } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft,
@@ -9,7 +10,6 @@ import {
     CheckSquare,
     Square,
     RefreshCw,
-    Shield,
     KeyRound,
     Lock,
     Unlock,
@@ -47,7 +47,7 @@ function StatsSkeleton() {
                 <Card key={i}>
                     <CardContent className="p-5">
                         <Skeleton className="size-11 rounded-xl" />
-                        <div className="mt-4 space-y-2">
+                        <div className="mt-4 flex flex-col gap-2">
                             <Skeleton className="h-7 w-12" />
                             <Skeleton className="h-4 w-28" />
                         </div>
@@ -64,7 +64,7 @@ function ModuleCardSkeleton() {
             <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
                     <Skeleton className="size-10 rounded-xl" />
-                    <div className="flex-1 space-y-1.5">
+                    <div className="flex-1 flex flex-col gap-1.5">
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-3 w-48" />
                     </div>
@@ -288,6 +288,7 @@ export default function PermissionShow({ roleId }) {
                 { label: roleMock.nom },
             ]}
         >
+            <Head title="Modifier permissions — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div {...fadeUp} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">

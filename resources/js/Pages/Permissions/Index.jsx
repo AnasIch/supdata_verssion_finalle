@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
-import { Shield, Eye, Users, Lock } from "lucide-react";
+import { Eye, Users, Lock } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/Components/UI/Card";
@@ -103,6 +104,7 @@ export default function PermissionsIndex() {
             title="Permissions"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Permissions" }]}
         >
+            <Head title="Permissions — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}

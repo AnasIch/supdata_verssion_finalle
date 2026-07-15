@@ -1,0 +1,22 @@
+export const profileData = {
+    id: 1,
+    firstName: "Youssef",
+    lastName: "Alami",
+    name: "Youssef Alami",
+    email: "youssef.alami@supdata.ma",
+    phone: "+212 6 12 34 56 78",
+    role: "Super Admin",
+    agency: "SUPDATA Casablanca",
+    agencyId: 1,
+    createdAt: "15/01/2024",
+    lastLogin: "14/07/2026 09:45",
+    lastActivity: "Il y a 12 min",
+    avatar: null,
+    initials: "YA",
+    stats: {
+        totalLogins: 347,
+        lastLogin: "14/07/2026 09:45",
+        avgSessionDuration: "42 min",
+        lastActivity: "Il y a 12 min",
+    },
+};

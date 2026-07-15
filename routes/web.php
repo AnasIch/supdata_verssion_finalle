@@ -50,13 +50,13 @@ Route::get('/agences', function () {
     return Inertia::render('Agences/Index');
 })->name('agences');
 
-Route::get('/agences/{id}', function ($id) {
-    return Inertia::render('Agences/Show', ['agencyId' => (int) $id]);
-})->name('agences.show');
-
 Route::get('/agences/{id}/modifier', function ($id) {
-    return Inertia::render('Agences/Edit', ['agencyId' => (int) $id]);
+    return Inertia::render('Agencies/Edit', ['agencyId' => (int) $id]);
 })->name('agences.edit');
+
+Route::get('/agences/{id}', function ($id) {
+    return Inertia::render('Agencies/Show', ['agencyId' => (int) $id]);
+})->name('agences.show');
 
 Route::get('/permissions', function () {
     return Inertia::render('Permissions/Index');
@@ -73,4 +73,16 @@ Route::get('/rapports', function () {
 Route::get('/audit-logs', function () {
     return Inertia::render('Dashboard/AuditLogs/Index');
 })->name('audit-logs');
+
+Route::get('/notifications', function () {
+    return Inertia::render('Dashboard/Notifications/Index');
+})->name('notifications');
+
+Route::get('/parametres', function () {
+    return Inertia::render('Dashboard/Settings/Index');
+})->name('settings');
+
+Route::get('/profil', function () {
+    return Inertia::render('Profile/Index');
+})->name('profile');
 

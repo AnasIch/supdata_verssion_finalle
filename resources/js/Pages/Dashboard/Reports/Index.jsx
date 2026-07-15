@@ -12,6 +12,7 @@ import {
     Activity,
     User,
 } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
@@ -20,7 +21,6 @@ import { Skeleton } from "@/Components/UI/Skeleton";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/UI/Select";
 import { useToast } from "@/Components/UI/Toast";
 import KpiCard from "@/Components/Charts/KpiCard";
-import StatsCard from "@/Components/Charts/StatsCard";
 import ChartCard from "@/Components/Charts/ChartCard";
 import LineChart from "@/Components/Charts/LineChart";
 import BarChart from "@/Components/Charts/BarChart";
@@ -162,6 +162,7 @@ export default function ReportsIndex() {
             title="Rapports & Analytics"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rapports & Analytics" }]}
         >
+            <Head title="Rapports & Analytics — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div {...fadeUp} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <PageTitle
@@ -324,7 +325,7 @@ export default function ReportsIndex() {
                             { icon: Clock, label: "Dernière connexion", value: analyticsOverview.lastLogin, sub: "Super Admin", color: "bg-amber-50 text-amber-600" },
                             { icon: User, label: "Utilisateur le plus actif", value: analyticsOverview.mostActiveUser.name, sub: `${analyticsOverview.mostActiveUser.actions} actions ce mois`, color: "bg-rose-50 text-rose-600" },
                         ].map((stat, i) => (
-                            <StatsCard key={stat.label} {...stat} delay={0.45 + i * 0.04} />
+                            <KpiCard key={stat.label} {...stat} delay={0.45 + i * 0.04} />
                         ))}
                     </div>
                 </motion.div>

@@ -11,6 +11,7 @@ import {
     Pencil,
     MoreHorizontal,
 } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Card, CardContent } from "@/Components/UI/Card";
@@ -122,6 +123,7 @@ export default function AgenciesIndex() {
             title="Agences"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Agences" }]}
         >
+            <Head title="Agences — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}

@@ -1,24 +1,23 @@
 import { useState, useCallback, useMemo } from "react";
-import { permissionGroups } from "@/Mocks/permissionGroups";
+import { permissionGroups as defaultGroups } from "@/Mocks/permissionGroups";
 
 function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
-function countPermissions(state) {
+function countPermissions(groups, state) {
     let total = 0;
     let active = 0;
-    for (const group of permissionGroups) {
-        const groupState = state[group.key] || {};
+    for (const group of groups) {
         for (const perm of group.permissions) {
             total++;
-            if (groupState[perm.key]) active++;
+            if (state[group.key]?.[perm.key]) active++;
         }
     }
     return { total, active, inactive: total - active };
 }
 
-export function usePermissions(initialState) {
+export function usePermissions(initialState, groups = defaultGroups) {
     const [permissions, setPermissions] = useState(() => deepClone(initialState));
     const [savedSnapshot, setSavedSnapshot] = useState(() => deepClone(initialState));
 
@@ -39,7 +38,7 @@ export function usePermissions(initialState) {
 
     const toggleModule = useCallback((moduleKey, checked) => {
         setPermissions((prev) => {
-            const group = permissionGroups.find((g) => g.key === moduleKey);
+            const group = groups.find((g) => g.key === moduleKey);
             if (!group) return prev;
             const modulePerms = {};
             for (const p of group.permissions) {
@@ -47,12 +46,12 @@ export function usePermissions(initialState) {
             }
             return { ...prev, [moduleKey]: modulePerms };
         });
-    }, []);
+    }, [groups]);
 
     const selectAll = useCallback(() => {
         setPermissions((prev) => {
             const next = { ...prev };
-            for (const group of permissionGroups) {
+            for (const group of groups) {
                 next[group.key] = {};
                 for (const p of group.permissions) {
                     next[group.key][p.key] = true;
@@ -60,12 +59,12 @@ export function usePermissions(initialState) {
             }
             return next;
         });
-    }, []);
+    }, [groups]);
 
     const deselectAll = useCallback(() => {
         setPermissions((prev) => {
             const next = { ...prev };
-            for (const group of permissionGroups) {
+            for (const group of groups) {
                 next[group.key] = {};
                 for (const p of group.permissions) {
                     next[group.key][p.key] = false;
@@ -73,7 +72,7 @@ export function usePermissions(initialState) {
             }
             return next;
         });
-    }, []);
+    }, [groups]);
 
     const reset = useCallback(() => {
         setPermissions(deepClone(savedSnapshot));
@@ -83,7 +82,7 @@ export function usePermissions(initialState) {
         setSavedSnapshot(deepClone(permissions));
     }, [permissions]);
 
-    const stats = useMemo(() => countPermissions(permissions), [permissions]);
+    const stats = useMemo(() => countPermissions(groups, permissions), [groups, permissions]);
 
     return {
         permissions,

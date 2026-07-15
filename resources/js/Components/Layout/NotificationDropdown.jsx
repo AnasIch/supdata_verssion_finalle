@@ -95,7 +95,10 @@ export default function NotificationDropdown() {
                 </div>
                 <DropdownMenuSeparator className="m-0" />
                 <div className="px-2 py-2">
-                    <button className="w-full rounded-xl py-2 text-center text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
+                    <button
+                        className="w-full rounded-xl py-2 text-center text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        onClick={() => window.location.href = "/notifications"}
+                    >
                         Voir toutes les notifications
                     </button>
                 </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { Head } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, ShieldPlus, Users, Lock, Eye, KeyRound } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
@@ -169,6 +170,7 @@ export default function RolesIndex() {
             title="Rôles & Permissions"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rôles & Permissions" }]}
         >
+            <Head title="Rôles — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/Components/UI/Button";

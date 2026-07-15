@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { UserPlus } from "lucide-react";
+import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
@@ -104,6 +105,7 @@ export default function UsersIndex() {
             title="Utilisateurs"
             breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Utilisateurs" }]}
         >
+            <Head title="Utilisateurs — SUPDATA" />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
