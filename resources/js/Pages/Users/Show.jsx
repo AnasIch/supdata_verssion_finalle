@@ -29,7 +29,7 @@ export default function UserShow() {
         <DashboardLayout
             title="Détail utilisateur"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Utilisateurs", href: "/utilisateurs" },
                 { label: "Détail utilisateur" },
             ]}

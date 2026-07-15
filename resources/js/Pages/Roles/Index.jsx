@@ -168,7 +168,7 @@ export default function RolesIndex() {
     return (
         <DashboardLayout
             title="Rôles & Permissions"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rôles & Permissions" }]}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Rôles & Permissions" }]}
         >
             <Head title="Rôles — SUPDATA" />
             <div className="flex flex-col gap-6">

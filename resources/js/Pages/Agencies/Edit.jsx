@@ -91,7 +91,7 @@ export default function AgencyEdit({ agencyId }) {
 
     if (!agence) {
         return (
-            <DashboardLayout title="Modifier" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Agences", href: "/agences" }, { label: "Introuvable" }]}>
+            <DashboardLayout title="Modifier" breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences", href: "/agences" }, { label: "Introuvable" }]}>
                 <div className="py-12 text-center text-sm text-slate-500">Agence introuvable.</div>
             </DashboardLayout>
         );
@@ -104,7 +104,7 @@ export default function AgencyEdit({ agencyId }) {
         <DashboardLayout
             title="Modifier l'agence"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Agences", href: "/agences" },
                 { label: agence.name, href: `/agences/${agence.id}` },
                 { label: "Modifier" },

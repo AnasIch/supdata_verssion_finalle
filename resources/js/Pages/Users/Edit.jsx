@@ -111,7 +111,7 @@ export default function UserEdit() {
         <DashboardLayout
             title="Modifier un utilisateur"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Utilisateurs", href: "/utilisateurs" },
                 { label: "Modifier un utilisateur" },
             ]}

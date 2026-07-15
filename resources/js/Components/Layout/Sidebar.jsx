@@ -1,39 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-    LayoutDashboard,
-    Users,
-    Shield,
-    Building2,
-    BarChart3,
-    FileText,
-    Settings,
-    Bell,
-    X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SupdataLogo from "@/Components/Common/SupdataLogo";
 import SidebarGroup from "./SidebarGroup";
 import SidebarFooter from "./SidebarFooter";
-
-const mainNav = [
-    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-];
-
-const managementNav = [
-    { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
-    { title: "Rôles & Permissions", href: "/roles-permissions", icon: Shield },
-    { title: "Agences", href: "/agences", icon: Building2 },
-];
-
-const systemNav = [
-    { title: "Rapports & Analytics", href: "/rapports", icon: BarChart3 },
-    { title: "Notifications", href: "/notifications", icon: Bell },
-    { title: "Audit Logs", href: "/audit-logs", icon: FileText },
-    { title: "Paramètres", href: "/parametres", icon: Settings },
-];
+import sidebarMenus from "@/Data/sidebarMenus";
+import { getDashboardPath } from "@/lib/mockAuth";
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, user }) {
+    const role = user?.role || "Super Admin";
+    const menu = sidebarMenus[role] || sidebarMenus["Super Admin"];
+    const basePath = getDashboardPath(role);
+
+    const prefixedMenu = useMemo(() => ({
+        ...menu,
+        groups: menu.groups.map((group) => ({
+            ...group,
+            items: group.items.map((item) => ({
+                ...item,
+                href: item.href === "." ? basePath : `${basePath}/${item.href}`,
+            })),
+        })),
+    }), [menu, basePath]);
+
+    const totalItems = prefixedMenu.groups.reduce((acc, group) => acc + group.items.length, 0);
+
+    let runningIndex = 0;
+
     useEffect(() => {
         if (mobileOpen) {
             document.body.style.overflow = "hidden";
@@ -61,11 +55,22 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 py-3">
-                <SidebarGroup title="Principal" items={mainNav} collapsed={collapsed} startIndex={0} />
-                <div className="my-2 border-t border-slate-100" />
-                <SidebarGroup title="Gestion" items={managementNav} collapsed={collapsed} startIndex={mainNav.length} />
-                <div className="my-2 border-t border-slate-100" />
-                <SidebarGroup title="Système" items={systemNav} collapsed={collapsed} startIndex={mainNav.length + managementNav.length} />
+                {prefixedMenu.groups.map((group, groupIndex) => {
+                    const startIndex = runningIndex;
+                    runningIndex += group.items.length;
+
+                    return (
+                        <div key={group.title}>
+                            {groupIndex > 0 && <div className="my-2 border-t border-slate-100" />}
+                            <SidebarGroup
+                                title={group.title}
+                                items={group.items}
+                                collapsed={collapsed}
+                                startIndex={startIndex}
+                            />
+                        </div>
+                    );
+                })}
             </nav>
 
             <SidebarFooter collapsed={collapsed} onToggle={onToggle} user={user} />

@@ -43,7 +43,7 @@ export default function AgencesIndex() {
     return (
         <DashboardLayout
             title="Agences"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Agences" }]}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences" }]}
         >
             <Head title="Gestion des agences — SUPDATA" />
             <div className="flex flex-col gap-6">

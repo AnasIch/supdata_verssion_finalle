@@ -42,7 +42,7 @@ export default function UserCreate() {
         <DashboardLayout
             title="Créer un utilisateur"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Utilisateurs", href: "/utilisateurs" },
                 { label: "Créer un utilisateur" },
             ]}

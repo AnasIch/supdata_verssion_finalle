@@ -373,7 +373,7 @@ export default function RoleShow() {
             <DashboardLayout
                 title="Détail du rôle"
                 breadcrumbs={[
-                    { label: "Dashboard", href: "/dashboard" },
+                    { label: "Dashboard", href: "/dashboard-super-admin" },
                     { label: "Rôles & Permissions", href: "/roles-permissions" },
                     { label: "Chargement..." },
                 ]}
@@ -402,7 +402,7 @@ export default function RoleShow() {
         <DashboardLayout
             title="Détail du rôle"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Rôles & Permissions", href: "/roles-permissions" },
                 { label: detail.nom },
             ]}

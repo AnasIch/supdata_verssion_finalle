@@ -1,0 +1,227 @@
+export const localAdminUser = {
+    name: "Youssef Benali",
+    email: "y.benali@supdata.ma",
+    role: "Administrateur Local",
+    agency: "SUPDATA Casablanca",
+};
+
+export const kpiData = [
+    {
+        id: "pending",
+        label: "Demandes en attente",
+        value: "12",
+        description: "À traiter aujourd'hui",
+        trend: "+3",
+        trendUp: true,
+        color: "bg-amber-50 text-amber-600",
+    },
+    {
+        id: "validated",
+        label: "Validées aujourd'hui",
+        value: "8",
+        description: "Demandes approuvées",
+        trend: "+5",
+        trendUp: true,
+        color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        id: "rejected",
+        label: "Refusées aujourd'hui",
+        value: "2",
+        description: "Demandes rejetées",
+        trend: "-1",
+        trendUp: false,
+        color: "bg-red-50 text-red-600",
+    },
+    {
+        id: "budget",
+        label: "Budget disponible",
+        value: "245 000",
+        unit: "MAD",
+        description: "Reste ce mois-ci",
+        trend: "-12%",
+        trendUp: false,
+        color: "bg-blue-50 text-blue-600",
+    },
+    {
+        id: "critical",
+        label: "Stock critique",
+        value: "7",
+        description: "Produits sous le seuil",
+        trend: "+2",
+        trendUp: true,
+        color: "bg-orange-50 text-orange-600",
+    },
+    {
+        id: "notifications",
+        label: "Notifications non lues",
+        value: "5",
+        description: "À consulter",
+        trend: "",
+        trendUp: false,
+        color: "bg-violet-50 text-violet-600",
+    },
+];
+
+export const demandesEvolutionData = [
+    { mois: "Jan", demandes: 18, validees: 14, refusees: 4 },
+    { mois: "Fév", demandes: 25, validees: 20, refusees: 5 },
+    { mois: "Mar", demandes: 32, validees: 26, refusees: 6 },
+    { mois: "Avr", demandes: 28, validees: 22, refusees: 6 },
+    { mois: "Mai", demandes: 45, validees: 38, refusees: 7 },
+    { mois: "Jun", demandes: 38, validees: 30, refusees: 8 },
+    { mois: "Jul", demandes: 52, validees: 44, refusees: 8 },
+    { mois: "Aoû", demandes: 48, validees: 40, refusees: 8 },
+    { mois: "Sep", demandes: 61, validees: 52, refusees: 9 },
+    { mois: "Oct", demandes: 55, validees: 46, refusees: 9 },
+    { mois: "Nov", demandes: 67, validees: 58, refusees: 9 },
+    { mois: "Déc", demandes: 72, validees: 62, refusees: 10 },
+];
+
+export const decisionsData = [
+    { name: "Validées", value: 62, color: "#10b981" },
+    { name: "En attente", value: 18, color: "#f59e0b" },
+    { name: "Refusées", value: 10, color: "#ef4444" },
+    { name: "Annulées", value: 4, color: "#94a3b8" },
+];
+
+export const pendingRequests = [
+    {
+        id: "DEM-2026-0041",
+        responsable: "Mohammed Tazi",
+        client: "AutoTech SARL",
+        priorite: "Haute",
+        budget: "45 000",
+        date: "15/07/2026",
+        statut: "En attente",
+    },
+    {
+        id: "DEM-2026-0040",
+        responsable: "Sara Filali",
+        client: "GreenBuild Corp",
+        priorite: "Moyenne",
+        budget: "12 500",
+        date: "15/07/2026",
+        statut: "En attente",
+    },
+    {
+        id: "DEM-2026-0039",
+        responsable: "Rachid Mouline",
+        client: "DataSoft SA",
+        priorite: "Haute",
+        budget: "78 000",
+        date: "14/07/2026",
+        statut: "En attente",
+    },
+    {
+        id: "DEM-2026-0038",
+        responsable: "Amina Berrada",
+        client: "MedTech Industries",
+        priorite: "Basse",
+        budget: "8 200",
+        date: "14/07/2026",
+        statut: "En attente",
+    },
+    {
+        id: "DEM-2026-0037",
+        responsable: "Mohammed Tazi",
+        client: "ConstructPlus",
+        priorite: "Moyenne",
+        budget: "23 400",
+        date: "13/07/2026",
+        statut: "En attente",
+    },
+];
+
+export const recentActivities = [
+    {
+        id: 1,
+        type: "demande",
+        text: "Nouvelle demande reçue",
+        detail: "DEM-2026-0041 — AutoTech SARL — 45 000 MAD",
+        time: "Il y a 12 min",
+        color: "bg-amber-50 text-amber-600",
+    },
+    {
+        id: 2,
+        type: "validation",
+        text: "Validation par la Gestion Administrative",
+        detail: "DEM-2026-0039 — Approuvée par Rachid Mouline",
+        time: "Il y a 45 min",
+        color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        id: 3,
+        type: "consultation",
+        text: "Consultation d'une demande",
+        detail: "DEM-2026-0038 — Consultée par Youssef Benali",
+        time: "Il y a 1h",
+        color: "bg-blue-50 text-blue-600",
+    },
+    {
+        id: 4,
+        type: "notification",
+        text: "Notification envoyée",
+        detail: "Alerte stock critique — 3 produits sous le seuil",
+        time: "Il y a 2h",
+        color: "bg-violet-50 text-violet-600",
+    },
+    {
+        id: 5,
+        type: "connexion",
+        text: "Connexion au système",
+        detail: "Youssef Benali — IP 192.168.1.15",
+        time: "Il y a 3h",
+        color: "bg-slate-100 text-slate-600",
+    },
+];
+
+export const importantNotifications = [
+    {
+        id: 1,
+        type: "warning",
+        title: "Stock critique — Dell OptiPlex 7090",
+        description: "3 unités restantes à Casablanca. Seuil minimum : 5.",
+        time: "Il y a 20 min",
+        badge: "Critique",
+    },
+    {
+        id: 2,
+        type: "info",
+        title: "Nouvelle demande d'achat",
+        description: "DEM-2026-0041 — 45 000 MAD — AutoTech SARL",
+        time: "Il y a 35 min",
+        badge: "Nouveau",
+    },
+    {
+        id: 3,
+        type: "success",
+        title: "Demande validée",
+        description: "DEM-2026-0039 approuvée par la Gestion Administrative",
+        time: "Il y a 1h",
+        badge: "Validé",
+    },
+    {
+        id: 4,
+        type: "warning",
+        title: "Budget mensuel en baisse",
+        description: "72% du budget consommé — 245 000 MAD restants",
+        time: "Il y a 2h",
+        badge: "Attention",
+    },
+    {
+        id: 5,
+        type: "info",
+        title: "Rapport de stock disponible",
+        description: "Rapport mensuel juillet 2026 prêt au téléchargement",
+        time: "Il y a 4h",
+        badge: "Info",
+    },
+];
+
+export const quickActions = [
+    { label: "Voir les demandes", href: "/demandes", color: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
+    { label: "Consulter le stock", href: "/stock", color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" },
+    { label: "Historique", href: "/historique", color: "bg-amber-50 text-amber-600 hover:bg-amber-100" },
+    { label: "Rapports", href: "/rapports", color: "bg-violet-50 text-violet-600 hover:bg-violet-100" },
+];

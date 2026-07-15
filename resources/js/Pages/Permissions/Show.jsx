@@ -270,7 +270,7 @@ export default function PermissionShow({ roleId }) {
         return (
             <DashboardLayout
                 title="Permissions"
-                breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Permissions", href: "/permissions" }, { label: "Rôle introuvable" }]}
+                breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Permissions", href: "/permissions" }, { label: "Rôle introuvable" }]}
             >
                 <div className="py-12 text-center text-sm text-slate-500">Rôle introuvable.</div>
             </DashboardLayout>
@@ -283,7 +283,7 @@ export default function PermissionShow({ roleId }) {
         <DashboardLayout
             title="Permissions"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: "/dashboard-super-admin" },
                 { label: "Permissions", href: "/permissions" },
                 { label: roleMock.nom },
             ]}

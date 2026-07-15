@@ -1,0 +1,227 @@
+export const stockUser = {
+    name: "Rachid Amrani",
+    email: "r.amrani@supdata.ma",
+    role: "Responsable Stock",
+    agency: "SUPDATA Tanger",
+};
+
+export const kpiData = [
+    {
+        id: "total",
+        label: "Articles en stock",
+        value: "1 247",
+        description: "Références actives",
+        trend: "+12",
+        trendUp: true,
+        color: "bg-blue-50 text-blue-600",
+    },
+    {
+        id: "alerts",
+        label: "Alertes stock",
+        value: "18",
+        description: "Sous le seuil minimum",
+        trend: "+4",
+        trendUp: true,
+        color: "bg-red-50 text-red-600",
+    },
+    {
+        id: "movements",
+        label: "Mouvements du jour",
+        value: "34",
+        description: "Entrées & sorties",
+        trend: "+8",
+        trendUp: true,
+        color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        id: "value",
+        label: "Valeur du stock",
+        value: "12 450 000",
+        unit: "MAD",
+        description: "Inventaire total",
+        trend: "+5%",
+        trendUp: true,
+        color: "bg-violet-50 text-violet-600",
+    },
+    {
+        id: "critical",
+        label: "Ruptures imminentes",
+        value: "5",
+        description: "Articles critiques",
+        trend: "+2",
+        trendUp: true,
+        color: "bg-orange-50 text-orange-600",
+    },
+    {
+        id: "orders",
+        label: "Commandes en cours",
+        value: "12",
+        description: "En attente de réception",
+        trend: "-3",
+        trendUp: false,
+        color: "bg-cyan-50 text-cyan-600",
+    },
+];
+
+export const stockEvolutionData = [
+    { mois: "Jan", entrees: 120, sorties: 95, valeur: 11200000 },
+    { mois: "Fév", entrees: 145, sorties: 130, valeur: 11450000 },
+    { mois: "Mar", entrees: 110, sorties: 125, valeur: 11100000 },
+    { mois: "Avr", entrees: 160, sorties: 140, valeur: 11800000 },
+    { mois: "Mai", entrees: 180, sorties: 155, valeur: 12200000 },
+    { mois: "Jun", entrees: 135, sorties: 148, valeur: 11950000 },
+    { mois: "Jul", entrees: 170, sorties: 160, valeur: 12450000 },
+    { mois: "Aoû", entrees: 125, sorties: 145, valeur: 11850000 },
+    { mois: "Sep", entrees: 155, sorties: 135, valeur: 12300000 },
+    { mois: "Oct", entrees: 165, sorties: 150, valeur: 12600000 },
+    { mois: "Nov", entrees: 175, sorties: 165, valeur: 12800000 },
+    { mois: "Déc", entrees: 190, sorties: 175, valeur: 13100000 },
+];
+
+export const categoryData = [
+    { name: "Équipements IT", value: 45, color: "#3b82f6" },
+    { name: "Mobilier", value: 22, color: "#10b981" },
+    { name: "Fournitures", value: 18, color: "#f59e0b" },
+    { name: "Sécurité", value: 15, color: "#8b5cf6" },
+];
+
+export const lowStockAlerts = [
+    {
+        id: "SKU-00412",
+        article: "Dell OptiPlex 7090",
+        categorie: "Équipements IT",
+        stockActuel: 3,
+        seuilMin: 5,
+        agence: "Casablanca",
+        statut: "Critique",
+    },
+    {
+        id: "SKU-00387",
+        article: "Chaise ergonomique Pro",
+        categorie: "Mobilier",
+        stockActuel: 4,
+        seuilMin: 8,
+        agence: "Rabat",
+        statut: "Critique",
+    },
+    {
+        id: "SKU-00523",
+        article: "Caméra Logitech Brio",
+        categorie: "Équipements IT",
+        stockActuel: 6,
+        seuilMin: 10,
+        agence: "Tanger",
+        statut: "Alerte",
+    },
+    {
+        id: "SKU-00291",
+        article: "Papier A4 80g (ramette)",
+        categorie: "Fournitures",
+        stockActuel: 15,
+        seuilMin: 50,
+        agence: "Fès",
+        statut: "Critique",
+    },
+    {
+        id: "SKU-00615",
+        article: "Badge RFID sécurisé",
+        categorie: "Sécurité",
+        stockActuel: 12,
+        seuilMin: 20,
+        agence: "Marrakech",
+        statut: "Alerte",
+    },
+];
+
+export const recentMovements = [
+    {
+        id: 1,
+        type: "entry",
+        text: "Réception commande",
+        detail: "CMD-2026-0198 — 45 unités — Dell OptiPlex",
+        time: "Il y a 25 min",
+        color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        id: 2,
+        type: "exit",
+        text: "Sortie affectée",
+        detail: "AFF-2026-0087 — 12 chaises — Agence Rabat",
+        time: "Il y a 50 min",
+        color: "bg-amber-50 text-amber-600",
+    },
+    {
+        id: 3,
+        type: "alert",
+        text: "Alerte stock bas",
+        detail: "SKU-00291 — Papier A4 — 15/50 restants",
+        time: "Il y a 1h",
+        color: "bg-red-50 text-red-600",
+    },
+    {
+        id: 4,
+        type: "entry",
+        text: "Transfert inter-agence",
+        detail: "TRF-2026-0034 — 8 caméras — De Tanger à Casablanca",
+        time: "Il y a 2h",
+        color: "bg-blue-50 text-blue-600",
+    },
+    {
+        id: 5,
+        type: "exit",
+        text: "Livraison effectuée",
+        detail: "LIV-2026-0092 — 20 écrans — Client MarocTech",
+        time: "Il y a 3h",
+        color: "bg-cyan-50 text-cyan-600",
+    },
+];
+
+export const importantNotifications = [
+    {
+        id: 1,
+        type: "warning",
+        title: "Rupture imminente — Dell OptiPlex 7090",
+        description: "3 unités restantes à Casablanca. Commande en cours.",
+        time: "Il y a 15 min",
+        badge: "Critique",
+    },
+    {
+        id: 2,
+        type: "info",
+        title: "Commande en transit",
+        description: "CMD-2026-0198 — 45 Dell OptiPlex — Arrivée prévue 17/07",
+        time: "Il y a 1h",
+        badge: "Info",
+    },
+    {
+        id: 3,
+        type: "success",
+        title: "Inventaire terminé",
+        description: "Inventaire physique agence Tanger — 1 247 articles vérifiés",
+        time: "Il y a 2h",
+        badge: "Validé",
+    },
+    {
+        id: 4,
+        type: "warning",
+        title: "Stock bas — Chaises ergonomiques",
+        description: "4/80 unités restantes — Agence Rabat",
+        time: "Il y a 3h",
+        badge: "Attention",
+    },
+    {
+        id: 5,
+        type: "info",
+        title: "Transfert inter-agence effectué",
+        description: "8 caméras Logitech transférées de Tanger à Casablanca",
+        time: "Il y a 5h",
+        badge: "Info",
+    },
+];
+
+export const quickActions = [
+    { label: "Entrées de stock", href: "/stock/entrees", color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" },
+    { label: "Sorties de stock", href: "stock/sorties", color: "bg-amber-50 text-amber-600 hover:bg-amber-100" },
+    { label: "Alertes stock", href: "/stock/alertes", color: "bg-red-50 text-red-600 hover:bg-red-100" },
+    { label: "Inventaire", href: "/stock/inventaire", color: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
+];

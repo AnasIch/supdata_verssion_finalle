@@ -103,7 +103,7 @@ export default function UsersIndex() {
     return (
         <DashboardLayout
             title="Utilisateurs"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Utilisateurs" }]}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Utilisateurs" }]}
         >
             <Head title="Utilisateurs — SUPDATA" />
             <div className="flex flex-col gap-6">

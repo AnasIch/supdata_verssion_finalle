@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { Head } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Shield, Activity, Monitor } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useProfile } from "@/Hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/UI/Tabs";
@@ -20,6 +22,7 @@ const tabItems = [
 ];
 
 export default function ProfileIndex() {
+    const user = useMemo(() => getCurrentUser(), []);
     const {
         profile,
         sessions,
@@ -41,9 +44,10 @@ export default function ProfileIndex() {
         <DashboardLayout
             title="Mon profil"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: getDashboardPath(user.role) },
                 { label: "Mon profil" },
             ]}
+            user={user}
         >
             <Head title="Mon profil — SUPDATA" />
 

@@ -102,7 +102,7 @@ export default function PermissionsIndex() {
     return (
         <DashboardLayout
             title="Permissions"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Permissions" }]}
+            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Permissions" }]}
         >
             <Head title="Permissions — SUPDATA" />
             <div className="flex flex-col gap-6">

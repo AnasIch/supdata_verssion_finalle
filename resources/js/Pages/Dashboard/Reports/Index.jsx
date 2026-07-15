@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
     Download,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/UI/Card";
@@ -50,8 +51,9 @@ const periodOptions = [
 ];
 
 function LoadingSkeleton() {
+    const skeletonUser = getCurrentUser();
     return (
-        <DashboardLayout title="Rapports & Analytics" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rapports & Analytics" }]}>
+        <DashboardLayout title="Rapports & Analytics" breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(skeletonUser.role) }, { label: "Rapports & Analytics" }]}>
             <div className="flex flex-col gap-6">
                 <Skeleton className="h-10 w-64" />
                 <Skeleton className="h-12 w-full rounded-xl" />
@@ -119,6 +121,7 @@ function formatCurrency(n) {
 }
 
 export default function ReportsIndex() {
+    const user = useMemo(() => getCurrentUser(), []);
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -151,7 +154,7 @@ export default function ReportsIndex() {
 
     if (error) {
         return (
-            <DashboardLayout title="Rapports & Analytics" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rapports & Analytics" }]}>
+            <DashboardLayout title="Rapports & Analytics" breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(user.role) }, { label: "Rapports & Analytics" }]}>
                 <ErrorState onRetry={handleRetry} />
             </DashboardLayout>
         );
@@ -160,7 +163,8 @@ export default function ReportsIndex() {
     return (
         <DashboardLayout
             title="Rapports & Analytics"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Rapports & Analytics" }]}
+            breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(user.role) }, { label: "Rapports & Analytics" }]}
+            user={user}
         >
             <Head title="Rapports & Analytics — SUPDATA" />
             <div className="flex flex-col gap-6">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
     RotateCcw,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/UI/Card";
@@ -47,8 +48,9 @@ import { systemInfo } from "@/Mocks/systemInfo";
 const fadeUp = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.35 } };
 
 function LoadingSkeleton() {
+    const skeletonUser = getCurrentUser();
     return (
-        <DashboardLayout title="Paramètres" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Paramètres" }]}>
+        <DashboardLayout title="Paramètres" breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(skeletonUser.role) }, { label: "Paramètres" }]}>
             <div className="flex flex-col gap-6">
                 <Skeleton className="h-10 w-64" />
                 <Skeleton className="h-12 w-full rounded-xl" />
@@ -286,6 +288,7 @@ const tabItems = [
 ];
 
 export default function SettingsIndex() {
+    const user = useMemo(() => getCurrentUser(), []);
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
@@ -344,7 +347,8 @@ export default function SettingsIndex() {
     return (
         <DashboardLayout
             title="Paramètres"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Paramètres" }]}
+            breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(user.role) }, { label: "Paramètres" }]}
+            user={user}
         >
             <Head title="Paramètres — SUPDATA" />
             <div className="flex flex-col gap-6">

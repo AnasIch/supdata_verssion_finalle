@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import {
@@ -26,6 +26,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useNotifications } from "@/Hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { notificationTypes, notificationSources } from "@/Mocks/notificationsList";
@@ -214,7 +215,9 @@ function NotificationRow({ notification }) {
                             <Button
                                 size="sm"
                                 onClick={() => {
-                                    window.location.href = notification.actionUrl;
+                                    const currentUser = getCurrentUser();
+                                    const base = getDashboardPath(currentUser.role);
+                                    window.location.href = `${base}${notification.actionUrl}`;
                                 }}
                             >
                                 Voir les détails
@@ -306,6 +309,7 @@ function FilterBar({
 }
 
 export default function NotificationsIndex() {
+    const user = useMemo(() => getCurrentUser(), []);
     const {
         notifications,
         search,
@@ -366,9 +370,10 @@ export default function NotificationsIndex() {
         <DashboardLayout
             title="Centre de notifications"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard" },
+                { label: "Dashboard", href: getDashboardPath(user.role) },
                 { label: "Notifications" },
             ]}
+            user={user}
         >
             <Head title="Notifications — SUPDATA" />
 

@@ -49,7 +49,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 09:45",
         read: false,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 2,
@@ -60,7 +60,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 09:35",
         read: false,
         source: "achats",
-        actionUrl: "/rapports",
+        actionUrl: "rapports",
     },
     {
         id: 3,
@@ -71,7 +71,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 09:20",
         read: false,
         source: "utilisateurs",
-        actionUrl: "/utilisateurs",
+        actionUrl: "utilisateurs",
     },
     {
         id: 4,
@@ -82,7 +82,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 08:50",
         read: false,
         source: "agences",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 5,
@@ -93,7 +93,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 08:30",
         read: true,
         source: "roles",
-        actionUrl: "/roles-permissions",
+        actionUrl: "roles-permissions",
     },
     {
         id: 6,
@@ -104,7 +104,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 07:45",
         read: true,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 7,
@@ -115,7 +115,7 @@ export const initialNotifications = [
         timestamp: "14/07/2026 06:45",
         read: true,
         source: "system",
-        actionUrl: "/audit-logs",
+        actionUrl: "audit-logs",
     },
     {
         id: 8,
@@ -126,7 +126,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 14:00",
         read: true,
         source: "achats",
-        actionUrl: "/rapports",
+        actionUrl: "rapports",
     },
     {
         id: 9,
@@ -137,7 +137,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 17:30",
         read: true,
         source: "rapports",
-        actionUrl: "/rapports",
+        actionUrl: "rapports",
     },
     {
         id: 10,
@@ -148,7 +148,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 17:15",
         read: true,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 11,
@@ -159,7 +159,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 14:30",
         read: true,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 12,
@@ -170,7 +170,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 13:00",
         read: true,
         source: "utilisateurs",
-        actionUrl: "/utilisateurs",
+        actionUrl: "utilisateurs",
     },
     {
         id: 13,
@@ -181,7 +181,7 @@ export const initialNotifications = [
         timestamp: "13/07/2026 15:00",
         read: true,
         source: "paramètres",
-        actionUrl: "/parametres",
+        actionUrl: "parametres",
     },
     {
         id: 14,
@@ -192,7 +192,7 @@ export const initialNotifications = [
         timestamp: "12/07/2026 15:30",
         read: true,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 15,
@@ -203,7 +203,7 @@ export const initialNotifications = [
         timestamp: "12/07/2026 13:30",
         read: true,
         source: "achats",
-        actionUrl: "/rapports",
+        actionUrl: "rapports",
     },
     {
         id: 16,
@@ -214,7 +214,7 @@ export const initialNotifications = [
         timestamp: "12/07/2026 16:00",
         read: true,
         source: "stock",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
     {
         id: 17,
@@ -225,7 +225,7 @@ export const initialNotifications = [
         timestamp: "11/07/2026 16:30",
         read: true,
         source: "utilisateurs",
-        actionUrl: "/utilisateurs",
+        actionUrl: "utilisateurs",
     },
     {
         id: 18,
@@ -236,7 +236,7 @@ export const initialNotifications = [
         timestamp: "11/07/2026 14:30",
         read: true,
         source: "achats",
-        actionUrl: "/rapports",
+        actionUrl: "rapports",
     },
     {
         id: 19,
@@ -247,7 +247,7 @@ export const initialNotifications = [
         timestamp: "12/07/2026 14:00",
         read: true,
         source: "roles",
-        actionUrl: "/roles-permissions",
+        actionUrl: "roles-permissions",
     },
     {
         id: 20,
@@ -258,6 +258,6 @@ export const initialNotifications = [
         timestamp: "11/07/2026 15:00",
         read: true,
         source: "agences",
-        actionUrl: "/agences",
+        actionUrl: "agences",
     },
 ];

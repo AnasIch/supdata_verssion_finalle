@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/UI/Card";
@@ -44,8 +45,9 @@ const periodOptions = [
 ];
 
 function LoadingSkeleton() {
+    const skeletonUser = getCurrentUser();
     return (
-        <DashboardLayout title="Journaux d'audit" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Journaux d'audit" }]}>
+        <DashboardLayout title="Journaux d'audit" breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(skeletonUser.role) }, { label: "Journaux d'audit" }]}>
             <div className="flex flex-col gap-6">
                 <Skeleton className="h-10 w-64" />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -166,6 +168,7 @@ function DiffView({ oldVal, newVal }) {
 }
 
 export default function AuditLogsIndex() {
+    const user = useMemo(() => getCurrentUser(), []);
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -257,7 +260,7 @@ export default function AuditLogsIndex() {
 
     if (error) {
         return (
-            <DashboardLayout title="Journaux d'audit" breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Journaux d'audit" }]}>
+            <DashboardLayout title="Journaux d'audit" breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(user.role) }, { label: "Journaux d'audit" }]}>
                 <ErrorState onRetry={handleRetry} />
             </DashboardLayout>
         );
@@ -266,7 +269,8 @@ export default function AuditLogsIndex() {
     return (
         <DashboardLayout
             title="Journaux d'audit"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Journaux d'audit" }]}
+            breadcrumbs={[{ label: "Dashboard", href: getDashboardPath(user.role) }, { label: "Journaux d'audit" }]}
+            user={user}
         >
             <Head title="Journaux d'audit — SUPDATA" />
             <div className="flex flex-col gap-6">
