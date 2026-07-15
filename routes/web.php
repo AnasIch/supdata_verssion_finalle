@@ -259,11 +259,11 @@ Route::get('/dashboard-admin-local/stock/{id}', function ($id) {
 })->name('al.stock.show');
 
 Route::get('/dashboard-admin-local/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
+    return Inertia::render('Dashboard/LocalAdmin/Reports/Index');
 })->name('al.reports');
 
 Route::get('/dashboard-admin-local/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
+    return Inertia::render('Dashboard/LocalAdmin/Notifications/Index');
 })->name('al.notifications');
 
 /*
