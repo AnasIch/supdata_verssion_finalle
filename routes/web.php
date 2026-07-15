@@ -284,6 +284,18 @@ Route::get('/dashboard-administrative/parametres', function () {
     return Inertia::render('Dashboard/Settings/Index');
 })->name('ga.settings');
 
+Route::get('/dashboard-administrative/documents', function () {
+    return Inertia::render('Operations/Index', ['module' => 'documents']);
+})->name('ga.documents');
+
+Route::get('/dashboard-administrative/notes-service', function () {
+    return Inertia::render('Operations/Index', ['module' => 'notes']);
+})->name('ga.notes');
+
+Route::get('/dashboard-administrative/contrats', function () {
+    return Inertia::render('Operations/Index', ['module' => 'contrats']);
+})->name('ga.contracts');
+
 /*
 |--------------------------------------------------------------------------
 | Role-Specific Routes — Responsable Commercial
@@ -310,7 +322,7 @@ Route::get('/dashboard-stock/stock', function () {
 
 Route::get('/dashboard-stock/stock/{id}', function ($id) {
     return Inertia::render('Stock/Show', ['productId' => (int) $id]);
-})->name('rs.stock.show');
+})->whereNumber('id')->name('rs.stock.show');
 
 Route::get('/dashboard-stock/rapports', function () {
     return Inertia::render('Dashboard/Reports/Index');
@@ -319,3 +331,23 @@ Route::get('/dashboard-stock/rapports', function () {
 Route::get('/dashboard-stock/notifications', function () {
     return Inertia::render('Dashboard/Notifications/Index');
 })->name('rs.notifications');
+
+Route::get('/dashboard-stock/stock/entrees', function () {
+    return Inertia::render('Operations/Index', ['module' => 'entrees']);
+})->name('rs.stock.entries');
+
+Route::get('/dashboard-stock/stock/sorties', function () {
+    return Inertia::render('Operations/Index', ['module' => 'sorties']);
+})->name('rs.stock.exits');
+
+Route::get('/dashboard-stock/stock/alertes', function () {
+    return Inertia::render('Operations/Index', ['module' => 'alertes']);
+})->name('rs.stock.alerts');
+
+Route::get('/dashboard-stock/stock/inventaire', function () {
+    return Inertia::render('Operations/Index', ['module' => 'inventaire']);
+})->name('rs.stock.inventory');
+
+Route::get('/dashboard-stock/commandes', function () {
+    return Inertia::render('Operations/Index', ['module' => 'commandes']);
+})->name('rs.orders');

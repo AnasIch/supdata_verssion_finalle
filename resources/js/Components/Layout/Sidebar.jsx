@@ -54,14 +54,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 )}
             </div>
 
-            <nav className="flex-1 overflow-y-auto px-3 py-3">
+            <nav className="flex-1 overflow-y-auto px-3 py-4">
                 {prefixedMenu.groups.map((group, groupIndex) => {
                     const startIndex = runningIndex;
                     runningIndex += group.items.length;
 
                     return (
                         <div key={group.title}>
-                            {groupIndex > 0 && <div className="my-2 border-t border-slate-100" />}
+                            {groupIndex > 0 && <div className="my-3 border-t border-slate-100" />}
                             <SidebarGroup
                                 title={group.title}
                                 items={group.items}
@@ -81,7 +81,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <>
             <aside
                 className={cn(
-                    "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:bg-white lg:border-r lg:border-slate-200/80 lg:shadow-[2px_0_12px_rgb(0,0,0,0.03)] lg:transition-all lg:duration-300",
+                    "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:bg-[#fbfbf9] lg:border-r lg:border-slate-200 lg:transition-all lg:duration-300",
                     collapsed ? "lg:w-[80px]" : "lg:w-[280px]"
                 )}
             >
