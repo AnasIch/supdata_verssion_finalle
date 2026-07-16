@@ -1,12 +1,11 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
 
-const typeIcons = {
-    deal: "bg-blue-50 text-blue-600",
-    conversion: "bg-emerald-50 text-emerald-600",
-    client: "bg-violet-50 text-violet-600",
-    refused: "bg-red-50 text-red-600",
-    followup: "bg-amber-50 text-amber-600",
+const typeStyles = {
+    demande: "bg-blue-50 text-blue-600",
+    reservation: "bg-violet-50 text-violet-600",
+    validation: "bg-emerald-50 text-emerald-600",
+    refus: "bg-red-50 text-red-600",
 };
 
 export default function RecentActivityCard({ data }) {
@@ -18,9 +17,7 @@ export default function RecentActivityCard({ data }) {
         >
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-slate-900">
-                        Activité récente
-                    </CardTitle>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Activité récente</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="relative">
@@ -28,12 +25,8 @@ export default function RecentActivityCard({ data }) {
                         <div className="flex flex-col gap-4">
                             {data.map((item) => (
                                 <div key={item.id} className="relative flex items-start gap-3">
-                                    <div
-                                        className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full ${typeIcons[item.type] || "bg-slate-100 text-slate-600"}`}
-                                    >
-                                        <span className="text-xs font-bold">
-                                            {item.type.charAt(0).toUpperCase()}
-                                        </span>
+                                    <div className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full ${typeStyles[item.type] || "bg-slate-100 text-slate-600"}`}>
+                                        <span className="text-xs font-bold">{item.type.charAt(0).toUpperCase()}</span>
                                     </div>
                                     <div className="min-w-0 flex-1 pt-0.5">
                                         <p className="text-sm font-medium text-slate-900">{item.text}</p>

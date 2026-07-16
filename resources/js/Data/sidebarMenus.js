@@ -15,6 +15,8 @@ import {
     AlertTriangle,
     ArrowUpDown,
     ShoppingCart,
+    User,
+    Bookmark,
 } from "lucide-react";
 
 const sidebarMenus = {
@@ -111,15 +113,15 @@ const sidebarMenus = {
             {
                 title: "Commercial",
                 items: [
-                    { title: "Devis", href: "devis", icon: FileSignature },
-                    { title: "Clients", href: "clients", icon: Users },
-                    { title: "Pipeline", href: "pipeline", icon: TrendingUp },
+                    { title: "Demandes d'achat", href: "demandes", icon: ClipboardList },
+                    { title: "Stock disponible", href: "stock", icon: Package },
+                    { title: "Réservation de stock", href: "reservations", icon: Bookmark },
                 ],
             },
             {
                 title: "Suivi",
                 items: [
-                    { title: "Rapports commerciaux", href: "rapports", icon: BarChart3 },
+                    { title: "Rapports", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                 ],
             },

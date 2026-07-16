@@ -1,29 +1,26 @@
 import { motion } from "framer-motion";
 import {
-    DollarSign,
-    Users,
-    FileText,
+    ClipboardList,
+    Clock,
+    Package,
+    Bell,
     TrendingUp,
-    BarChart3,
-    XCircle,
     TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
-    revenue: DollarSign,
-    clients: Users,
-    quotes: FileText,
-    conversion: TrendingUp,
-    pipeline: BarChart3,
-    lost: XCircle,
+    created: ClipboardList,
+    pending: Clock,
+    reserved: Package,
+    notifications: Bell,
 };
 
 export default function KpiCards({ data }) {
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {data.map((kpi, i) => {
-                const Icon = iconMap[kpi.id] || DollarSign;
+                const Icon = iconMap[kpi.id] || ClipboardList;
                 return (
                     <motion.div
                         key={kpi.id}

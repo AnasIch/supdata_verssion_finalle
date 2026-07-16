@@ -8,10 +8,6 @@ Route::get('/', function () {
     return Inertia::render('Landing/Index');
 })->name('home');
 
-Route::get('/ui-showcase', function () {
-    return Inertia::render('Development/UIShowcase');
-})->name('ui-showcase');
-
 /*
 |--------------------------------------------------------------------------
 | Super Admin
@@ -175,7 +171,7 @@ Route::get('/stock/{id}', function ($id) {
 */
 
 Route::get('/profil', function () {
-    return Inertia::render('Profile/Index');
+    return Inertia::render('Dashboard/Commercial/Profile');
 })->name('profile');
 
 /*
@@ -310,12 +306,32 @@ Route::get('/dashboard-administrative/contrats', function () {
 |--------------------------------------------------------------------------
 */
 
+Route::get('/dashboard-commercial/demandes', function () {
+    return Inertia::render('Commercial/Demandes/Index');
+})->name('rc.demandes');
+
+Route::get('/dashboard-commercial/demandes/creer', function () {
+    return Inertia::render('Commercial/Demandes/Create');
+})->name('rc.demandes.create');
+
+Route::get('/dashboard-commercial/demandes/{id}', function ($id) {
+    return Inertia::render('Commercial/Demandes/Show', ['demandeId' => $id]);
+})->name('rc.demandes.show');
+
+Route::get('/dashboard-commercial/stock', function () {
+    return Inertia::render('Commercial/Stock/Index');
+})->name('rc.stock');
+
+Route::get('/dashboard-commercial/reservations', function () {
+    return Inertia::render('Commercial/Reservations/Index');
+})->name('rc.reservations');
+
 Route::get('/dashboard-commercial/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
+    return Inertia::render('Dashboard/Commercial/Reports');
 })->name('rc.reports');
 
 Route::get('/dashboard-commercial/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
+    return Inertia::render('Dashboard/Commercial/Notifications');
 })->name('rc.notifications');
 
 /*

@@ -1,25 +1,20 @@
 import { useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { setCurrentUser } from "@/lib/mockAuth";
+import { setCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useCommercialDashboard } from "@/Hooks/useCommercialDashboard";
 import DashboardHeader from "@/Components/Commercial/DashboardHeader";
 import KpiCards from "@/Components/Commercial/KpiCards";
 import DashboardCharts from "@/Components/Commercial/DashboardCharts";
-import PendingQuotesCard from "@/Components/Commercial/PendingQuotesCard";
 import RecentActivityCard from "@/Components/Commercial/RecentActivityCard";
-import NotificationsCard from "@/Components/Commercial/NotificationsCard";
 import QuickActionsCard from "@/Components/Commercial/QuickActionsCard";
 
 export default function CommercialDashboard({ user }) {
     const {
         user: commercialUser,
         kpiData,
-        revenueEvolutionData,
-        performanceData,
-        pendingQuotes,
+        demandesEvolutionData,
         recentActivities,
-        importantNotifications,
         quickActions,
         isRefreshing,
         refresh,
@@ -31,7 +26,7 @@ export default function CommercialDashboard({ user }) {
         <DashboardLayout
             title="Dashboard Responsable Commercial"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
+                { label: "Dashboard", href: getDashboardPath(user?.role || "Responsable Commercial") },
                 { label: "Responsable Commercial" },
             ]}
             user={user || commercialUser}
@@ -42,14 +37,9 @@ export default function CommercialDashboard({ user }) {
 
                 <KpiCards data={kpiData} />
 
-                <DashboardCharts revenueData={revenueEvolutionData} performanceData={performanceData} />
+                <DashboardCharts evolutionData={demandesEvolutionData} />
 
-                <PendingQuotesCard data={pendingQuotes} />
-
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <RecentActivityCard data={recentActivities} />
-                    <NotificationsCard data={importantNotifications} />
-                </div>
+                <RecentActivityCard data={recentActivities} />
 
                 <QuickActionsCard data={quickActions} />
             </div>

@@ -2,11 +2,8 @@ import { useState, useCallback } from "react";
 import {
     commercialUser,
     kpiData,
-    revenueEvolutionData,
-    performanceData,
-    pendingQuotes,
+    demandesEvolutionData,
     recentActivities,
-    importantNotifications,
     quickActions,
 } from "@/Mocks/commercialDashboard";
 
@@ -21,11 +18,8 @@ export function useCommercialDashboard() {
     return {
         user: commercialUser,
         kpiData,
-        revenueEvolutionData,
-        performanceData,
-        pendingQuotes,
+        demandesEvolutionData,
         recentActivities,
-        importantNotifications,
         quickActions,
         isRefreshing,
         refresh,

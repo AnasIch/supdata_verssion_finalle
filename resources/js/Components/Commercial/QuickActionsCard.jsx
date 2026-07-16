@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { FileText, Users, BarChart3, Funnel, ArrowUpRight } from "lucide-react";
+import { ClipboardList, List, Package, Bell, ArrowUpRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
 
 const iconMap = {
-    "Nouveau devis": FileText,
-    "Liste des clients": Users,
-    "Rapports commerciaux": BarChart3,
-    "Pipeline": Funnel,
+    "Nouvelle demande": ClipboardList,
+    "Voir mes demandes": List,
+    "Consulter le stock": Package,
+    "Voir les notifications": Bell,
 };
 
 export default function QuickActionsCard({ data }) {
@@ -14,18 +14,16 @@ export default function QuickActionsCard({ data }) {
         <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.6 }}
+            transition={{ duration: 0.35, delay: 0.5 }}
         >
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-sm font-semibold text-slate-900">
-                        Raccourcis
-                    </CardTitle>
+                    <CardTitle className="text-sm font-semibold text-slate-900">Raccourcis</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 gap-3">
                         {data.map((action) => {
-                            const Icon = iconMap[action.label] || FileText;
+                            const Icon = iconMap[action.label] || ClipboardList;
                             return (
                                 <button
                                     key={action.label}
