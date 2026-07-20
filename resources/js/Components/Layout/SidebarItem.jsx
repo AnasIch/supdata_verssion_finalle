@@ -8,9 +8,24 @@ import {
     TooltipProvider,
 } from "@/Components/UI/Tooltip";
 
+function isItemActive(url, item) {
+    if (!item.slug) {
+        return url === item.href;
+    }
+    if (item.exact) {
+        return url === item.href || url === `/${item.slug}`;
+    }
+    return (
+        url === item.href ||
+        url.startsWith(item.href + "/") ||
+        url === `/${item.slug}` ||
+        url.startsWith(`/${item.slug}/`)
+    );
+}
+
 export default function SidebarItem({ item, collapsed, index = 0 }) {
     const { url } = usePage();
-    const isActive = item.exact ? url === item.href : url === item.href || url.startsWith(item.href + "/");
+    const isActive = isItemActive(url, item);
     const Icon = item.icon;
 
     const content = (
@@ -22,10 +37,10 @@ export default function SidebarItem({ item, collapsed, index = 0 }) {
             <Link
                 href={item.href}
                 className={cn(
-                    "group relative flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-[13px] font-medium transition-colors duration-150",
+                    "group relative flex items-center gap-3 rounded-lg border-l-[3px] px-3 py-2 text-[13px] transition-all duration-200",
                     isActive
-                        ? "border-blue-700 bg-slate-100 text-slate-950"
-                        : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-950",
+                        ? "border-blue-600 bg-blue-50/80 font-semibold text-blue-700"
+                        : "border-transparent font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900",
                     collapsed && "justify-center border-l-0 px-0 py-2.5"
                 )}
                 aria-current={isActive ? "page" : undefined}
@@ -33,14 +48,14 @@ export default function SidebarItem({ item, collapsed, index = 0 }) {
                 {isActive && (
                     <motion.div
                         layoutId="sidebar-active"
-                        className="absolute inset-0 rounded-md bg-slate-100"
+                        className="absolute inset-0 rounded-lg bg-blue-50/80"
                         transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                 )}
                 <Icon
                     className={cn(
                         "relative z-10 size-[1.15rem] shrink-0 transition-colors duration-200",
-                        isActive ? "text-blue-700" : "text-slate-400 group-hover:text-slate-700"
+                        isActive ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"
                     )}
                 />
                 {!collapsed && (

@@ -54,6 +54,7 @@ export default function UserPermissionsSelector({ selected, onToggle, onToggleAl
                                 return (
                                     <label
                                         key={perm}
+                                        onClick={(e) => { e.preventDefault(); onToggle(perm); }}
                                         className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
                                     >
                                         <div

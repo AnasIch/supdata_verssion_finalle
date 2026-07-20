@@ -9,7 +9,7 @@ import {
     SelectItem,
 } from "@/Components/UI/Select";
 
-export default function UsersFilters({ filters, onFilterChange, onReset }) {
+export default function UsersFilters({ filters, onFilterChange, onReset, roles = [], agencies = [] }) {
     const hasActiveFilters = filters.role !== "all" || filters.agency !== "all" || filters.status !== "all" || filters.search.length > 0;
 
     return (
@@ -38,11 +38,9 @@ export default function UsersFilters({ filters, onFilterChange, onReset }) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Tous les rôles</SelectItem>
-                            <SelectItem value="Super Admin">Super Admin</SelectItem>
-                            <SelectItem value="Admin">Admin</SelectItem>
-                            <SelectItem value="Gestionnaire">Gestionnaire</SelectItem>
-                            <SelectItem value="Technicien">Technicien</SelectItem>
-                            <SelectItem value="Viewer">Viewer</SelectItem>
+                            {roles.map((r) => (
+                                <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 
@@ -52,11 +50,9 @@ export default function UsersFilters({ filters, onFilterChange, onReset }) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Toutes les agences</SelectItem>
-                            <SelectItem value="Casablanca">Casablanca</SelectItem>
-                            <SelectItem value="Marrakech">Marrakech</SelectItem>
-                            <SelectItem value="Rabat">Rabat</SelectItem>
-                            <SelectItem value="Tanger">Tanger</SelectItem>
-                            <SelectItem value="Fès">Fès</SelectItem>
+                            {agencies.map((a) => (
+                                <SelectItem key={a.id} value={a.city}>{a.city}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 
@@ -68,7 +64,6 @@ export default function UsersFilters({ filters, onFilterChange, onReset }) {
                             <SelectItem value="all">Tous les statuts</SelectItem>
                             <SelectItem value="active">Actif</SelectItem>
                             <SelectItem value="inactive">Inactif</SelectItem>
-                            <SelectItem value="suspended">Suspendu</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { Building2 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import AgencesStats from "@/Components/Agences/AgencesStats";
@@ -19,6 +20,8 @@ const initialAgences = [
 ];
 
 export default function AgencesIndex() {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [agences] = useState(initialAgences);
     const [search, setSearch] = useState("");
     const [detailTarget, setDetailTarget] = useState(null);
@@ -43,7 +46,7 @@ export default function AgencesIndex() {
     return (
         <DashboardLayout
             title="Agences"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences" }]}
+            breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Agences" }]}
         >
             <Head title="Gestion des agences — SUPDATA" />
             <div className="flex flex-col gap-6">

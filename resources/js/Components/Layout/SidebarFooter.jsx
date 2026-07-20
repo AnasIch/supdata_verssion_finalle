@@ -1,6 +1,6 @@
 import { Link } from "@inertiajs/react";
 import { Avatar, AvatarFallback } from "@/Components/UI/Avatar";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SidebarCollapse from "./SidebarCollapse";
 

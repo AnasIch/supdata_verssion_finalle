@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import {
     ArrowLeft,
@@ -18,6 +18,7 @@ import {
     ChevronRight,
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/Components/UI/Card";
@@ -357,6 +358,8 @@ function RoleUsersTable({ users, loading }) {
 }
 
 export default function RoleShow() {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -373,8 +376,8 @@ export default function RoleShow() {
             <DashboardLayout
                 title="Détail du rôle"
                 breadcrumbs={[
-                    { label: "Dashboard", href: "/dashboard-super-admin" },
-                    { label: "Rôles & Permissions", href: "/roles-permissions" },
+                    { label: "Dashboard", href: base },
+                    { label: "Rôles & Permissions", href: `${base}/roles-permissions` },
                     { label: "Chargement..." },
                 ]}
             >
@@ -402,8 +405,8 @@ export default function RoleShow() {
         <DashboardLayout
             title="Détail du rôle"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Rôles & Permissions", href: "/roles-permissions" },
+                { label: "Dashboard", href: base },
+                { label: "Rôles & Permissions", href: `${base}/roles-permissions` },
                 { label: detail.nom },
             ]}
         >
@@ -416,7 +419,7 @@ export default function RoleShow() {
                     />
                     <div className="flex items-center gap-2">
                         <Button variant="outline" asChild>
-                            <a href="/roles-permissions">
+                            <a href={`${base}/roles-permissions`}>
                                 <ArrowLeft className="size-4" />
                                 Retour à la liste
                             </a>

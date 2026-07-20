@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,31 +19,24 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-super-admin', function () {
-    return Inertia::render('Dashboard/SuperAdmin/Index', [
-        'user' => [
-            'name' => 'Super Admin',
-            'email' => 'admin@supdata.fr',
-            'role' => 'Super Admin',
-        ],
-    ]);
-})->name('super-admin.dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard-super-admin', [DashboardController::class, 'index'])->name('super-admin.dashboard');
+});
 
-Route::get('/utilisateurs/creer', function () {
-    return Inertia::render('Users/Create');
-})->name('users.create');
+/*
+|--------------------------------------------------------------------------
+| User Management (CRUD)
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/utilisateurs/{id}/modifier', function ($id) {
-    return Inertia::render('Users/Edit', ['userId' => (int) $id]);
-})->name('users.edit');
-
-Route::get('/utilisateurs/{id}', function ($id) {
-    return Inertia::render('Users/Show', ['userId' => (int) $id]);
-})->name('users.show');
-
-Route::get('/utilisateurs', function () {
-    return Inertia::render('Users/Index');
-})->name('users');
+Route::get('/utilisateurs/creer', [UserController::class, 'create'])->name('users.create');
+Route::post('/utilisateurs', [UserController::class, 'store'])->name('users.store');
+Route::get('/utilisateurs', [UserController::class, 'index'])->name('users');
+Route::get('/utilisateurs/{user}', [UserController::class, 'show'])->name('users.show');
+Route::get('/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('users.edit');
+Route::put('/utilisateurs/{user}', [UserController::class, 'update'])->name('users.update');
+Route::patch('/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+Route::delete('/utilisateurs/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
 Route::get('/roles-permissions', function () {
     return Inertia::render('Roles/Index');
@@ -48,41 +46,11 @@ Route::get('/roles/{id}', function ($id) {
     return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
 })->name('roles.show');
 
-Route::get('/agences', function () {
-    return Inertia::render('Agences/Index');
-})->name('agences');
-
-Route::get('/agences/{id}/modifier', function ($id) {
-    return Inertia::render('Agencies/Edit', ['agencyId' => (int) $id]);
-})->name('agences.edit');
-
-Route::get('/agences/{id}', function ($id) {
-    return Inertia::render('Agencies/Show', ['agencyId' => (int) $id]);
-})->name('agences.show');
-
-Route::get('/permissions', function () {
-    return Inertia::render('Permissions/Index');
-})->name('permissions');
-
-Route::get('/permissions/{roleId}', function ($roleId) {
-    return Inertia::render('Permissions/Show', ['roleId' => (int) $roleId]);
-})->name('permissions.show');
-
-Route::get('/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
-})->name('reports');
-
-Route::get('/audit-logs', function () {
-    return Inertia::render('Dashboard/AuditLogs/Index');
-})->name('audit-logs');
+Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs');
 
 Route::get('/notifications', function () {
     return Inertia::render('Dashboard/Notifications/Index');
 })->name('notifications');
-
-Route::get('/parametres', function () {
-    return Inertia::render('Dashboard/Settings/Index');
-})->name('settings');
 
 /*
 |--------------------------------------------------------------------------
@@ -170,9 +138,9 @@ Route::get('/stock/{id}', function ($id) {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/profil', function () {
-    return Inertia::render('Dashboard/Commercial/Profile');
-})->name('profile');
+Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
+Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+Route::patch('/profil/password', [ProfileController::class, 'changePassword'])->name('profile.password');
 
 /*
 |--------------------------------------------------------------------------
@@ -180,21 +148,14 @@ Route::get('/profil', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-super-admin/utilisateurs/creer', function () {
-    return Inertia::render('Users/Create');
-})->name('sa.users.create');
-
-Route::get('/dashboard-super-admin/utilisateurs/{id}/modifier', function ($id) {
-    return Inertia::render('Users/Edit', ['userId' => (int) $id]);
-})->name('sa.users.edit');
-
-Route::get('/dashboard-super-admin/utilisateurs/{id}', function ($id) {
-    return Inertia::render('Users/Show', ['userId' => (int) $id]);
-})->name('sa.users.show');
-
-Route::get('/dashboard-super-admin/utilisateurs', function () {
-    return Inertia::render('Users/Index');
-})->name('sa.users');
+Route::get('/dashboard-super-admin/utilisateurs/creer', [UserController::class, 'create'])->name('sa.users.create');
+Route::post('/dashboard-super-admin/utilisateurs', [UserController::class, 'store'])->name('sa.users.store');
+Route::get('/dashboard-super-admin/utilisateurs', [UserController::class, 'index'])->name('sa.users');
+Route::get('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'show'])->name('sa.users.show');
+Route::get('/dashboard-super-admin/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('sa.users.edit');
+Route::put('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'update'])->name('sa.users.update');
+Route::patch('/dashboard-super-admin/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('sa.users.toggle-status');
+Route::delete('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'destroy'])->name('sa.users.destroy');
 
 Route::get('/dashboard-super-admin/roles-permissions', function () {
     return Inertia::render('Roles/Index');
@@ -204,33 +165,18 @@ Route::get('/dashboard-super-admin/roles/{id}', function ($id) {
     return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
 })->name('sa.roles.show');
 
-Route::get('/dashboard-super-admin/agences', function () {
-    return Inertia::render('Agences/Index');
-})->name('sa.agences');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard-super-admin/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('sa.notifications.unread-count');
+    Route::get('/dashboard-super-admin/notifications', [NotificationController::class, 'index'])->name('sa.notifications');
+    Route::patch('/dashboard-super-admin/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('sa.notifications.read-all');
+    Route::patch('/dashboard-super-admin/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('sa.notifications.read');
+    Route::delete('/dashboard-super-admin/notifications/read', [NotificationController::class, 'destroyAllRead'])->name('sa.notifications.destroy-all-read');
+    Route::delete('/dashboard-super-admin/notifications/{notification}', [NotificationController::class, 'destroy'])->name('sa.notifications.destroy');
+});
 
-Route::get('/dashboard-super-admin/agences/{id}/modifier', function ($id) {
-    return Inertia::render('Agencies/Edit', ['agencyId' => (int) $id]);
-})->name('sa.agences.edit');
-
-Route::get('/dashboard-super-admin/agences/{id}', function ($id) {
-    return Inertia::render('Agencies/Show', ['agencyId' => (int) $id]);
-})->name('sa.agences.show');
-
-Route::get('/dashboard-super-admin/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
-})->name('sa.reports');
-
-Route::get('/dashboard-super-admin/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
-})->name('sa.notifications');
-
-Route::get('/dashboard-super-admin/audit-logs', function () {
-    return Inertia::render('Dashboard/AuditLogs/Index');
-})->name('sa.audit-logs');
-
-Route::get('/dashboard-super-admin/parametres', function () {
-    return Inertia::render('Dashboard/Settings/Index');
-})->name('sa.settings');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard-super-admin/audit-logs', [AuditLogController::class, 'index'])->name('sa.audit-logs');
+});
 
 /*
 |--------------------------------------------------------------------------

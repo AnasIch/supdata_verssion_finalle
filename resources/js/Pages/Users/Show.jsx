@@ -1,36 +1,26 @@
 import { motion } from "framer-motion";
 import { Pencil, ArrowLeft } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import UserProfileCard from "@/Components/Users/UserProfileCard";
 import UserInformationCard from "@/Components/Users/UserInformationCard";
 import UserSystemCard from "@/Components/Users/UserSystemCard";
-import UserPermissionsCard from "@/Components/Users/UserPermissionsCard";
-import UserActivityTimeline from "@/Components/Users/UserActivityTimeline";
 import UserStatsCards from "@/Components/Users/UserStatsCards";
 
-const mockUser = {
-    id: 1,
-    name: "Youssef Alami",
-    email: "youssef.alami@supdata.fr",
-    phone: "+212 6 12 34 56 78",
-    position: "Directeur des opérations",
-    role: "Super Admin",
-    agency: "Casablanca",
-    status: "active",
-    createdAt: "12 jan. 2024",
-    lastLogin: "14 juil. 2026 — 09:32",
-};
-
 export default function UserShow() {
+    const { user } = usePage().props;
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
+
     return (
         <DashboardLayout
             title="Détail utilisateur"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Utilisateurs", href: "/utilisateurs" },
+                { label: "Dashboard", href: base },
+                { label: "Utilisateurs", href: `${base}/utilisateurs` },
                 { label: "Détail utilisateur" },
             ]}
         >
@@ -48,13 +38,13 @@ export default function UserShow() {
                     />
                     <div className="flex items-center gap-2">
                         <Button variant="outline" asChild>
-                            <a href="/utilisateurs">
+                            <a href={`${base}/utilisateurs`}>
                                 <ArrowLeft className="size-4" />
                                 Retour à la liste
                             </a>
                         </Button>
                         <Button asChild>
-                            <a href={`/utilisateurs/${mockUser.id}/modifier`}>
+                            <a href={`${base}/utilisateurs/${user.id}/modifier`}>
                                 <Pencil className="size-4" />
                                 Modifier
                             </a>
@@ -62,18 +52,14 @@ export default function UserShow() {
                     </div>
                 </motion.div>
 
-                <UserProfileCard user={mockUser} />
+                <UserProfileCard user={user} />
 
-                <UserStatsCards />
+                <UserStatsCards user={user} />
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <UserInformationCard user={mockUser} />
-                    <UserSystemCard />
+                    <UserInformationCard user={user} />
+                    <UserSystemCard user={user} />
                 </div>
-
-                <UserPermissionsCard />
-
-                <UserActivityTimeline />
             </div>
         </DashboardLayout>
     );

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Save, RotateCcw, Building2 } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/UI/Card";
@@ -42,6 +43,8 @@ function FormSkeleton() {
 }
 
 export default function AgencyEdit({ agencyId }) {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const toast = useToast();
     const [loading, setLoading] = useState(true);
     const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
@@ -82,16 +85,16 @@ export default function AgencyEdit({ agencyId }) {
 
     const handleBackClick = useCallback(() => {
         if (isDirty) {
-            setPendingNavigation(`/agences/${agencyId}`);
+            setPendingNavigation(`${base}/agences/${agencyId}`);
             setLeaveDialogOpen(true);
         } else {
-            window.location.href = `/agences/${agencyId}`;
+            window.location.href = `${base}/agences/${agencyId}`;
         }
-    }, [isDirty, agencyId]);
+    }, [isDirty, agencyId, base]);
 
     if (!agence) {
         return (
-            <DashboardLayout title="Modifier" breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences", href: "/agences" }, { label: "Introuvable" }]}>
+            <DashboardLayout title="Modifier" breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Agences", href: `${base}/agences` }, { label: "Introuvable" }]}>
                 <div className="py-12 text-center text-sm text-slate-500">Agence introuvable.</div>
             </DashboardLayout>
         );
@@ -104,9 +107,9 @@ export default function AgencyEdit({ agencyId }) {
         <DashboardLayout
             title="Modifier l'agence"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Agences", href: "/agences" },
-                { label: agence.name, href: `/agences/${agence.id}` },
+                { label: "Dashboard", href: base },
+                { label: "Agences", href: `${base}/agences` },
+                { label: agence.name, href: `${base}/agences/${agence.id}` },
                 { label: "Modifier" },
             ]}
         >
@@ -214,7 +217,7 @@ export default function AgencyEdit({ agencyId }) {
                             variant="destructive"
                             onClick={() => {
                                 setLeaveDialogOpen(false);
-                                window.location.href = pendingNavigation || `/agences/${agencyId}`;
+                                window.location.href = pendingNavigation || `${base}/agences/${agencyId}`;
                             }}
                         >
                             Quitter sans enregistrer

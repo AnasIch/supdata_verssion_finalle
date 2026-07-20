@@ -1,8 +1,6 @@
 import {
     LayoutDashboard,
     Users,
-    Shield,
-    Building2,
     BarChart3,
     FileText,
     Settings,
@@ -10,12 +8,10 @@ import {
     Package,
     ClipboardList,
     FileSignature,
-    TrendingUp,
     Warehouse,
     AlertTriangle,
     ArrowUpDown,
     ShoppingCart,
-    User,
     Bookmark,
 } from "lucide-react";
 
@@ -32,17 +28,13 @@ const sidebarMenus = {
                 title: "Gestion",
                 items: [
                     { title: "Utilisateurs", href: "utilisateurs", icon: Users },
-                    { title: "Rôles & Permissions", href: "roles-permissions", icon: Shield },
-                    { title: "Agences", href: "agences", icon: Building2 },
                 ],
             },
             {
                 title: "Système",
                 items: [
-                    { title: "Rapports & Analytics", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                     { title: "Audit Logs", href: "audit-logs", icon: FileText },
-                    { title: "Paramètres", href: "parametres", icon: Settings },
                 ],
             },
         ],

@@ -19,6 +19,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             ...group,
             items: group.items.map((item) => ({
                 ...item,
+                slug: item.href === "." ? null : item.href,
                 href: item.href === "." ? basePath : `${basePath}/${item.href}`,
             })),
         })),

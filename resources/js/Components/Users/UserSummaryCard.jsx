@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { User, Mail, Building2, Shield, BadgeCheck, Key } from "lucide-react";
+import { User, Mail, Building2, Shield, BadgeCheck } from "lucide-react";
 import RoleBadge from "./RoleBadge";
 import AgencyBadge from "./AgencyBadge";
 import UserStatusBadge from "./UserStatusBadge";
@@ -57,11 +57,6 @@ export default function UserSummaryCard({ form }) {
                     <span className="ml-auto font-medium text-slate-700">
                         {form.status === "active" ? "Actif" : form.status === "inactive" ? "Inactif" : "—"}
                     </span>
-                </div>
-                <div className="flex items-center gap-2.5 text-sm">
-                    <Key className="size-4 text-slate-400" />
-                    <span className="text-slate-500">Permissions</span>
-                    <span className="ml-auto font-medium text-slate-700">{form.permissions.length}</span>
                 </div>
             </div>
         </motion.div>

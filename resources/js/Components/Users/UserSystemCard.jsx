@@ -1,16 +1,16 @@
 import { motion } from "framer-motion";
 import { Hash, Shield, Building2, Calendar, Clock, BadgeCheck } from "lucide-react";
 
-const items = [
-    { label: "Identifiant", value: "ID-00048", icon: Hash },
-    { label: "Rôle", value: "Super Admin", icon: Shield },
-    { label: "Agence", value: "Casablanca", icon: Building2 },
-    { label: "Compte créé le", value: "12 janvier 2024", icon: Calendar },
-    { label: "Dernière connexion", value: "14 juillet 2026 — 09:32", icon: Clock },
-    { label: "Statut", value: "Actif", icon: BadgeCheck, badge: true },
-];
+export default function UserSystemCard({ user }) {
+    const items = [
+        { label: "Identifiant", value: `ID-${String(user?.id ?? 0).padStart(5, "0")}`, icon: Hash },
+        { label: "Rôle", value: user?.role ?? "—", icon: Shield },
+        { label: "Agence", value: user?.agency ?? "—", icon: Building2 },
+        { label: "Compte créé le", value: user?.createdAt ?? "—", icon: Calendar },
+        { label: "Dernière connexion", value: user?.lastLogin ?? "—", icon: Clock },
+        { label: "Statut", value: user?.status === "active" ? "Actif" : "Inactif", icon: BadgeCheck, badge: user?.status === "active" },
+    ];
 
-export default function UserSystemCard() {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}

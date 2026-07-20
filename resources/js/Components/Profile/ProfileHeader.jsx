@@ -59,11 +59,11 @@ export default function ProfileHeader({ profile, onAvatarUpload }) {
                     <div className="hidden shrink-0 gap-4 text-xs text-slate-500 sm:flex">
                         <div className="flex items-center gap-1.5">
                             <Calendar size={14} className="text-slate-400" />
-                            Membre depuis {profile.createdAt}
+                            Membre depuis {profile.created_at}
                         </div>
                         <div className="flex items-center gap-1.5">
                             <Clock size={14} className="text-slate-400" />
-                            Dernière connexion : {profile.lastLogin}
+                            Dernière connexion : {profile.last_login_at || "Jamais"}
                         </div>
                     </div>
                 </div>

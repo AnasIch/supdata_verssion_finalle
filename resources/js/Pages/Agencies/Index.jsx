@@ -11,8 +11,9 @@ import {
     Pencil,
     MoreHorizontal,
 } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Card, CardContent } from "@/Components/UI/Card";
 import { Skeleton } from "@/Components/UI/Skeleton";
@@ -73,6 +74,8 @@ function TableSkeleton() {
 }
 
 export default function AgenciesIndex() {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [sortBy, setSortBy] = useState("name");
@@ -121,7 +124,7 @@ export default function AgenciesIndex() {
     return (
         <DashboardLayout
             title="Agences"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences" }]}
+            breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Agences" }]}
         >
             <Head title="Agences — SUPDATA" />
             <div className="flex flex-col gap-6">
@@ -258,13 +261,13 @@ export default function AgenciesIndex() {
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem asChild>
-                                                                    <a href={`/agences/${agence.id}`}>
+                                                                    <a href={`${base}/agences/${agence.id}`}>
                                                                         <Eye className="size-4" />
                                                                         Voir les détails
                                                                     </a>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem asChild>
-                                                                    <a href={`/agences/${agence.id}/modifier`}>
+                                                                    <a href={`${base}/agences/${agence.id}/modifier`}>
                                                                         <Pencil className="size-4" />
                                                                         Modifier
                                                                     </a>

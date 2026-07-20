@@ -1,34 +1,31 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Save, RotateCcw, X } from "lucide-react";
+import { router } from "@inertiajs/react";
 import { Button } from "@/Components/UI/Button";
 import UserPersonalInformation from "./UserPersonalInformation";
 import UserProfessionalInformation from "./UserProfessionalInformation";
-import UserSecurityCard from "./UserSecurityCard";
-import UserPermissionsSelector from "./UserPermissionsSelector";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 
 const emptyForm = {
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    avatar: null,
-    avatarPreview: null,
     agency: "",
     role: "",
     status: "active",
-    password: "",
-    passwordConfirm: "",
-    permissions: [],
 };
 
-export default function CreateUserForm({ onFormChange, initialValues, mode = "create" }) {
+export default function CreateUserForm({ onFormChange, initialValues, mode = "create", roles = [], agencies = [] }) {
     const defaults = { ...emptyForm, ...initialValues };
     const [form, setForm] = useState(defaults);
     const [errors, setErrors] = useState({});
     const initialRef = useRef(defaults);
 
     const isEdit = mode === "edit";
+
+    const base = getDashboardBaseFromUrl(window.location.pathname);
 
     useEffect(() => {
         if (onFormChange) {
@@ -37,31 +34,8 @@ export default function CreateUserForm({ onFormChange, initialValues, mode = "cr
     });
 
     const handleChange = useCallback((key, value) => {
-        setForm((prev) => {
-            const next = { ...prev, [key]: value };
-            if (key === "avatar" && value) {
-                const url = URL.createObjectURL(value);
-                next.avatarPreview = url;
-            }
-            return next;
-        });
+        setForm((prev) => ({ ...prev, [key]: value }));
         setErrors((prev) => ({ ...prev, [key]: undefined }));
-    }, []);
-
-    const handleTogglePerm = useCallback((perm) => {
-        setForm((prev) => {
-            const has = prev.permissions.includes(perm);
-            return {
-                ...prev,
-                permissions: has
-                    ? prev.permissions.filter((p) => p !== perm)
-                    : [...prev.permissions, perm],
-            };
-        });
-    }, []);
-
-    const handleToggleAll = useCallback((perms) => {
-        setForm((prev) => ({ ...prev, permissions: perms }));
     }, []);
 
     const validate = () => {
@@ -72,11 +46,6 @@ export default function CreateUserForm({ onFormChange, initialValues, mode = "cr
         else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "L'email n'est pas valide.";
         if (!form.agency) e.agency = "Sélectionnez une agence.";
         if (!form.role) e.role = "Sélectionnez un rôle.";
-        if (!isEdit) {
-            if (!form.password) e.password = "Le mot de passe est obligatoire.";
-            else if (form.password.length < 8) e.password = "Minimum 8 caractères.";
-            if (form.password !== form.passwordConfirm) e.passwordConfirm = "Les mots de passe ne correspondent pas.";
-        }
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -84,7 +53,29 @@ export default function CreateUserForm({ onFormChange, initialValues, mode = "cr
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!validate()) return;
-        alert(isEdit ? "Modifications enregistrées (mock) !" : "Utilisateur créé avec succès (mock) !");
+
+        const selectedRole = roles.find((r) => r.name === form.role);
+        const selectedAgency = agencies.find((a) => a.city === form.agency);
+
+        const payload = {
+            name: `${form.firstName} ${form.lastName}`.trim(),
+            email: form.email,
+            phone: form.phone || null,
+            role_id: selectedRole?.id,
+            agency_id: selectedAgency?.id,
+            status: form.status,
+        };
+
+        if (isEdit) {
+            const userId = initialValues?.id;
+            router.put(`${base}/utilisateurs/${userId}`, payload, {
+                onError: (err) => setErrors(err),
+            });
+        } else {
+            router.post(`${base}/utilisateurs`, payload, {
+                onError: (err) => setErrors(err),
+            });
+        }
     };
 
     const handleReset = () => {
@@ -96,18 +87,12 @@ export default function CreateUserForm({ onFormChange, initialValues, mode = "cr
         <form onSubmit={handleSubmit} noValidate>
             <div className="flex flex-col gap-5">
                 <UserPersonalInformation form={form} onChange={handleChange} errors={errors} />
-                <UserProfessionalInformation form={form} onChange={handleChange} errors={errors} />
-                <UserSecurityCard form={form} onChange={handleChange} errors={errors} isEdit={isEdit} />
-                <UserPermissionsSelector
-                    selected={form.permissions}
-                    onToggle={handleTogglePerm}
-                    onToggleAll={handleToggleAll}
-                />
+                <UserProfessionalInformation form={form} onChange={handleChange} errors={errors} roles={roles} agencies={agencies} />
 
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.35 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
                     className="flex flex-col gap-3 sm:flex-row sm:justify-end"
                 >
                     <Button type="button" variant="ghost" onClick={handleReset} className="w-full sm:w-auto">

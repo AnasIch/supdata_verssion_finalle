@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
     User,
@@ -13,37 +14,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 import { Input } from "@/Components/UI/Input";
-
 import { cn } from "@/lib/utils";
 
-const fieldConfig = [
-    { name: "firstName", label: "Prénom", icon: User, required: true },
-    { name: "lastName", label: "Nom", icon: User, required: true },
-    { name: "email", label: "Adresse email", icon: Mail, type: "email", required: true },
-    { name: "phone", label: "Téléphone", icon: Phone, type: "tel" },
-];
-
-const metaFields = [
-    { label: "Rôle", icon: Shield, value: "role" },
-    { label: "Agence", icon: Building2, value: "agency" },
-    { label: "Membre depuis", icon: Calendar, value: "createdAt" },
-    { label: "Dernière connexion", icon: Clock, value: "lastLogin" },
-];
-
 export default function ProfileInformationForm({
-    form,
     profile,
     isEditing,
     onStartEditing,
     onCancelEditing,
     onSave,
 }) {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = form;
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -67,21 +46,13 @@ export default function ProfileInformationForm({
                     </Button>
                 ) : (
                     <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={onCancelEditing}
-                        >
+                        <Button variant="outline" size="sm" onClick={onCancelEditing}>
                             <X size={14} className="mr-1.5" />
                             Annuler
                         </Button>
-                        <Button
-                            size="sm"
-                            onClick={handleSubmit(onSave)}
-                            disabled={isSubmitting}
-                        >
+                        <Button size="sm" type="submit" form="profile-form">
                             <Save size={14} className="mr-1.5" />
-                            {isSubmitting ? "Enregistrement…" : "Enregistrer"}
+                            Enregistrer
                         </Button>
                     </div>
                 )}
@@ -89,58 +60,102 @@ export default function ProfileInformationForm({
 
             <hr className="my-5 border-slate-100" />
 
-            <form onSubmit={handleSubmit(onSave)} className="flex flex-col gap-5">
+            <form id="profile-form" onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                onSave({
+                    name: fd.get("name"),
+                    phone: fd.get("phone"),
+                });
+            }} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {fieldConfig.map((field) => (
-                        <div key={field.name}>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-600">
-                                {field.label}
-                                {field.required && (
-                                    <span className="ml-0.5 text-red-500">*</span>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Nom complet <span className="ml-0.5 text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                name="name"
+                                defaultValue={profile.name}
+                                disabled={!isEditing}
+                                required
+                                aria-required="true"
+                                className={cn(
+                                    "pl-9",
+                                    !isEditing && "cursor-default border-transparent bg-slate-50 text-slate-700"
                                 )}
-                            </label>
-                            <div className="relative">
-                                <field.icon
-                                    size={16}
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                />
-                                <Input
-                                    {...register(field.name)}
-                                    type={field.type || "text"}
-                                    disabled={!isEditing}
-                                    aria-invalid={errors[field.name] ? "true" : "false"}
-                                    aria-required={field.required ? "true" : undefined}
-                                    className={cn(
-                                        "pl-9",
-                                        !isEditing && "cursor-default border-transparent bg-slate-50 text-slate-700"
-                                    )}
-                                />
-                            </div>
-                            {errors[field.name] && (
-                                <p className="mt-1 text-xs text-red-500" role="alert">
-                                    {errors[field.name].message}
-                                </p>
-                            )}
+                            />
                         </div>
-                    ))}
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Téléphone
+                        </label>
+                        <div className="relative">
+                            <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                name="phone"
+                                type="tel"
+                                defaultValue={profile.phone}
+                                disabled={!isEditing}
+                                className={cn(
+                                    "pl-9",
+                                    !isEditing && "cursor-default border-transparent bg-slate-50 text-slate-700"
+                                )}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <hr className="!my-6 border-slate-100" />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {metaFields.map((field) => (
-                        <div key={field.name || field.label}>
-                            <label className="mb-1.5 block text-xs font-medium text-slate-600">
-                                {field.label}
-                            </label>
-                            <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
-                                <field.icon size={16} className="text-slate-400" />
-                                <span className="text-sm text-slate-700">
-                                    {profile[field.value]}
-                                </span>
-                            </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Adresse email
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                            <Mail size={16} className="text-slate-400" />
+                            <span className="text-sm text-slate-700">{profile.email}</span>
                         </div>
-                    ))}
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Rôle
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                            <Shield size={16} className="text-slate-400" />
+                            <span className="text-sm text-slate-700">{profile.role}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Agence
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                            <Building2 size={16} className="text-slate-400" />
+                            <span className="text-sm text-slate-700">{profile.agency}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Membre depuis
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                            <Calendar size={16} className="text-slate-400" />
+                            <span className="text-sm text-slate-700">{profile.created_at}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">
+                            Dernière connexion
+                        </label>
+                        <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5">
+                            <Clock size={16} className="text-slate-400" />
+                            <span className="text-sm text-slate-700">{profile.last_login_at || "Jamais"}</span>
+                        </div>
+                    </div>
                 </div>
             </form>
         </motion.div>

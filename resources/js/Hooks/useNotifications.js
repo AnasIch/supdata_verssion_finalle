@@ -1,115 +1,133 @@
 import { useState, useCallback, useMemo } from "react";
-import { initialNotifications as defaultNotifications } from "@/Mocks/notificationsList";
+import { router } from "@inertiajs/react";
 
-export function useNotifications({ notifications: initialData = defaultNotifications } = {}) {
-    const [notifications, setNotifications] = useState(initialData);
-    const [search, setSearch] = useState("");
-    const [sourceFilter, setSourceFilter] = useState("all");
-    const [typeFilter, setTypeFilter] = useState("all");
-    const [readFilter, setReadFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
+export function useNotifications({
+    initialNotifications = [],
+    initialFilters = {},
+    initialPagination = { currentPage: 1, lastPage: 1, total: 0 },
+} = {}) {
+    const [search, setSearch] = useState(initialFilters.search || "");
+    const [sourceFilter, setSourceFilter] = useState(initialFilters.source || "all");
+    const [typeFilter, setTypeFilter] = useState(initialFilters.type || "all");
+    const [readFilter, setReadFilter] = useState(initialFilters.read || "all");
+    const [currentPage, setCurrentPage] = useState(initialPagination.currentPage || 1);
 
-    const PAGE_SIZE = 10;
+    const buildParams = useCallback((overrides = {}) => {
+        const params = {};
+        const s = overrides.search !== undefined ? overrides.search : search;
+        const src = overrides.source !== undefined ? overrides.source : sourceFilter;
+        const type = overrides.type !== undefined ? overrides.type : typeFilter;
+        const read = overrides.read !== undefined ? overrides.read : readFilter;
+        const page = overrides.page !== undefined ? overrides.page : currentPage;
+
+        if (s) params.search = s;
+        if (src && src !== "all") params.source = src;
+        if (type && type !== "all") params.type = type;
+        if (read && read !== "all") params.read = read;
+        if (page > 1) params.page = page;
+
+        return params;
+    }, [search, sourceFilter, typeFilter, readFilter, currentPage]);
+
+    const navigate = useCallback((overrides = {}) => {
+        const params = buildParams(overrides);
+        router.get(window.location.pathname, params, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [buildParams]);
+
+    const handleSearch = useCallback((value) => {
+        setSearch(value);
+        navigate({ search: value, page: 1 });
+    }, [navigate]);
+
+    const handleSourceChange = useCallback((value) => {
+        setSourceFilter(value);
+        navigate({ source: value, page: 1 });
+    }, [navigate]);
+
+    const handleTypeChange = useCallback((value) => {
+        setTypeFilter(value);
+        navigate({ type: value, page: 1 });
+    }, [navigate]);
+
+    const handleReadChange = useCallback((value) => {
+        setReadFilter(value);
+        navigate({ read: value, page: 1 });
+    }, [navigate]);
+
+    const handlePageChange = useCallback((page) => {
+        setCurrentPage(page);
+        navigate({ page });
+    }, [navigate]);
 
     const markAsRead = useCallback((id) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-        );
-    }, []);
-
-    const markAsUnread = useCallback((id) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, read: false } : n))
-        );
+        router.patch(`/dashboard-super-admin/notifications/${id}/read`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
     const markAllAsRead = useCallback(() => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        router.patch("/dashboard-super-admin/notifications/read-all", {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
     const deleteNotification = useCallback((id) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        router.delete(`/dashboard-super-admin/notifications/${id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
     const deleteAllRead = useCallback(() => {
-        setNotifications((prev) => prev.filter((n) => !n.read));
+        router.delete("/dashboard-super-admin/notifications/read", {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
-    const filtered = useMemo(() => {
-        let result = [...notifications];
+    const resetFilters = useCallback(() => {
+        setSearch("");
+        setSourceFilter("all");
+        setTypeFilter("all");
+        setReadFilter("all");
+        setCurrentPage(1);
+        navigate({ search: "", source: "all", type: "all", read: "all", page: 1 });
+    }, [navigate]);
 
-        if (sourceFilter !== "all") {
-            result = result.filter((n) => n.source === sourceFilter);
-        }
-        if (typeFilter !== "all") {
-            result = result.filter((n) => n.type === typeFilter);
-        }
-        if (readFilter === "read") {
-            result = result.filter((n) => n.read);
-        } else if (readFilter === "unread") {
-            result = result.filter((n) => !n.read);
-        }
-        if (search) {
-            const q = search.toLowerCase();
-            result = result.filter(
-                (n) =>
-                    n.title.toLowerCase().includes(q) ||
-                    n.description.toLowerCase().includes(q)
-            );
-        }
-
-        result.sort((a, b) => b.id - a.id);
-        return result;
-    }, [notifications, sourceFilter, typeFilter, readFilter, search]);
-
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => !n.read).length,
-        [notifications]
-    );
-
-    const totalCount = notifications.length;
-
-    const stats = useMemo(() => ({
-        total: notifications.length,
-        unread: notifications.filter((n) => !n.read).length,
-        info: notifications.filter((n) => n.type === "info").length,
-        success: notifications.filter((n) => n.type === "success").length,
-        warning: notifications.filter((n) => n.type === "warning").length,
-        error: notifications.filter((n) => n.type === "error").length,
-    }), [notifications]);
+    const hasFilters = search || sourceFilter !== "all" || typeFilter !== "all" || readFilter !== "all";
 
     return {
-        notifications: paged,
-        allNotifications: notifications,
+        notifications: initialNotifications,
         search,
-        setSearch,
+        setSearch: handleSearch,
         sourceFilter,
-        setSourceFilter,
+        setSourceFilter: handleSourceChange,
         typeFilter,
-        setTypeFilter,
+        setTypeFilter: handleTypeChange,
         readFilter,
-        setReadFilter,
+        setReadFilter: handleReadChange,
         currentPage,
-        setCurrentPage,
-        totalPages,
-        filteredCount: filtered.length,
-        unreadCount,
-        totalCount,
-        stats,
+        setCurrentPage: handlePageChange,
+        totalPages: initialPagination.lastPage,
+        filteredCount: initialPagination.total,
+        hasFilters,
         markAsRead,
-        markAsUnread,
         markAllAsRead,
         deleteNotification,
         deleteAllRead,
-        resetFilters: () => {
-            setSearch("");
-            setSourceFilter("all");
-            setTypeFilter("all");
-            setReadFilter("all");
-            setCurrentPage(1);
-        },
+        resetFilters,
     };
 }

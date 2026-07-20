@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import CreateUserForm from "@/Components/Users/CreateUserForm";
@@ -15,31 +16,6 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/Components/UI/Dialog";
-
-const mockUser = {
-    id: 1,
-    firstName: "Youssef",
-    lastName: "Alami",
-    email: "youssef.alami@supdata.fr",
-    phone: "+212 6 12 34 56 78",
-    avatar: null,
-    avatarPreview: null,
-    agency: "Casablanca",
-    role: "Super Admin",
-    status: "active",
-    password: "",
-    passwordConfirm: "",
-    permissions: [
-        "Créer utilisateur",
-        "Modifier utilisateur",
-        "Supprimer utilisateur",
-        "Consulter rapports",
-        "Gérer permissions",
-        "Gérer agences",
-        "Gérer les stocks",
-        "Approuver demandes",
-    ],
-};
 
 function shallowEqual(a, b) {
     if (a === b) return true;
@@ -58,7 +34,10 @@ function shallowEqual(a, b) {
 }
 
 export default function UserEdit() {
-    const [summary, setSummary] = useState(mockUser);
+    const { user: initialUser, roles, agencies } = usePage().props;
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
+    const [summary, setSummary] = useState(initialUser);
     const [isDirty, setIsDirty] = useState(false);
     const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
     const pendingNavigation = useRef(null);
@@ -66,9 +45,9 @@ export default function UserEdit() {
     const handleFormChange = useCallback((form) => {
         setSummary(form);
         const { password, passwordConfirm, avatar, ...rest } = form;
-        const { password: _, passwordConfirm: __, avatar: ___, ...initialRest } = mockUser;
+        const { password: _, passwordConfirm: __, avatar: ___, ...initialRest } = initialUser;
         setIsDirty(!shallowEqual(rest, initialRest) || form.password.length > 0);
-    }, []);
+    }, [initialUser]);
 
     useEffect(() => {
         const handler = (e) => {
@@ -95,7 +74,7 @@ export default function UserEdit() {
         if (pendingNavigation.current) {
             pendingNavigation.current();
         } else {
-            window.location.href = "/utilisateurs";
+            window.location.href = `${base}/utilisateurs`;
         }
     };
 
@@ -103,7 +82,7 @@ export default function UserEdit() {
         if (isDirty) {
             setLeaveDialogOpen(true);
         } else {
-            window.location.href = "/utilisateurs";
+            window.location.href = `${base}/utilisateurs`;
         }
     };
 
@@ -111,8 +90,8 @@ export default function UserEdit() {
         <DashboardLayout
             title="Modifier un utilisateur"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Utilisateurs", href: "/utilisateurs" },
+                { label: "Dashboard", href: base },
+                { label: "Utilisateurs", href: `${base}/utilisateurs` },
                 { label: "Modifier un utilisateur" },
             ]}
         >
@@ -137,8 +116,10 @@ export default function UserEdit() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
                     <CreateUserForm
                         onFormChange={handleFormChange}
-                        initialValues={mockUser}
+                        initialValues={initialUser}
                         mode="edit"
+                        roles={roles}
+                        agencies={agencies}
                     />
                     <div className="order-first lg:order-last">
                         <UserSummaryCard form={summary} />

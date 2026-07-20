@@ -1,17 +1,44 @@
 import { motion } from "framer-motion";
-import { LogIn, Clock, ShieldCheck, CalendarDays } from "lucide-react";
+import { Clock, CalendarDays } from "lucide-react";
 
-const stats = [
-    { icon: LogIn, title: "Connexions", value: "1 247", color: "bg-blue-50 text-blue-600" },
-    { icon: Clock, title: "Dernière activité", value: "Il y a 2h", color: "bg-amber-50 text-amber-600" },
-    { icon: ShieldCheck, title: "Permissions", value: "8 / 12", color: "bg-purple-50 text-purple-600" },
-    { icon: CalendarDays, title: "Ancienneté", value: "2 ans 6 mois", color: "bg-emerald-50 text-emerald-600" },
-];
+function formatRelativeTime(isoString) {
+    if (!isoString) return "—";
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffH = Math.floor(diffMin / 60);
+    const diffD = Math.floor(diffH / 24);
+    const diffM = Math.floor(diffD / 30);
+    const diffY = Math.floor(diffD / 365);
 
-export default function UserStatsCards() {
+    if (diffMin < 1) return "À l'instant";
+    if (diffMin < 60) return `Il y a ${diffMin} min`;
+    if (diffH < 24) return `Il y a ${diffH}h`;
+    if (diffD < 30) return `Il y a ${diffD}j`;
+    if (diffM < 12) return `Il y a ${diffM} mois`;
+    return `Il y a ${diffY} an${diffY > 1 ? "s" : ""}`;
+}
+
+export default function UserStatsCards({ user }) {
+    const items = [
+        {
+            icon: Clock,
+            title: "Dernière connexion",
+            value: formatRelativeTime(user?.lastLoginRaw),
+            color: "bg-blue-50 text-blue-600",
+        },
+        {
+            icon: CalendarDays,
+            title: "Ancienneté",
+            value: formatRelativeTime(user?.createdAtRaw),
+            color: "bg-emerald-50 text-emerald-600",
+        },
+    ];
+
     return (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {stats.map((s, i) => (
+        <div className="grid grid-cols-2 gap-4">
+            {items.map((s, i) => (
                 <motion.div
                     key={s.title}
                     initial={{ opacity: 0, y: 14 }}
