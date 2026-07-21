@@ -113,7 +113,6 @@ const sidebarMenus = {
             {
                 title: "Suivi",
                 items: [
-                    { title: "Rapports", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                 ],
             },

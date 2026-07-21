@@ -61,7 +61,6 @@ class DashboardController extends Controller
                 'status' => $d->status,
                 'priority' => $d->priority,
                 'quantity' => $d->quantity,
-                'estimated_cost' => $d->estimated_cost ? number_format((float) $d->estimated_cost, 2, '.', ' ') . ' MAD' : '—',
                 'user' => $d->user->name ?? '—',
                 'agency' => $d->agency->name ?? '—',
                 'created_at' => $d->created_at->locale('fr')->isoFormat('DD MMM YYYY'),

@@ -1,14 +1,11 @@
-import { useState } from "react";
-import { Head } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Bell,
     BellRing,
     CheckCheck,
     Search,
-    ShoppingCart,
-    Package,
-    Truck,
     Info,
     CheckCircle2,
     XCircle,
@@ -18,23 +15,14 @@ import {
     MailOpen,
     X,
     RotateCcw,
+    Trash2,
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
-import { useCommercialNotifications } from "@/Hooks/useCommercialNotifications";
-import { commercialNotificationTypes } from "@/Mocks/commercialNotifications";
+import { useToast } from "@/Components/UI/Toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/Components/UI/Button";
 import { Input } from "@/Components/UI/Input";
-import { Badge } from "@/Components/UI/Badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
-
-const categoryIcons = {
-    demandes: ShoppingCart,
-    reservations: Package,
-    livraisons: Truck,
-    informations: Info,
-};
+import { Card, CardContent } from "@/Components/UI/Card";
 
 const typeIcons = {
     info: Info,
@@ -43,10 +31,24 @@ const typeIcons = {
     error: XCircle,
 };
 
-const priorityColors = {
-    haute: "bg-red-50 text-red-600",
-    moyenne: "bg-amber-50 text-amber-600",
-    basse: "bg-slate-100 text-slate-500",
+const typeColors = {
+    info: "bg-blue-50 text-blue-600",
+    success: "bg-emerald-50 text-emerald-600",
+    warning: "bg-amber-50 text-amber-600",
+    error: "bg-red-50 text-red-600",
+};
+
+const sourceLabels = {
+    demandes: "Demandes",
+    reservations: "Réservations",
+    livraisons: "Livraisons",
+    utilisateurs: "Utilisateurs",
+    agences: "Agences",
+    roles: "Rôles",
+    parametres: "Paramètres",
+    rapports: "Rapports",
+    stock: "Stock",
+    system: "Système",
 };
 
 function KpiBar({ stats }) {
@@ -80,10 +82,8 @@ function KpiBar({ stats }) {
     );
 }
 
-function NotificationRow({ notification, onMarkAsRead }) {
+function NotificationRow({ notification, onMarkAsRead, onDelete }) {
     const TypeIcon = typeIcons[notification.type] || Bell;
-    const CatIcon = categoryIcons[notification.category] || Bell;
-    const typeConfig = commercialNotificationTypes[notification.type];
 
     return (
         <div
@@ -97,7 +97,7 @@ function NotificationRow({ notification, onMarkAsRead }) {
             <div
                 className={cn(
                     "flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10",
-                    typeConfig?.color || "bg-slate-100 text-slate-500"
+                    typeColors[notification.type] || "bg-slate-100 text-slate-500"
                 )}
             >
                 <TypeIcon size={18} />
@@ -123,18 +123,11 @@ function NotificationRow({ notification, onMarkAsRead }) {
                     {notification.description}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                        <CatIcon size={12} />
-                        {notification.category === "demandes" && "Demandes"}
-                        {notification.category === "reservations" && "Réservations"}
-                        {notification.category === "livraisons" && "Livraisons"}
-                        {notification.category === "informations" && "Informations"}
-                    </span>
-                    <span className={cn("rounded-md px-1.5 py-0.5 text-xs font-medium", priorityColors[notification.priority])}>
-                        {notification.priority === "haute" && "Haute"}
-                        {notification.priority === "moyenne" && "Moyenne"}
-                        {notification.priority === "basse" && "Basse"}
-                    </span>
+                    {notification.source && sourceLabels[notification.source] && (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                            {sourceLabels[notification.source]}
+                        </span>
+                    )}
                     {notification.read ? (
                         <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">
                             <MailOpen size={12} />
@@ -149,41 +142,129 @@ function NotificationRow({ notification, onMarkAsRead }) {
                             Non lu
                         </button>
                     )}
+                    <button
+                        onClick={() => onDelete(notification.id)}
+                        className="inline-flex items-center gap-1 rounded-md bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-500 opacity-0 transition-all hover:bg-red-100 group-hover:opacity-100"
+                    >
+                        <Trash2 size={12} />
+                    </button>
                 </div>
             </div>
 
             <span className="shrink-0 text-xs text-slate-400 hidden sm:block">
-                {notification.date}
+                {notification.timestamp}
             </span>
         </div>
     );
 }
 
-export default function CommercialNotifications() {
-    const user = getCurrentUser();
-    const {
-        notifications,
-        stats,
-        categoryFilter,
-        setCategoryFilter,
-        readFilter,
-        setReadFilter,
-        search,
-        setSearch,
-        markAsRead,
-        markAllAsRead,
-        resetFilters,
-        hasFilters,
-        categories,
-    } = useCommercialNotifications();
+export default function CommercialNotifications({
+    notifications,
+    pagination,
+    stats,
+    unreadCount,
+    filters,
+}) {
+    const { props } = usePage();
+    const toast = useToast();
+    const user = props.auth?.user;
+
+    const [search, setSearch] = useState(filters?.search || "");
+    const [readFilter, setReadFilter] = useState(filters?.read || "all");
+
+    useEffect(() => {
+        const flash = props.flash;
+        if (flash?.success) toast(flash.success, "success");
+        if (flash?.error) toast(flash.error, "error");
+    }, [props.flash]);
+
+    useEffect(() => {
+        const errors = props.errors;
+        if (errors) {
+            const firstError = Object.values(errors)[0];
+            if (firstError) toast(firstError, "error");
+        }
+    }, [props.errors]);
+
+    const buildParams = (overrides = {}) => {
+        const params = {};
+        const s = overrides.search !== undefined ? overrides.search : search;
+        const r = overrides.read !== undefined ? overrides.read : readFilter;
+        const page = overrides.page !== undefined ? overrides.page : 1;
+
+        if (s) params.search = s;
+        if (r && r !== "all") params.read = r;
+        if (page > 1) params.page = page;
+
+        return params;
+    };
+
+    const navigate = (overrides = {}) => {
+        router.get(
+            route("rc.notifications"),
+            buildParams(overrides),
+            { preserveState: true, replace: true }
+        );
+    };
+
+    const handleSearch = (value) => {
+        setSearch(value);
+        navigate({ search: value, page: 1 });
+    };
+
+    const handleReadFilter = (value) => {
+        setReadFilter(value);
+        navigate({ read: value, page: 1 });
+    };
+
+    const handlePageChange = (page) => {
+        navigate({ page });
+    };
+
+    const markAsRead = (id) => {
+        router.patch(route("rc.notifications.read", id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
+    };
+
+    const markAllAsRead = () => {
+        router.patch(route("rc.notifications.read-all"), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
+    };
+
+    const deleteNotification = (id) => {
+        router.delete(route("rc.notifications.destroy", id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
+    };
+
+    const resetFilters = () => {
+        setSearch("");
+        setReadFilter("all");
+        navigate({ search: "", read: "all", page: 1 });
+    };
+
+    const hasFilters = search || readFilter !== "all";
+
+    const breadcrumbs = [
+        { label: "Dashboard", href: "/dashboard-commercial" },
+        { label: "Notifications" },
+    ];
 
     return (
         <DashboardLayout
             title="Notifications"
-            breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
-                { label: "Notifications" },
-            ]}
+            breadcrumbs={breadcrumbs}
             user={user}
         >
             <Head title="Notifications — SUPDATA" />
@@ -223,25 +304,14 @@ export default function CommercialNotifications() {
                                         <Input
                                             placeholder="Rechercher une notification…"
                                             value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
+                                            onChange={(e) => handleSearch(e.target.value)}
                                             className="pl-9"
                                         />
                                     </div>
                                     <div className="flex gap-2">
                                         <select
-                                            value={categoryFilter}
-                                            onChange={(e) => setCategoryFilter(e.target.value)}
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                        >
-                                            {categories.map((c) => (
-                                                <option key={c.value} value={c.value}>
-                                                    {c.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <select
                                             value={readFilter}
-                                            onChange={(e) => setReadFilter(e.target.value)}
+                                            onChange={(e) => handleReadFilter(e.target.value)}
                                             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         >
                                             <option value="all">Toutes</option>
@@ -270,7 +340,7 @@ export default function CommercialNotifications() {
 
                 <div className="flex items-center justify-between">
                     <p className="text-sm text-slate-500">
-                        {notifications.length} notification{notifications.length > 1 ? "s" : ""}
+                        {pagination.total} notification{pagination.total !== 1 ? "s" : ""}
                         {hasFilters && " (filtré)"}
                     </p>
                     <div className="flex gap-2">
@@ -334,12 +404,37 @@ export default function CommercialNotifications() {
                                     <NotificationRow
                                         notification={n}
                                         onMarkAsRead={markAsRead}
+                                        onDelete={deleteNotification}
                                     />
                                 </motion.div>
                             ))
                         )}
                     </AnimatePresence>
                 </div>
+
+                {pagination.lastPage > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
+                            disabled={pagination.currentPage === 1}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Précédent
+                        </button>
+                        <span className="px-3 text-sm text-slate-500">
+                            Page {pagination.currentPage} / {pagination.lastPage}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => handlePageChange(Math.min(pagination.lastPage, pagination.currentPage + 1))}
+                            disabled={pagination.currentPage === pagination.lastPage}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Suivant
+                        </button>
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     );

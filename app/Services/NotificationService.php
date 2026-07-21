@@ -17,9 +17,10 @@ class NotificationService
         string $type = 'info',
         string $source = 'system',
         ?string $actionUrl = null,
+        array $context = [],
     ): DatabaseNotification {
         $user->notify(
-            new SystemNotification($title, $description, $type, $source, $actionUrl)
+            new SystemNotification($title, $description, $type, $source, $actionUrl, $context)
         );
 
         return $user->notifications()->latest()->first();
@@ -106,10 +107,15 @@ class NotificationService
     public function getStats(User $user): array
     {
         $all = $user->notifications();
+        $today = now()->startOfDay();
+        $weekAgo = now()->subWeek();
 
         return [
             'total' => (clone $all)->count(),
             'unread' => (clone $all)->whereNull('read_at')->count(),
+            'read' => (clone $all)->whereNotNull('read_at')->count(),
+            'today' => (clone $all)->where('created_at', '>=', $today)->count(),
+            'thisWeek' => (clone $all)->where('created_at', '>=', $weekAgo)->count(),
             'warning' => (clone $all)->where('data->type', 'warning')->count(),
             'error' => (clone $all)->where('data->type', 'error')->count(),
         ];

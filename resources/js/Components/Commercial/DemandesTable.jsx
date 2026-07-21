@@ -1,38 +1,46 @@
-import { Eye } from "lucide-react";
+import { Eye, Archive } from "lucide-react";
 import { DataTable } from "@/Components/UI/DataTable";
 import { Badge } from "@/Components/UI/Badge";
 
 const statusLabels = {
     pending: "En attente",
-    accepted: "Acceptée",
-    refused: "Refusée",
+    approved: "Approuvée",
+    rejected: "Rejetée",
     in_progress: "En cours",
+    completed: "Terminée",
 };
 
 const statusVariants = {
     pending: "warning",
-    accepted: "success",
-    refused: "destructive",
+    approved: "success",
+    rejected: "destructive",
     in_progress: "info",
+    completed: "secondary",
+};
+
+const priorityLabels = {
+    low: "Basse",
+    medium: "Moyenne",
+    high: "Haute",
+    urgent: "Urgente",
 };
 
 const priorityVariants = {
-    Urgente: "destructive",
-    Haute: "warning",
-    Moyenne: "info",
-    Basse: "secondary",
-    Faible: "secondary",
+    low: "secondary",
+    medium: "info",
+    high: "warning",
+    urgent: "destructive",
 };
 
 const columns = [
     {
-        header: "N° demande",
-        accessorKey: "id",
-        className: "font-medium text-slate-900",
+        header: "Titre",
+        accessorKey: "title",
+        className: "font-medium text-slate-900 max-w-[200px] truncate",
     },
     {
         header: "Produit",
-        accessorKey: "product",
+        accessorKey: "product_name",
         className: "max-w-[220px] truncate",
     },
     {
@@ -44,13 +52,21 @@ const columns = [
         header: "Priorité",
         cell: (row) => (
             <Badge variant={priorityVariants[row.priority] || "secondary"}>
-                {row.priority}
+                {priorityLabels[row.priority] || row.priority}
             </Badge>
         ),
     },
     {
         header: "Date",
-        accessorKey: "createdAt",
+        cell: (row) => (
+            <span>
+                {new Date(row.created_at).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                })}
+            </span>
+        ),
     },
     {
         header: "Statut",
@@ -62,21 +78,34 @@ const columns = [
     },
 ];
 
-export default function DemandesTable({ data, onView }) {
+export default function DemandesTable({ data, onView, onArchive }) {
     const extendedColumns = [
         ...columns,
         {
             header: "Actions",
             cell: (row) => (
-                <button
-                    type="button"
-                    onClick={() => onView(row)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100"
-                    aria-label={`Voir la demande ${row.id}`}
-                >
-                    <Eye className="size-3.5" />
-                    Voir
-                </button>
+                <div className="flex items-center justify-end gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => onView(row)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100"
+                        aria-label={`Voir la demande ${row.title}`}
+                    >
+                        <Eye className="size-3.5" />
+                        Voir
+                    </button>
+                    {row.status !== "completed" && (
+                        <button
+                            type="button"
+                            onClick={() => onArchive(row)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 transition-colors hover:bg-amber-100"
+                            aria-label={`Archiver la demande ${row.title}`}
+                        >
+                            <Archive className="size-3.5" />
+                            Archiver
+                        </button>
+                    )}
+                </div>
             ),
             className: "text-right",
         },

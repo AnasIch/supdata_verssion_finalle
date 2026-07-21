@@ -11,56 +11,35 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/Components/UI/Dialog";
-import { stockStore } from "@/Hooks/useCommercialStock";
-import { productOptions } from "@/Mocks/commercialReservations";
 
-const agencyList = ["Casablanca", "Marrakech"];
-
-export default function CreateReservationDialog({ open, onOpenChange, onConfirm }) {
+export default function CreateReservationDialog({ open, onOpenChange, onConfirm, products }) {
     const [clientName, setClientName] = useState("");
-    const [agency, setAgency] = useState("");
     const [productId, setProductId] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [remark, setRemark] = useState("");
 
-    const filteredProducts = useMemo(() => {
-        if (!agency) return [];
-        return productOptions.filter((p) => p.agency === agency);
-    }, [agency]);
-
-    const selectedProduct = productOptions.find((p) => p.id === productId);
-
-    const stockItem = useMemo(() => {
+    const selectedProduct = useMemo(() => {
         if (!productId) return null;
-        return stockStore.products.find((p) => p.id === productId) || null;
-    }, [productId, open]);
+        return products.find((p) => Number(p.id) === Number(productId)) || null;
+    }, [productId, products]);
 
-    const maxAvailable = stockItem ? stockItem.quantity - stockItem.reservedQuantity : 0;
+    const maxAvailable = selectedProduct ? selectedProduct.available : 0;
 
     const canConfirm =
         clientName.trim().length > 0 &&
-        agency.length > 0 &&
         productId.length > 0 &&
         quantity >= 1 &&
         quantity <= maxAvailable;
 
-    const handleAgencyChange = (value) => {
-        setAgency(value);
-        setProductId("");
-        setQuantity(1);
-    };
-
     const handleConfirm = () => {
         if (!canConfirm) return;
         onConfirm({
-            clientName: clientName.trim(),
-            productId,
-            agency,
+            client_name: clientName.trim(),
+            product_id: Number(productId),
             quantity,
-            remark: remark.trim(),
+            remark: remark.trim() || null,
         });
         setClientName("");
-        setAgency("");
         setProductId("");
         setQuantity(1);
         setRemark("");
@@ -69,7 +48,6 @@ export default function CreateReservationDialog({ open, onOpenChange, onConfirm 
     const handleClose = () => {
         onOpenChange(false);
         setClientName("");
-        setAgency("");
         setProductId("");
         setQuantity(1);
         setRemark("");
@@ -86,22 +64,6 @@ export default function CreateReservationDialog({ open, onOpenChange, onConfirm 
                 </DialogHeader>
 
                 <div className="flex flex-col gap-4 py-2">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-slate-500">
-                            Agence d'origine <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={agency}
-                            onChange={(e) => handleAgencyChange(e.target.value)}
-                            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Sélectionnez une agence</option>
-                            {agencyList.map((a) => (
-                                <option key={a} value={a}>{a}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     <div className="flex flex-col gap-1">
                         <label className="text-xs font-medium text-slate-500">
                             Nom du client <span className="text-red-500">*</span>
@@ -124,21 +86,18 @@ export default function CreateReservationDialog({ open, onOpenChange, onConfirm 
                                 setProductId(e.target.value);
                                 setQuantity(1);
                             }}
-                            disabled={!agency}
-                            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         >
-                            <option value="">
-                                {agency ? "Sélectionnez un produit" : "Choisir une agence d'abord"}
-                            </option>
-                            {filteredProducts.map((p) => (
+                            <option value="">Sélectionnez un produit</option>
+                            {products.map((p) => (
                                 <option key={p.id} value={p.id}>
-                                    {p.name}
+                                    {p.name} ({p.available} disponible{p.available !== 1 ? "s" : ""})
                                 </option>
                             ))}
                         </select>
                     </div>
 
-                    {stockItem && (
+                    {selectedProduct && (
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-medium text-slate-500">Stock disponible</label>
                             <input

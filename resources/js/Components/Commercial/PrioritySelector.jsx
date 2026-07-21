@@ -1,6 +1,12 @@
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { priorityOptions } from "@/Mocks/commercialCreateRequest";
+
+const priorityOptions = [
+    { value: "low", label: "Basse", color: "bg-slate-100 text-slate-600" },
+    { value: "medium", label: "Moyenne", color: "bg-blue-50 text-blue-600" },
+    { value: "high", label: "Haute", color: "bg-amber-50 text-amber-600" },
+    { value: "urgent", label: "Urgente", color: "bg-red-50 text-red-600" },
+];
 
 export default function PrioritySelector({ value, onChange, error }) {
     return (
@@ -22,7 +28,14 @@ export default function PrioritySelector({ value, onChange, error }) {
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                         )}
                     >
-                        <AlertTriangle className={cn("size-3.5", value === opt.value ? "text-blue-600" : "text-slate-400")} />
+                        <AlertTriangle
+                            className={cn(
+                                "size-3.5",
+                                value === opt.value
+                                    ? "text-blue-600"
+                                    : "text-slate-400"
+                            )}
+                        />
                         {opt.label}
                     </button>
                 ))}

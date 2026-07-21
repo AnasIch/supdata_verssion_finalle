@@ -2,25 +2,14 @@ import { useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { setCurrentUser, getDashboardPath } from "@/lib/mockAuth";
-import { useCommercialDashboard } from "@/Hooks/useCommercialDashboard";
 import DashboardHeader from "@/Components/Commercial/DashboardHeader";
 import KpiCards from "@/Components/Commercial/KpiCards";
 import DashboardCharts from "@/Components/Commercial/DashboardCharts";
 import RecentActivityCard from "@/Components/Commercial/RecentActivityCard";
 import QuickActionsCard from "@/Components/Commercial/QuickActionsCard";
 
-export default function CommercialDashboard({ user }) {
-    const {
-        user: commercialUser,
-        kpiData,
-        demandesEvolutionData,
-        recentActivities,
-        quickActions,
-        isRefreshing,
-        refresh,
-    } = useCommercialDashboard();
-
-    useEffect(() => { setCurrentUser(user || commercialUser); }, []);
+export default function CommercialDashboard({ user, stats, evolution, activity }) {
+    useEffect(() => { setCurrentUser(user); }, [user]);
 
     return (
         <DashboardLayout
@@ -29,19 +18,19 @@ export default function CommercialDashboard({ user }) {
                 { label: "Dashboard", href: getDashboardPath(user?.role || "Responsable Commercial") },
                 { label: "Responsable Commercial" },
             ]}
-            user={user || commercialUser}
+            user={user}
         >
             <Head title="Dashboard Responsable Commercial — SUPDATA" />
             <div className="flex flex-col gap-6">
-                <DashboardHeader user={commercialUser} isRefreshing={isRefreshing} onRefresh={refresh} />
+                <DashboardHeader user={user} />
 
-                <KpiCards data={kpiData} />
+                <KpiCards stats={stats} />
 
-                <DashboardCharts evolutionData={demandesEvolutionData} />
+                <DashboardCharts evolutionData={evolution} />
 
-                <RecentActivityCard data={recentActivities} />
+                <RecentActivityCard data={activity} />
 
-                <QuickActionsCard data={quickActions} />
+                <QuickActionsCard />
             </div>
         </DashboardLayout>
     );

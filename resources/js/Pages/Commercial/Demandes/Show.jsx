@@ -7,13 +7,8 @@ import {
     User,
     Calendar,
     Building2,
-    Tag,
     AlertTriangle,
-    CheckCircle2,
-    Send,
     Clock,
-    Download,
-    Paperclip,
     MessageSquare,
 } from "lucide-react";
 import { Head, Link } from "@inertiajs/react";
@@ -22,62 +17,56 @@ import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Badge } from "@/Components/UI/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
-import { commercialDemandes } from "@/Mocks/commercialDemandes";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 
 const statusLabels = {
     pending: "En attente",
-    accepted: "Acceptée",
-    refused: "Refusée",
+    approved: "Approuvée",
+    rejected: "Rejetée",
     in_progress: "En cours",
+    completed: "Terminée",
 };
 
 const statusVariants = {
     pending: "warning",
-    accepted: "success",
-    refused: "destructive",
+    approved: "success",
+    rejected: "destructive",
     in_progress: "info",
+    completed: "secondary",
+};
+
+const priorityLabels = {
+    low: "Basse",
+    medium: "Moyenne",
+    high: "Haute",
+    urgent: "Urgente",
 };
 
 const priorityVariants = {
-    Urgente: "destructive",
-    Haute: "warning",
-    Moyenne: "info",
-    Basse: "secondary",
-    Faible: "secondary",
+    low: "secondary",
+    medium: "info",
+    high: "warning",
+    urgent: "destructive",
 };
 
-const historyIcons = {
-    "Demande créée": { icon: FileText, color: "bg-blue-50 text-blue-600" },
-    "Transmise à la Gestion Administrative": { icon: Send, color: "bg-indigo-50 text-indigo-600" },
-    "Validation en attente": { icon: Clock, color: "bg-amber-50 text-amber-600" },
-    "Acceptée": { icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
-    "Refusée": { icon: AlertTriangle, color: "bg-red-50 text-red-500" },
-    "En cours de traitement": { icon: Clock, color: "bg-cyan-50 text-cyan-600" },
-};
-
-export default function CommercialDemandeShow({ demandeId }) {
-    const user = useMemo(() => getCurrentUser(), []);
-    const demande = useMemo(() => {
-        const found = commercialDemandes.find((d) => String(d.id) === String(demandeId));
-        return found || commercialDemandes[0];
-    }, [demandeId]);
-
+export default function CommercialDemandeShow({ user, demande }) {
     const handlePrint = () => {
         window.print();
     };
 
     return (
         <DashboardLayout
-            title={`Demande ${demande.id}`}
+            title={`Demande ${demande.title}`}
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
-                { label: "Demandes d'achat", href: `${getDashboardPath(user.role)}/demandes` },
-                { label: demande.id },
+                { label: "Dashboard", href: "/dashboard-commercial" },
+                {
+                    label: "Demandes d'achat",
+                    href: "/dashboard-commercial/demandes",
+                },
+                { label: demande.title },
             ]}
             user={user}
         >
-            <Head title={`Demande ${demande.id} — SUPDATA`} />
+            <Head title={`${demande.title} — SUPDATA`} />
             <div className="flex flex-col gap-6">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -86,12 +75,12 @@ export default function CommercialDemandeShow({ demandeId }) {
                     className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <PageTitle
-                        title={demande.product}
-                        description={`Détail de la demande ${demande.id}`}
+                        title={demande.title}
+                        description={`Détail de la demande #${demande.id}`}
                     />
                     <div className="flex items-center gap-2">
                         <Button variant="outline" asChild>
-                            <Link href={`${getDashboardPath(user.role)}/demandes`}>
+                            <Link href={route("rc.demandes")}>
                                 <ArrowLeft className="size-4" />
                                 Retour
                             </Link>
@@ -117,8 +106,13 @@ export default function CommercialDemandeShow({ demandeId }) {
                                             <FileText className="size-5 text-blue-600" />
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold text-slate-900">{demande.id}</h3>
-                                            <p className="text-sm text-slate-500">{demande.product}</p>
+                                            <h3 className="text-lg font-bold text-slate-900">
+                                                #{demande.id}
+                                            </h3>
+                                            <p className="text-sm text-slate-500">
+                                                {demande.product_name ||
+                                                    "Multi-produits"}
+                                            </p>
                                         </div>
                                     </div>
 
@@ -128,8 +122,12 @@ export default function CommercialDemandeShow({ demandeId }) {
                                                 <User className="size-4 text-slate-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs text-slate-500">Demandeur</p>
-                                                <p className="text-sm font-medium text-slate-900">{demande.requester}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    Demandeur
+                                                </p>
+                                                <p className="text-sm font-medium text-slate-900">
+                                                    {demande.user?.name}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -137,8 +135,12 @@ export default function CommercialDemandeShow({ demandeId }) {
                                                 <Building2 className="size-4 text-slate-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs text-slate-500">Service</p>
-                                                <p className="text-sm font-medium text-slate-900">{demande.service}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    Agence
+                                                </p>
+                                                <p className="text-sm font-medium text-slate-900">
+                                                    {demande.agency?.name}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -146,8 +148,12 @@ export default function CommercialDemandeShow({ demandeId }) {
                                                 <Calendar className="size-4 text-slate-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs text-slate-500">Date</p>
-                                                <p className="text-sm font-medium text-slate-900">{demande.createdAt}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    Date
+                                                </p>
+                                                <p className="text-sm font-medium text-slate-900">
+                                                    {demande.created_at}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -155,9 +161,19 @@ export default function CommercialDemandeShow({ demandeId }) {
                                                 <AlertTriangle className="size-4 text-slate-500" />
                                             </div>
                                             <div>
-                                                <p className="text-xs text-slate-500">Priorité</p>
-                                                <Badge variant={priorityVariants[demande.priority] || "secondary"}>
-                                                    {demande.priority}
+                                                <p className="text-xs text-slate-500">
+                                                    Priorité
+                                                </p>
+                                                <Badge
+                                                    variant={
+                                                        priorityVariants[
+                                                            demande.priority
+                                                        ] || "secondary"
+                                                    }
+                                                >
+                                                    {priorityLabels[
+                                                        demande.priority
+                                                    ] || demande.priority}
                                                 </Badge>
                                             </div>
                                         </div>
@@ -166,9 +182,19 @@ export default function CommercialDemandeShow({ demandeId }) {
 
                                 <div className="flex flex-col gap-4 lg:w-56">
                                     <div className="rounded-xl border border-slate-100 p-4 text-center">
-                                        <p className="text-xs text-slate-500">Statut</p>
-                                        <Badge variant={statusVariants[demande.status] || "secondary"} className="mt-1">
-                                            {statusLabels[demande.status] || demande.status}
+                                        <p className="text-xs text-slate-500">
+                                            Statut
+                                        </p>
+                                        <Badge
+                                            variant={
+                                                statusVariants[
+                                                    demande.status
+                                                ] || "secondary"
+                                            }
+                                            className="mt-1"
+                                        >
+                                            {statusLabels[demande.status] ||
+                                                demande.status}
                                         </Badge>
                                     </div>
                                 </div>
@@ -177,82 +203,68 @@ export default function CommercialDemandeShow({ demandeId }) {
                     </Card>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: 0.15 }}
-                >
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-sm font-semibold text-slate-900">Produits demandés</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="rounded-xl border border-slate-200/70">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 bg-slate-50/50">
-                                            <th className="px-4 py-3 text-left font-medium text-slate-600">Produit</th>
-                                            <th className="px-4 py-3 text-center font-medium text-slate-600">Quantité</th>
-                                            <th className="px-4 py-3 text-left font-medium text-slate-600">Observation</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {demande.products.map((item, i) => (
-                                            <tr key={i} className="border-b border-slate-50 last:border-0">
-                                                <td className="px-4 py-3 font-medium text-slate-900">{item.product}</td>
-                                                <td className="px-4 py-3 text-center text-slate-700">{item.quantity}</td>
-                                                <td className="px-4 py-3 text-slate-500">{item.observation || "—"}</td>
+                {demande.products && demande.products.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.15 }}
+                    >
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-sm font-semibold text-slate-900">
+                                    Produits demandés ({demande.products.length})
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="rounded-xl border border-slate-200/70">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 bg-slate-50/50">
+                                                <th className="px-4 py-3 text-left font-medium text-slate-600">
+                                                    Produit
+                                                </th>
+                                                <th className="px-4 py-3 text-center font-medium text-slate-600">
+                                                    Quantité
+                                                </th>
+                                                <th className="px-4 py-3 text-left font-medium text-slate-600">
+                                                    Observation
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                                        </thead>
+                                        <tbody>
+                                            {demande.products.map((item, i) => (
+                                                <tr
+                                                    key={i}
+                                                    className="border-b border-slate-50 last:border-0"
+                                                >
+                                                    <td className="px-4 py-3 font-medium text-slate-900">
+                                                        {item.product?.name ||
+                                                            item.product}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center text-slate-700">
+                                                        {item.quantity}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-500">
+                                                        {item.observation ||
+                                                            "—"}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                )}
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {demande.description && (
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.35, delay: 0.2 }}
                     >
-                        <Card className="h-full">
-                            <CardHeader>
-                                <CardTitle className="text-sm font-semibold text-slate-900">Historique</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="relative">
-                                    <div className="absolute left-[17px] top-2 h-[calc(100%-16px)] w-px bg-slate-100" />
-                                    <div className="flex flex-col gap-4">
-                                        {demande.history.map((step, i) => {
-                                            const style = historyIcons[step.action] || historyIcons["Demande créée"];
-                                            const Icon = style.icon;
-                                            return (
-                                                <div key={i} className="relative flex items-start gap-3">
-                                                    <div className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full ${style.color}`}>
-                                                        <Icon className="size-4" />
-                                                    </div>
-                                                    <div className="min-w-0 flex-1 pt-0.5">
-                                                        <p className="text-sm font-medium text-slate-900">{step.action}</p>
-                                                        <p className="text-xs text-slate-500">{step.person}</p>
-                                                    </div>
-                                                    <span className="shrink-0 text-xs text-slate-400">{step.date}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.25 }}
-                    >
-                        <Card className="h-full">
+                        <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                                     <MessageSquare className="size-4" />
@@ -260,72 +272,9 @@ export default function CommercialDemandeShow({ demandeId }) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm leading-relaxed text-slate-600">{demande.comment}</p>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </div>
-
-                {demande.rejectReason && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.3 }}
-                    >
-                        <Card className="border-red-100 bg-red-50/30">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-red-700">
-                                    <AlertTriangle className="size-4" />
-                                    Motif du refus
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm leading-relaxed text-red-600">{demande.rejectReason}</p>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
-
-                {demande.attachments.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.35 }}
-                    >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                    <Paperclip className="size-4" />
-                                    Pièces jointes ({demande.attachments.length})
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-col gap-2">
-                                    {demande.attachments.map((file, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center justify-between rounded-xl border border-slate-100 p-3 transition-colors hover:bg-slate-50"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex size-9 items-center justify-center rounded-lg bg-blue-50">
-                                                    <FileText className="size-4 text-blue-600" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-900">{file.name}</p>
-                                                    <p className="text-xs text-slate-500">{file.size}</p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => window.alert(`Téléchargement de « ${file.name} » simulé.`)}
-                                                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200"
-                                            >
-                                                <Download className="size-3.5" />
-                                                Télécharger
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p className="text-sm leading-relaxed text-slate-600">
+                                    {demande.description}
+                                </p>
                             </CardContent>
                         </Card>
                     </motion.div>

@@ -4,31 +4,37 @@ import { Badge } from "@/Components/UI/Badge";
 import { Button } from "@/Components/UI/Button";
 
 const statusVariants = {
-    "Réservé": "info",
-    "Livré": "success",
-    "Annulé": "destructive",
+    reserved: "info",
+    delivered: "success",
+    cancelled: "destructive",
+};
+
+const statusLabels = {
+    reserved: "Réservé",
+    delivered: "Livré",
+    cancelled: "Annulé",
 };
 
 export default function ReservationsTable({ data, onEdit, onDelete }) {
     const columns = [
         {
             header: "Référence",
-            accessorKey: "id",
+            accessorKey: "reference",
             className: "font-medium text-slate-900",
         },
         {
             header: "Nom du client",
-            accessorKey: "clientName",
+            accessorKey: "client_name",
             className: "font-medium text-slate-900",
         },
         {
             header: "Produit",
-            accessorKey: "productName",
+            cell: (row) => row.product?.name ?? "—",
             className: "max-w-[200px] truncate",
         },
         {
             header: "Agence d'origine",
-            accessorKey: "agency",
+            cell: (row) => row.agency?.name ?? "—",
         },
         {
             header: "Quantité",
@@ -37,20 +43,28 @@ export default function ReservationsTable({ data, onEdit, onDelete }) {
         },
         {
             header: "Date",
-            accessorKey: "date",
+            cell: (row) => (
+                <span>
+                    {new Date(row.created_at).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                    })}
+                </span>
+            ),
         },
         {
             header: "Statut",
             cell: (row) => (
                 <Badge variant={statusVariants[row.status] || "secondary"}>
-                    {row.status}
+                    {statusLabels[row.status] || row.status}
                 </Badge>
             ),
         },
         {
             header: "Actions",
             cell: (row) => {
-                const isReserved = row.status === "Réservé";
+                const isReserved = row.status === "reserved";
                 return (
                     <div className="flex items-center gap-1">
                         {isReserved && (

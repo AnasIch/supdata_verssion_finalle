@@ -20,6 +20,11 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         $user->load(['role', 'agency']);
 
         return Inertia::render('Profile/Index', [

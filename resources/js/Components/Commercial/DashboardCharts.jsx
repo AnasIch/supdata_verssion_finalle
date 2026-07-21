@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     );
 };
 
-export default function DashboardCharts({ evolutionData }) {
+export default function DashboardCharts({ evolutionData = [] }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -39,17 +39,23 @@ export default function DashboardCharts({ evolutionData }) {
                 </CardHeader>
                 <CardContent>
                     <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={evolutionData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                                <XAxis dataKey="mois" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                                <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Line type="monotone" dataKey="demandes" name="Total" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="validees" name="Validées" stroke="#10b981" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="refusees" name="Refusées" stroke="#ef4444" strokeWidth={2} dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                        {evolutionData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={evolutionData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                    <XAxis dataKey="mois" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Line type="monotone" dataKey="demandes" name="Total" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="validees" name="Validées" stroke="#10b981" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="refusees" name="Refusées" stroke="#ef4444" strokeWidth={2} dot={false} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                                Pas encore de données
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

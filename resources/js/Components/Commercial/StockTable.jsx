@@ -13,6 +13,12 @@ const statusVariants = {
     out_of_stock: "destructive",
 };
 
+function getAvailabilityStatus(row) {
+    if (row.quantity_in_stock === 0) return "out_of_stock";
+    if (row.quantity_in_stock <= row.minimum_stock) return "low";
+    return "available";
+}
+
 export default function StockTable({ data }) {
     const columns = [
         {
@@ -26,25 +32,28 @@ export default function StockTable({ data }) {
         },
         {
             header: "Agence",
-            accessorKey: "agency",
+            cell: (row) => row.agency?.name ?? "—",
         },
         {
             header: "Qté disponible",
-            accessorKey: "quantity",
+            accessorKey: "quantity_in_stock",
             className: "text-center",
         },
         {
             header: "Qté réservée",
-            accessorKey: "reservedQuantity",
+            accessorKey: "reserved_quantity",
             className: "text-center",
         },
         {
             header: "Disponibilité",
-            cell: (row) => (
-                <Badge variant={statusVariants[row.status] || "secondary"}>
-                    {statusLabels[row.status] || row.status}
-                </Badge>
-            ),
+            cell: (row) => {
+                const status = getAvailabilityStatus(row);
+                return (
+                    <Badge variant={statusVariants[status] || "secondary"}>
+                        {statusLabels[status] || status}
+                    </Badge>
+                );
+            },
         },
     ];
 

@@ -2,25 +2,59 @@ import { motion } from "framer-motion";
 import {
     ClipboardList,
     Clock,
-    Package,
+    CheckCircle2,
     Bell,
-    TrendingUp,
-    TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const iconMap = {
-    created: ClipboardList,
-    pending: Clock,
-    reserved: Package,
-    notifications: Bell,
+const defaultStats = {
+    totalDemandes: 0,
+    pendingDemandes: 0,
+    approvedDemandes: 0,
+    unreadNotifications: 0,
 };
 
-export default function KpiCards({ data }) {
+const kpiConfig = [
+    {
+        id: "created",
+        key: "totalDemandes",
+        label: "Demandes d'achat créées",
+        description: "Total",
+        icon: ClipboardList,
+        color: "bg-blue-50 text-blue-600",
+    },
+    {
+        id: "pending",
+        key: "pendingDemandes",
+        label: "Demandes en attente",
+        description: "En cours de traitement",
+        icon: Clock,
+        color: "bg-amber-50 text-amber-600",
+    },
+    {
+        id: "approved",
+        key: "approvedDemandes",
+        label: "Demandes approuvées",
+        description: "Validées",
+        icon: CheckCircle2,
+        color: "bg-emerald-50 text-emerald-600",
+    },
+    {
+        id: "notifications",
+        key: "unreadNotifications",
+        label: "Notifications non lues",
+        description: "À traiter",
+        icon: Bell,
+        color: "bg-violet-50 text-violet-600",
+    },
+];
+
+export default function KpiCards({ stats = defaultStats }) {
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {data.map((kpi, i) => {
-                const Icon = iconMap[kpi.id] || ClipboardList;
+            {kpiConfig.map((kpi, i) => {
+                const Icon = kpi.icon;
+                const value = stats[kpi.key] ?? 0;
                 return (
                     <motion.div
                         key={kpi.id}
@@ -34,25 +68,11 @@ export default function KpiCards({ data }) {
                             <div className={cn("flex size-11 items-center justify-center rounded-xl", kpi.color)}>
                                 <Icon className="size-5" />
                             </div>
-                            {kpi.trend && (
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium",
-                                        kpi.trendUp ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-                                    )}
-                                >
-                                    {kpi.trendUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-                                    {kpi.trend}
-                                </div>
-                            )}
                         </div>
                         <div className="mt-4">
-                            <div className="flex items-baseline gap-1.5">
-                                <p className="text-2xl font-bold tracking-tight text-slate-900">{kpi.value}</p>
-                                {kpi.unit && <p className="text-sm font-medium text-slate-500">{kpi.unit}</p>}
-                            </div>
+                            <p className="text-2xl font-bold tracking-tight text-slate-900">{value}</p>
                             <p className="mt-0.5 text-sm text-slate-500">{kpi.label}</p>
-                            {kpi.description && <p className="mt-1 text-xs text-slate-400">{kpi.description}</p>}
+                            <p className="mt-1 text-xs text-slate-400">{kpi.description}</p>
                         </div>
                     </motion.div>
                 );

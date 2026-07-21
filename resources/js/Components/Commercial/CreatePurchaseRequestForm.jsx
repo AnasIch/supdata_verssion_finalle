@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
+import { Send, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 import { Textarea } from "@/Components/UI/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
@@ -12,22 +12,30 @@ export default function CreatePurchaseRequestForm({
     reference,
     today,
     user,
+    catalogProducts,
     onUpdateProduct,
     onChange,
+    onAddProduct,
+    onRemoveProduct,
     onSubmit,
     onReset,
+    processing,
 }) {
     return (
         <form onSubmit={onSubmit} noValidate>
             <div className="flex flex-col gap-5">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm font-semibold text-slate-900">Informations générales</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-slate-900">
+                            Informations générales
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">Référence</label>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Référence
+                                </label>
                                 <input
                                     type="text"
                                     value={reference}
@@ -36,7 +44,9 @@ export default function CreatePurchaseRequestForm({
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">Date</label>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Date
+                                </label>
                                 <input
                                     type="text"
                                     value={today}
@@ -45,16 +55,20 @@ export default function CreatePurchaseRequestForm({
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">Agence</label>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Agence
+                                </label>
                                 <input
                                     type="text"
-                                    value={user?.agency || "SUPDATA Casablanca"}
+                                    value={user?.agency || ""}
                                     disabled
                                     className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500"
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">Demandeur</label>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Demandeur
+                                </label>
                                 <input
                                     type="text"
                                     value={user?.name || ""}
@@ -70,8 +84,11 @@ export default function CreatePurchaseRequestForm({
                     <CardContent className="pt-6">
                         <ProductSelector
                             products={form.products}
+                            catalogProducts={catalogProducts}
                             errors={errors}
                             onUpdate={onUpdateProduct}
+                            onAdd={onAddProduct}
+                            onRemove={onRemoveProduct}
                         />
                     </CardContent>
                 </Card>
@@ -88,7 +105,9 @@ export default function CreatePurchaseRequestForm({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm font-semibold text-slate-900">Remarque générale</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-slate-900">
+                            Remarque générale
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Textarea
@@ -109,9 +128,13 @@ export default function CreatePurchaseRequestForm({
                     <Button type="button" variant="outline" onClick={onReset}>
                         Annuler
                     </Button>
-                    <Button type="submit" className="bg-emerald-600 text-white hover:bg-emerald-700">
+                    <Button
+                        type="submit"
+                        disabled={processing}
+                        className="bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
                         <Send className="size-4" />
-                        Envoyer la demande
+                        {processing ? "Envoi en cours..." : "Envoyer la demande"}
                     </Button>
                 </motion.div>
             </div>

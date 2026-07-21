@@ -13,7 +13,7 @@ class NotificationController extends Controller
         private NotificationService $notificationService,
     ) {}
 
-    public function index(Request $request)
+    private function getData(Request $request): array
     {
         $user = Auth::user();
         $paginator = $this->notificationService->getPaginated($user, $request);
@@ -23,7 +23,7 @@ class NotificationController extends Controller
             fn ($n) => $this->notificationService->serialize($n)
         );
 
-        return Inertia::render('Dashboard/Notifications/Index', [
+        return [
             'notifications' => $notifications,
             'pagination' => [
                 'currentPage' => $paginator->currentPage(),
@@ -33,7 +33,17 @@ class NotificationController extends Controller
             'stats' => $stats,
             'unreadCount' => $this->notificationService->getUnreadCount($user),
             'filters' => $request->only(['search', 'source', 'type', 'read']),
-        ]);
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        return Inertia::render('Dashboard/Notifications/Index', $this->getData($request));
+    }
+
+    public function commercialIndex(Request $request)
+    {
+        return Inertia::render('Dashboard/Commercial/Notifications', $this->getData($request));
     }
 
     public function unreadCount()

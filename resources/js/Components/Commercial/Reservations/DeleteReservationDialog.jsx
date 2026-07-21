@@ -23,8 +23,8 @@ export default function DeleteReservationDialog({ open, onOpenChange, reservatio
                     <DialogTitle>Supprimer la réservation</DialogTitle>
                     <DialogDescription>
                         Êtes-vous sûr de vouloir supprimer la réservation{" "}
-                        <span className="font-medium text-slate-900">{reservation.id}</span> ?
-                        {reservation.status === "Réservé" && (
+                        <span className="font-medium text-slate-900">{reservation.reference}</span> ?
+                        {reservation.status === "reserved" && (
                             <span className="mt-1 block text-xs text-amber-600">
                                 Le stock réservé sera libéré.
                             </span>

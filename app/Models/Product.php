@@ -16,6 +16,7 @@ class Product extends Model
         'category',
         'unit_price',
         'quantity_in_stock',
+        'reserved_quantity',
         'minimum_stock',
         'agency_id',
         'status',
@@ -26,6 +27,7 @@ class Product extends Model
         return [
             'unit_price' => 'decimal:2',
             'quantity_in_stock' => 'integer',
+            'reserved_quantity' => 'integer',
             'minimum_stock' => 'integer',
         ];
     }

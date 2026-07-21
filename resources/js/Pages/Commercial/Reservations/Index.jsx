@@ -1,70 +1,88 @@
-import { useState, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Head } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { Plus } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Badge } from "@/Components/UI/Badge";
+import { useToast } from "@/Components/UI/Toast";
 import ReservationsTable from "@/Components/Commercial/Reservations/ReservationsTable";
 import CreateReservationDialog from "@/Components/Commercial/Reservations/CreateReservationDialog";
 import EditReservationDialog from "@/Components/Commercial/Reservations/EditReservationDialog";
 import DeleteReservationDialog from "@/Components/Commercial/Reservations/DeleteReservationDialog";
-import { useToast } from "@/Components/UI/Toast";
-import { useCommercialReservations } from "@/Hooks/useCommercialReservations";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 
-export default function CommercialReservationsIndex() {
-    const user = useMemo(() => getCurrentUser(), []);
+export default function CommercialReservationsIndex({
+    user,
+    reservations,
+    reservationsMeta,
+    stats,
+    products,
+    filters,
+}) {
+    const { props } = usePage();
     const toast = useToast();
-    const {
-        reservations,
-        stats,
-        createReservation,
-        editReservation,
-        deleteReservation,
-    } = useCommercialReservations();
-
     const [createOpen, setCreateOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [selected, setSelected] = useState(null);
 
-    const handleCreate = (data) => {
-        createReservation(data);
-        setCreateOpen(false);
-        toast("Réservation créée avec succès.", "success");
-    };
+    useEffect(() => {
+        const flash = props.flash;
+        if (flash?.success) toast(flash.success, "success");
+        if (flash?.error) toast(flash.error, "error");
+    }, [props.flash]);
 
-    const handleEdit = (reservation) => {
+    useEffect(() => {
+        const errors = props.errors;
+        if (errors) {
+            const firstError = Object.values(errors)[0];
+            if (firstError) toast(firstError, "error");
+        }
+    }, [props.errors]);
+
+    const handleCreate = useCallback((data) => {
+        router.post(route("rc.reservations.store"), data, {
+            preserveState: true,
+            onFinish: () => setCreateOpen(false),
+        });
+    }, []);
+
+    const handleEdit = useCallback((reservation) => {
         setSelected(reservation);
         setEditOpen(true);
-    };
+    }, []);
 
-    const handleEditConfirm = (id, data) => {
-        editReservation(id, data);
-        setEditOpen(false);
-        setSelected(null);
-        toast("Réservation modifiée avec succès.", "success");
-    };
+    const handleEditConfirm = useCallback((id, data) => {
+        router.put(route("rc.reservations.update", id), data, {
+            preserveState: true,
+            onFinish: () => {
+                setEditOpen(false);
+                setSelected(null);
+            },
+        });
+    }, []);
 
-    const handleDelete = (reservation) => {
+    const handleDelete = useCallback((reservation) => {
         setSelected(reservation);
         setDeleteOpen(true);
-    };
+    }, []);
 
-    const handleDeleteConfirm = (id) => {
-        deleteReservation(id);
-        setDeleteOpen(false);
-        setSelected(null);
-        toast("Réservation supprimée.", "success");
-    };
+    const handleDeleteConfirm = useCallback((id) => {
+        router.delete(route("rc.reservations.destroy", id), {
+            preserveState: true,
+            onFinish: () => {
+                setDeleteOpen(false);
+                setSelected(null);
+            },
+        });
+    }, []);
 
     return (
         <DashboardLayout
             title="Réservation de stock"
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
+                { label: "Dashboard", href: "/dashboard-commercial" },
                 { label: "Réservation de stock" },
             ]}
             user={user}
@@ -134,21 +152,19 @@ export default function CommercialReservationsIndex() {
                                 className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-[0_1px_3px_rgb(0,0,0,0.04)]"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-slate-900">{r.id}</span>
-                                    <Badge variant={r.status === "Réservé" ? "info" : r.status === "Livré" ? "success" : "destructive"}>
-                                        {r.status}
+                                    <span className="text-sm font-medium text-slate-900">{r.reference}</span>
+                                    <Badge variant={r.status === "reserved" ? "info" : r.status === "delivered" ? "success" : "destructive"}>
+                                        {r.status === "reserved" ? "Réservé" : r.status === "delivered" ? "Livré" : "Annulé"}
                                     </Badge>
                                 </div>
-                                <p className="mt-1 text-sm text-slate-600">{r.clientName}</p>
-                                <p className="text-xs text-slate-500">{r.productName}</p>
+                                <p className="mt-1 text-sm text-slate-600">{r.client_name}</p>
+                                <p className="text-xs text-slate-500">{r.product?.name}</p>
                                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                                     <span>Qté: {r.quantity}</span>
                                     <span>·</span>
-                                    <span>{r.agency}</span>
-                                    <span>·</span>
-                                    <span>{r.date}</span>
+                                    <span>{r.agency?.name}</span>
                                 </div>
-                                {r.status === "Réservé" && (
+                                {r.status === "reserved" && (
                                     <div className="mt-3 flex gap-2">
                                         <button
                                             type="button"
@@ -171,8 +187,44 @@ export default function CommercialReservationsIndex() {
                     </div>
                 </motion.div>
 
+                {reservationsMeta.lastPage > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() =>
+                                router.get(
+                                    route("rc.reservations"),
+                                    { ...filters, page: Math.max(1, reservationsMeta.currentPage - 1) },
+                                    { preserveState: true, replace: true }
+                                )
+                            }
+                            disabled={reservationsMeta.currentPage === 1}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Précédent
+                        </button>
+                        <span className="px-3 text-sm text-slate-500">
+                            Page {reservationsMeta.currentPage} / {reservationsMeta.lastPage}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() =>
+                                router.get(
+                                    route("rc.reservations"),
+                                    { ...filters, page: Math.min(reservationsMeta.lastPage, reservationsMeta.currentPage + 1) },
+                                    { preserveState: true, replace: true }
+                                )
+                            }
+                            disabled={reservationsMeta.currentPage === reservationsMeta.lastPage}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Suivant
+                        </button>
+                    </div>
+                )}
+
                 <div className="text-sm text-slate-500">
-                    {reservations.length} réservation{reservations.length !== 1 ? "s" : ""}
+                    {reservationsMeta.total} réservation{reservationsMeta.total !== 1 ? "s" : ""}
                 </div>
             </div>
 
@@ -180,6 +232,7 @@ export default function CommercialReservationsIndex() {
                 open={createOpen}
                 onOpenChange={setCreateOpen}
                 onConfirm={handleCreate}
+                products={products}
             />
             <EditReservationDialog
                 open={editOpen}

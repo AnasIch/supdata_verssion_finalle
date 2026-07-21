@@ -39,9 +39,16 @@ export default function NotificationDropdown() {
     const notifications = recentNotifications || [];
     const [open, setOpen] = useState(false);
 
+    const getBasePath = () => {
+        return window.location.pathname.match(
+            /^\/dashboard-(super-admin|admin-local|administrative|commercial|stock)/
+        )?.[0] || "/dashboard-super-admin";
+    };
+
     const handleMarkAllRead = (e) => {
         e.stopPropagation();
-        router.patch("/dashboard-super-admin/notifications/read-all", {}, {
+        const base = getBasePath();
+        router.patch(`${base}/notifications/read-all`, {}, {
             preserveScroll: true,
             onSuccess: () => {
                 router.reload({ only: ["unreadCount", "recentNotifications"] });
@@ -51,9 +58,10 @@ export default function NotificationDropdown() {
 
     const handleNotificationClick = (notif) => {
         setOpen(false);
+        const base = getBasePath();
 
         if (!notif.read) {
-            router.patch(`/dashboard-super-admin/notifications/${notif.id}/read`, {}, {
+            router.patch(`${base}/notifications/${notif.id}/read`, {}, {
                 preserveScroll: true,
                 onSuccess: () => {
                     router.reload({ only: ["unreadCount", "recentNotifications"] });
@@ -62,9 +70,6 @@ export default function NotificationDropdown() {
         }
 
         if (notif.action_url) {
-            const base = window.location.pathname.match(
-                /^\/dashboard-(super-admin|admin-local|administrative|commercial|stock)/
-            )?.[0] || "/dashboard-super-admin";
             window.location.href = `${base}/${notif.action_url}`;
         }
     };
@@ -153,9 +158,7 @@ export default function NotificationDropdown() {
                         className="w-full rounded-xl py-2 text-center text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                         onClick={() => {
                             setOpen(false);
-                            const base = window.location.pathname.match(
-                                /^\/dashboard-(super-admin|admin-local|administrative|commercial|stock)/
-                            )?.[0] || "/dashboard-super-admin";
+                            const base = getBasePath();
                             window.location.href = `${base}/notifications`;
                         }}
                     >

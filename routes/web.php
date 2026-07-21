@@ -5,6 +5,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CommercialDashboardController;
+use App\Http\Controllers\CommercialStockController;
+use App\Http\Controllers\DemandeController;
+use App\Http\Controllers\ReservationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -98,15 +102,25 @@ Route::get('/dashboard-administrative', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-commercial', function () {
-    return Inertia::render('Dashboard/Commercial/Index', [
-        'user' => [
-            'name' => 'Karim Benjelloun',
-            'email' => 'k.benjelloun@supdata.ma',
-            'role' => 'Responsable Commercial',
-        ],
-    ]);
-})->name('commercial.dashboard');
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard-commercial', [CommercialDashboardController::class, 'index'])->name('commercial.dashboard');
+    Route::get('/dashboard-commercial/demandes', [DemandeController::class, 'index'])->name('rc.demandes');
+    Route::get('/dashboard-commercial/demandes/creer', [DemandeController::class, 'create'])->name('rc.demandes.create');
+    Route::post('/dashboard-commercial/demandes', [DemandeController::class, 'store'])->name('rc.demandes.store');
+    Route::post('/dashboard-commercial/demandes/{id}/archiver', [DemandeController::class, 'archive'])->name('rc.demandes.archive');
+    Route::get('/dashboard-commercial/demandes/{id}', [DemandeController::class, 'show'])->name('rc.demandes.show');
+    Route::get('/dashboard-commercial/stock', [CommercialStockController::class, 'index'])->name('rc.stock');
+    Route::get('/dashboard-commercial/reservations', [ReservationController::class, 'index'])->name('rc.reservations');
+    Route::post('/dashboard-commercial/reservations', [ReservationController::class, 'store'])->name('rc.reservations.store');
+    Route::put('/dashboard-commercial/reservations/{id}', [ReservationController::class, 'update'])->name('rc.reservations.update');
+    Route::delete('/dashboard-commercial/reservations/{id}', [ReservationController::class, 'destroy'])->name('rc.reservations.destroy');
+    Route::get('/dashboard-commercial/notifications', [NotificationController::class, 'commercialIndex'])->name('rc.notifications');
+    Route::get('/dashboard-commercial/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('rc.notifications.unread-count');
+    Route::patch('/dashboard-commercial/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('rc.notifications.read-all');
+    Route::patch('/dashboard-commercial/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('rc.notifications.read');
+    Route::delete('/dashboard-commercial/notifications/read', [NotificationController::class, 'destroyAllRead'])->name('rc.notifications.destroy-all-read');
+    Route::delete('/dashboard-commercial/notifications/{notification}', [NotificationController::class, 'destroy'])->name('rc.notifications.destroy');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -138,9 +152,11 @@ Route::get('/stock/{id}', function ($id) {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
-Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
-Route::patch('/profil/password', [ProfileController::class, 'changePassword'])->name('profile.password');
+Route::middleware('auth')->group(function () {
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profil/password', [ProfileController::class, 'changePassword'])->name('profile.password');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -245,40 +261,6 @@ Route::get('/dashboard-administrative/notes-service', function () {
 Route::get('/dashboard-administrative/contrats', function () {
     return Inertia::render('Operations/Index', ['module' => 'contrats']);
 })->name('ga.contracts');
-
-/*
-|--------------------------------------------------------------------------
-| Role-Specific Routes — Responsable Commercial
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/dashboard-commercial/demandes', function () {
-    return Inertia::render('Commercial/Demandes/Index');
-})->name('rc.demandes');
-
-Route::get('/dashboard-commercial/demandes/creer', function () {
-    return Inertia::render('Commercial/Demandes/Create');
-})->name('rc.demandes.create');
-
-Route::get('/dashboard-commercial/demandes/{id}', function ($id) {
-    return Inertia::render('Commercial/Demandes/Show', ['demandeId' => $id]);
-})->name('rc.demandes.show');
-
-Route::get('/dashboard-commercial/stock', function () {
-    return Inertia::render('Commercial/Stock/Index');
-})->name('rc.stock');
-
-Route::get('/dashboard-commercial/reservations', function () {
-    return Inertia::render('Commercial/Reservations/Index');
-})->name('rc.reservations');
-
-Route::get('/dashboard-commercial/rapports', function () {
-    return Inertia::render('Dashboard/Commercial/Reports');
-})->name('rc.reports');
-
-Route::get('/dashboard-commercial/notifications', function () {
-    return Inertia::render('Dashboard/Commercial/Notifications');
-})->name('rc.notifications');
 
 /*
 |--------------------------------------------------------------------------

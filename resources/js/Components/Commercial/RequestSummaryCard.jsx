@@ -2,11 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
 import { Badge } from "@/Components/UI/Badge";
 import { Package, Hash, Calendar, AlertTriangle } from "lucide-react";
 
+const priorityLabels = {
+    low: "Basse",
+    medium: "Moyenne",
+    high: "Haute",
+    urgent: "Urgente",
+};
+
 const priorityVariants = {
-    Faible: "secondary",
-    Moyenne: "info",
-    Haute: "warning",
-    Urgente: "destructive",
+    low: "secondary",
+    medium: "info",
+    high: "warning",
+    urgent: "destructive",
 };
 
 export default function RequestSummaryCard({ summary }) {
@@ -37,7 +44,7 @@ export default function RequestSummaryCard({ summary }) {
                             Priorité
                         </div>
                         <Badge variant={priorityVariants[summary.priority] || "secondary"}>
-                            {summary.priority}
+                            {priorityLabels[summary.priority] || summary.priority}
                         </Badge>
                     </div>
                     <div className="flex items-center justify-between rounded-xl border border-slate-100 p-3">

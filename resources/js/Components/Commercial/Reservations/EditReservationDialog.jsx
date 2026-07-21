@@ -19,7 +19,7 @@ export default function EditReservationDialog({ open, onOpenChange, reservation,
 
     useEffect(() => {
         if (reservation) {
-            setClientName(reservation.clientName);
+            setClientName(reservation.client_name);
             setQuantity(reservation.quantity);
             setRemark(reservation.remark || "");
         }
@@ -32,23 +32,19 @@ export default function EditReservationDialog({ open, onOpenChange, reservation,
     const handleConfirm = () => {
         if (!canConfirm) return;
         onConfirm(reservation.id, {
-            clientName: clientName.trim(),
+            client_name: clientName.trim(),
             quantity,
-            remark: remark.trim(),
+            remark: remark.trim() || null,
         });
     };
 
-    const handleClose = () => {
-        onOpenChange(false);
-    };
-
     return (
-        <Dialog open={open} onOpenChange={handleClose}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Modifier la réservation</DialogTitle>
                     <DialogDescription>
-                        Référence : {reservation.id}
+                        Référence : {reservation.reference}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -68,7 +64,7 @@ export default function EditReservationDialog({ open, onOpenChange, reservation,
                         <label className="text-xs font-medium text-slate-500">Produit</label>
                         <input
                             type="text"
-                            value={reservation.productName}
+                            value={reservation.product?.name ?? "—"}
                             disabled
                             className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500"
                         />
@@ -79,7 +75,7 @@ export default function EditReservationDialog({ open, onOpenChange, reservation,
                             <label className="text-xs font-medium text-slate-500">Agence d'origine</label>
                             <input
                                 type="text"
-                                value={reservation.agency}
+                                value={reservation.agency?.name ?? "—"}
                                 disabled
                                 className="h-10 w-full rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500"
                             />
@@ -110,7 +106,7 @@ export default function EditReservationDialog({ open, onOpenChange, reservation,
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={handleClose}>
+                    <Button variant="outline" onClick={onOpenChange}>
                         Annuler
                     </Button>
                     <Button
