@@ -4,7 +4,7 @@ import SearchBar from "./SearchBar";
 import NotificationDropdown from "./NotificationDropdown";
 import UserDropdown from "./UserDropdown";
 
-export default function Header({ breadcrumbs = [], user, onMobileMenuOpen }) {
+export default function Header({ breadcrumbs = [], user, onMobileMenuOpen, showNotifications = true }) {
     return (
         <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
             <button
@@ -23,7 +23,7 @@ export default function Header({ breadcrumbs = [], user, onMobileMenuOpen }) {
 
             <SearchBar className="hidden w-full max-w-xs md:block lg:max-w-sm" />
 
-            <NotificationDropdown />
+            {showNotifications && <NotificationDropdown />}
 
             <div className="hidden border-l border-slate-200 pl-2 md:block">
                 <UserDropdown user={user} />

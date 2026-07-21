@@ -81,19 +81,12 @@ const sidebarMenus = {
                 ],
             },
             {
-                title: "Documents",
+                title: "Traitement",
                 items: [
-                    { title: "Documents à traiter", href: "documents", icon: FileSignature },
-                    { title: "Notes de service", href: "notes-service", icon: ClipboardList },
-                    { title: "Contrats", href: "contrats", icon: FileText },
-                ],
-            },
-            {
-                title: "Suivi",
-                items: [
-                    { title: "Rapports financiers", href: "rapports", icon: BarChart3 },
-                    { title: "Notifications", href: "notifications", icon: Bell },
-                    { title: "Paramètres", href: "parametres", icon: Settings },
+                    { title: "Demandes reçues", href: "demandes", icon: ClipboardList },
+                    { title: "Consulter le stock", href: "stock", icon: Package },
+                    { title: "Suivi des validations", href: "validations", icon: Shield },
+                    { title: "Demandes acceptées", href: "demandes-acceptees", icon: ShoppingCart },
                 ],
             },
         ],
@@ -136,19 +129,13 @@ const sidebarMenus = {
             {
                 title: "Gestion",
                 items: [
-                    { title: "Stock", href: "stock", icon: Package, exact: true },
-                    { title: "Entrées de stock", href: "stock/entrees", icon: ArrowUpDown },
-                    { title: "Sorties de stock", href: "stock/sorties", icon: Package },
-                    { title: "Alertes stock", href: "stock/alertes", icon: AlertTriangle },
-                    { title: "Inventaire", href: "stock/inventaire", icon: Warehouse },
-                ],
-            },
-            {
-                title: "Suivi",
-                items: [
-                    { title: "Commandes", href: "commandes", icon: ShoppingCart },
-                    { title: "Rapports", href: "rapports", icon: BarChart3 },
-                    { title: "Notifications", href: "notifications", icon: Bell },
+                    { title: "Produits", href: "produits", icon: Package },
+                    { title: "Catégories", href: "categories", icon: FileText },
+                    { title: "Mouvements", href: "mouvements", icon: ArrowUpDown },
+                    { title: "Réceptions", href: "receptions", icon: ClipboardList },
+                    { title: "Inventaires", href: "inventaires", icon: Warehouse },
+                    { title: "Livraisons", href: "livraisons", icon: ShoppingCart },
+                    { title: "Alertes de stock", href: "alertes", icon: AlertTriangle },
                 ],
             },
         ],

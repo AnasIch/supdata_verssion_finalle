@@ -6,7 +6,7 @@ import Header from "@/Components/Layout/Header";
 import PageContainer from "@/Components/Layout/PageContainer";
 import { cn } from "@/lib/utils";
 
-export default function DashboardLayout({ children, title, breadcrumbs = [], user }) {
+export default function DashboardLayout({ children, title, breadcrumbs = [], user, showNotifications = true }) {
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -32,6 +32,7 @@ export default function DashboardLayout({ children, title, breadcrumbs = [], use
                     <Header
                         breadcrumbs={breadcrumbs}
                         user={user}
+                        showNotifications={showNotifications}
                         onMobileMenuOpen={() => setMobileOpen(true)}
                     />
                     <PageContainer>

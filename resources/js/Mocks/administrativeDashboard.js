@@ -8,7 +8,7 @@ export const administrativeUser = {
 export const administrativeStats = [
     { id: "review", label: "À vérifier", value: 12, detail: "4 demandes urgentes", tone: "amber" },
     { id: "approval", label: "Validation finale", value: 7, detail: "Chez l’administrateur local", tone: "blue" },
-    { id: "orders", label: "Commandes à créer", value: 5, detail: "186 400 MAD engagés", tone: "violet" },
+    { id: "approved", label: "Demandes acceptées", value: 5, detail: "Validations finales reçues", tone: "violet" },
     { id: "processed", label: "Traitées ce mois", value: 84, detail: "+12 % par rapport à juin", tone: "emerald" },
     { id: "rejected", label: "Rejetées", value: 6, detail: "7,1 % des demandes", tone: "red" },
     { id: "delay", label: "Délai moyen", value: "1,8 j", detail: "Objectif : moins de 2 jours", tone: "cyan" },
@@ -34,14 +34,14 @@ export const administrativeTrend = [
     { week: "S5", recues: 19, traitees: 18 }, { week: "S6", recues: 25, traitees: 23 },
 ];
 
-export const supplierOrders = [
-    { id: "DA-2026-0232", supplier: "Tech Distribution Maroc", agency: "Casablanca", amount: "92 500 MAD", approved: "15 juil. 2026", status: "À créer" },
-    { id: "DA-2026-0229", supplier: "Office Pro", agency: "Marrakech", amount: "34 600 MAD", approved: "14 juil. 2026", status: "À créer" },
-    { id: "DA-2026-0225", supplier: "Network Systems", agency: "Casablanca", amount: "59 300 MAD", approved: "14 juil. 2026", status: "Brouillon" },
+export const approvedRequests = [
+    { id: "DA-2026-0232", requester: "Nadia El Amrani", agency: "Casablanca", amount: "92 500 MAD", approved: "15 juil. 2026", status: "Acceptée" },
+    { id: "DA-2026-0229", requester: "Mehdi Alaoui", agency: "Marrakech", amount: "34 600 MAD", approved: "14 juil. 2026", status: "Acceptée" },
+    { id: "DA-2026-0225", requester: "Salma Bennis", agency: "Casablanca", amount: "59 300 MAD", approved: "14 juil. 2026", status: "Acceptée" },
 ];
 
 export const administrativeNotifications = [
-    { id: 1, title: "Validation finale reçue", text: "La demande DA-2026-0232 peut être transformée en commande.", time: "Il y a 12 min", tone: "success" },
+    { id: 1, title: "Validation finale reçue", text: "La demande DA-2026-0232 a été ajoutée au registre interne.", time: "Il y a 12 min", tone: "success" },
     { id: 2, title: "Dossier incomplet", text: "Une pièce justificative manque sur la demande DA-2026-0247.", time: "Il y a 38 min", tone: "warning" },
     { id: 3, title: "Échéance proche", text: "La demande DA-2026-0244 doit être traitée avant 16 h.", time: "Il y a 1 h", tone: "danger" },
 ];

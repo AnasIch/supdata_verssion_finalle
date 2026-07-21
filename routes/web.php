@@ -272,29 +272,23 @@ Route::get('/dashboard-admin-local/notifications', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-administrative/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
-})->name('ga.reports');
+Route::get('/dashboard-administrative/demandes', function () {
+    return Inertia::render('Administrative/Workspace', ['section' => 'demandes']);
+})->name('ga.requests');
 
-Route::get('/dashboard-administrative/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
-})->name('ga.notifications');
+Route::get('/dashboard-administrative/stock', function () {
+    return Inertia::render('Administrative/Workspace', ['section' => 'stock']);
+})->name('ga.stock');
 
-Route::get('/dashboard-administrative/parametres', function () {
-    return Inertia::render('Dashboard/Settings/Index');
-})->name('ga.settings');
+Route::get('/dashboard-administrative/validations', function () {
+    return Inertia::render('Administrative/Workspace', ['section' => 'validations']);
+})->name('ga.validations');
 
-Route::get('/dashboard-administrative/documents', function () {
-    return Inertia::render('Operations/Index', ['module' => 'documents']);
-})->name('ga.documents');
+Route::get('/dashboard-administrative/demandes-acceptees', function () {
+    return Inertia::render('Administrative/SupplierOrders');
+})->name('ga.approved-requests');
 
-Route::get('/dashboard-administrative/notes-service', function () {
-    return Inertia::render('Operations/Index', ['module' => 'notes']);
-})->name('ga.notes');
-
-Route::get('/dashboard-administrative/contrats', function () {
-    return Inertia::render('Operations/Index', ['module' => 'contrats']);
-})->name('ga.contracts');
+Route::redirect('/dashboard-administrative/commandes-fournisseurs', '/dashboard-administrative/demandes-acceptees');
 
 /*
 |--------------------------------------------------------------------------
@@ -316,38 +310,30 @@ Route::get('/dashboard-commercial/notifications', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-stock/stock', function () {
-    return Inertia::render('Stock/Index');
-})->name('rs.stock');
+Route::get('/dashboard-stock/produits', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'produits']);
+})->name('rs.products');
 
-Route::get('/dashboard-stock/stock/{id}', function ($id) {
-    return Inertia::render('Stock/Show', ['productId' => (int) $id]);
-})->whereNumber('id')->name('rs.stock.show');
+Route::get('/dashboard-stock/categories', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'categories']);
+})->name('rs.categories');
 
-Route::get('/dashboard-stock/rapports', function () {
-    return Inertia::render('Dashboard/Reports/Index');
-})->name('rs.reports');
+Route::get('/dashboard-stock/mouvements', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'mouvements']);
+})->name('rs.movements');
 
-Route::get('/dashboard-stock/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
-})->name('rs.notifications');
+Route::get('/dashboard-stock/receptions', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'receptions']);
+})->name('rs.receptions');
 
-Route::get('/dashboard-stock/stock/entrees', function () {
-    return Inertia::render('Operations/Index', ['module' => 'entrees']);
-})->name('rs.stock.entries');
+Route::get('/dashboard-stock/inventaires', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'inventaires']);
+})->name('rs.inventories');
 
-Route::get('/dashboard-stock/stock/sorties', function () {
-    return Inertia::render('Operations/Index', ['module' => 'sorties']);
-})->name('rs.stock.exits');
+Route::get('/dashboard-stock/livraisons', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'livraisons']);
+})->name('rs.deliveries');
 
-Route::get('/dashboard-stock/stock/alertes', function () {
-    return Inertia::render('Operations/Index', ['module' => 'alertes']);
-})->name('rs.stock.alerts');
-
-Route::get('/dashboard-stock/stock/inventaire', function () {
-    return Inertia::render('Operations/Index', ['module' => 'inventaire']);
-})->name('rs.stock.inventory');
-
-Route::get('/dashboard-stock/commandes', function () {
-    return Inertia::render('Operations/Index', ['module' => 'commandes']);
-})->name('rs.orders');
+Route::get('/dashboard-stock/alertes', function () {
+    return Inertia::render('Stock/Operations', ['section' => 'alertes']);
+})->name('rs.alerts');

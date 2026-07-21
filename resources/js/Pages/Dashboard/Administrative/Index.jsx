@@ -9,5 +9,5 @@ export default function AdministrativeDashboard({ user }) {
     const dashboard = useAdministrativeDashboard();
     const currentUser = user || dashboard.user;
     useEffect(() => { setCurrentUser(currentUser); }, [currentUser]);
-    return <DashboardLayout title="Gestion administrative" breadcrumbs={[{ label: "Gestion administrative" }, { label: "Vue d’ensemble" }]} user={currentUser}><Head title="Gestion administrative — SUPDATA"/><AdministrativeWorkspace dashboard={{ ...dashboard, user: currentUser }}/></DashboardLayout>;
+    return <DashboardLayout title="Gestion administrative" breadcrumbs={[{ label: "Gestion administrative" }, { label: "Vue d’ensemble" }]} user={currentUser} showNotifications={false}><Head title="Gestion administrative — SUPDATA"/><AdministrativeWorkspace dashboard={{ ...dashboard, user: currentUser }}/></DashboardLayout>;
 }
