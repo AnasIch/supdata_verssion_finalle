@@ -1,128 +1,100 @@
-import { useState, useCallback, useMemo } from "react";
-import {
-    initialNotifications as defaultNotifications,
-    categoryOptions,
-} from "@/Mocks/localAdminNotifications";
+import { useCallback } from "react";
+import { router } from "@inertiajs/react";
 
-export function useLocalAdminNotifications() {
-    const [notifications, setNotifications] = useState(defaultNotifications);
-    const [search, setSearch] = useState("");
-    const [categoryFilter, setCategoryFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
+export function useLocalAdminNotifications({
+    initialNotifications = [],
+    initialFilters = {},
+    initialPagination = { currentPage: 1, lastPage: 1, total: 0 },
+    initialStats = {},
+} = {}) {
+    const buildParams = useCallback((overrides = {}) => {
+        const params = {};
+        const s = overrides.search !== undefined ? overrides.search : initialFilters.search;
+        const read = overrides.read !== undefined ? overrides.read : initialFilters.read;
+        const page = overrides.page !== undefined ? overrides.page : initialPagination.currentPage;
 
-    const PAGE_SIZE = 8;
+        if (s) params.search = s;
+        if (read && read !== "all") params.read = read;
+        if (page > 1) params.page = page;
+
+        return params;
+    }, [initialFilters, initialPagination]);
+
+    const navigate = useCallback((overrides = {}) => {
+        const params = buildParams(overrides);
+        router.get(route("al.notifications"), params, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [buildParams]);
+
+    const handleSearch = useCallback((value) => {
+        navigate({ search: value, page: 1 });
+    }, [navigate]);
+
+    const handleReadChange = useCallback((value) => {
+        navigate({ read: value, page: 1 });
+    }, [navigate]);
+
+    const handlePageChange = useCallback((page) => {
+        navigate({ page });
+    }, [navigate]);
 
     const markAsRead = useCallback((id) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-        );
+        router.patch(route("al.notifications.read", id), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
     const markAllAsRead = useCallback(() => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        router.patch(route("al.notifications.read-all"), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
     const deleteNotification = useCallback((id) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        router.delete(route("al.notifications.destroy", id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
+        });
     }, []);
 
-    const filtered = useMemo(() => {
-        let result = [...notifications];
-
-        if (categoryFilter === "unread") {
-            result = result.filter((n) => !n.read);
-        } else if (categoryFilter === "read") {
-            result = result.filter((n) => n.read);
-        } else if (categoryFilter === "alertes") {
-            result = result.filter((n) => n.type === "warning" || n.type === "error");
-        } else if (categoryFilter === "demandes") {
-            result = result.filter((n) => n.category === "demandes");
-        } else if (categoryFilter === "stock") {
-            result = result.filter((n) => n.category === "stock");
-        } else if (categoryFilter === "system") {
-            result = result.filter((n) => n.category === "system");
-        }
-
-        if (search) {
-            const q = search.toLowerCase();
-            result = result.filter(
-                (n) =>
-                    n.title.toLowerCase().includes(q) ||
-                    n.description.toLowerCase().includes(q)
-            );
-        }
-
-        result.sort((a, b) => b.id - a.id);
-        return result;
-    }, [notifications, categoryFilter, search]);
-
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    const paged = filtered.slice(
-        (currentPage - 1) * PAGE_SIZE,
-        currentPage * PAGE_SIZE
-    );
-
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => !n.read).length,
-        [notifications]
-    );
-
-    const todayCount = useMemo(() => {
-        const today = new Date().toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
+    const deleteAllRead = useCallback(() => {
+        router.delete(route("al.notifications.destroy-all-read"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({ only: ["notifications", "unreadCount", "stats"] });
+            },
         });
-        return notifications.filter((n) => n.timestamp.startsWith(today.replace(/\//g, "/"))).length;
-    }, [notifications]);
+    }, []);
 
-    const thisWeekCount = useMemo(() => {
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return notifications.filter((n) => {
-            const parts = n.timestamp.split(" ")[0].split("/");
-            if (parts.length < 3) return false;
-            const d = new Date(parts[2], parts[1] - 1, parts[0]);
-            return d >= weekAgo;
-        }).length;
-    }, [notifications]);
-
-    const criticalCount = useMemo(
-        () => notifications.filter((n) => n.type === "warning" || n.type === "error").length,
-        [notifications]
-    );
-
-    const stats = useMemo(
-        () => ({
-            total: notifications.length,
-            unread: unreadCount,
-            today: todayCount,
-            thisWeek: thisWeekCount,
-            critical: criticalCount,
-        }),
-        [notifications, unreadCount, todayCount, thisWeekCount, criticalCount]
-    );
+    const resetFilters = useCallback(() => {
+        navigate({ search: "", read: "all", page: 1 });
+    }, [navigate]);
 
     return {
-        notifications: paged,
-        search,
-        setSearch,
-        categoryFilter,
-        setCategoryFilter,
-        categoryOptions,
-        currentPage,
-        setCurrentPage,
-        totalPages,
-        filteredCount: filtered.length,
-        unreadCount,
-        stats,
+        notifications: initialNotifications,
+        search: initialFilters.search || "",
+        setSearch: handleSearch,
+        readFilter: initialFilters.read || "all",
+        setReadFilter: handleReadChange,
+        currentPage: initialPagination.currentPage || 1,
+        setCurrentPage: handlePageChange,
+        totalPages: initialPagination.lastPage || 1,
+        filteredCount: initialPagination.total || 0,
+        stats: initialStats,
         markAsRead,
         markAllAsRead,
         deleteNotification,
-        resetFilters: () => {
-            setSearch("");
-            setCategoryFilter("all");
-            setCurrentPage(1);
-        },
+        deleteAllRead,
+        resetFilters,
     };
 }

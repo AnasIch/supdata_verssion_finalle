@@ -1,7 +1,7 @@
 import { CheckCheck } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 
-export default function NotificationsHeader({ unreadCount, onMarkAllRead }) {
+export default function NotificationsHeader({ unreadCount, onMarkAllRead, agency }) {
     return (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -9,7 +9,7 @@ export default function NotificationsHeader({ unreadCount, onMarkAllRead }) {
                     Notifications
                 </h1>
                 <p className="mt-1 text-sm text-slate-500">
-                    Alertes et notifications de l'agence Casablanca
+                    Alertes et notifications de l'agence {agency || "—"}
                 </p>
             </div>
             {unreadCount > 0 && (

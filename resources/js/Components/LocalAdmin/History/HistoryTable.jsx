@@ -1,81 +1,80 @@
 import { Badge } from "@/Components/UI/Badge";
 import { DataTable } from "@/Components/UI/DataTable";
 import {
+    LogIn,
+    LogOut,
+    Eye,
+    CheckCircle2,
+    XCircle,
+    KeyRound,
     ClipboardList,
     Package,
-    BarChart3,
-    Bell,
+    UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const typeConfig = {
-    demande: {
-        label: "Demande",
-        variant: "info",
-        icon: ClipboardList,
-    },
-    stock: {
-        label: "Stock",
-        variant: "warning",
-        icon: Package,
-    },
-    rapport: {
-        label: "Rapport",
-        variant: "default",
-        icon: BarChart3,
-    },
-    notification: {
-        label: "Notification",
-        variant: "secondary",
-        icon: Bell,
-    },
+const actionConfig = {
+    Connexion: { icon: LogIn, color: "bg-emerald-50 text-emerald-600" },
+    Déconnexion: { icon: LogOut, color: "bg-slate-100 text-slate-600" },
+    Consultation: { icon: Eye, color: "bg-blue-50 text-blue-600" },
+    Confirmation: { icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
+    Rejet: { icon: XCircle, color: "bg-red-50 text-red-600" },
+    Modification: { icon: UserCog, color: "bg-amber-50 text-amber-600" },
+    Validation: { icon: CheckCircle2, color: "bg-blue-50 text-blue-600" },
+    default: { icon: ClipboardList, color: "bg-slate-100 text-slate-600" },
 };
 
-const statusConfig = {
-    success: { label: "Succès", variant: "success" },
-    warning: { label: "Attention", variant: "warning" },
-    danger: { label: "Erreur", variant: "destructive" },
-    info: { label: "Info", variant: "info" },
-};
-
-function formatDate(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
-}
-
-function formatTime(dateStr) {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+function getActionConfig(action) {
+    return actionConfig[action] || actionConfig.default;
 }
 
 const columns = [
     {
+        header: "Date",
+        accessorKey: "timestamp",
+        cell: (row) => {
+            const parts = (row.timestamp || "").split(" ");
+            return (
+                <span className="text-sm text-slate-700">{parts[0] || "—"}</span>
+            );
+        },
+    },
+    {
+        header: "Heure",
+        accessorKey: "timestamp",
+        cell: (row) => {
+            const parts = (row.timestamp || "").split(" ");
+            return (
+                <span className="text-xs text-slate-400">{parts[1] || "—"}</span>
+            );
+        },
+    },
+    {
+        header: "Utilisateur",
+        accessorKey: "user",
+        cell: (row) => (
+            <div className="flex flex-col">
+                <span className="text-sm font-medium text-slate-800">{row.user || "Système"}</span>
+                {row.role && row.role !== "—" && (
+                    <span className="text-xs text-slate-400">{row.role}</span>
+                )}
+            </div>
+        ),
+    },
+    {
         header: "Action",
         accessorKey: "action",
         cell: (row) => {
-            const cfg = typeConfig[row.type] || typeConfig.demande;
+            const cfg = getActionConfig(row.action);
             const Icon = cfg.icon;
             return (
                 <div className="flex items-center gap-2">
-                    <div
-                        className={cn(
-                            "flex size-8 items-center justify-center rounded-lg",
-                            row.type === "demande" && "bg-blue-50 text-blue-600",
-                            row.type === "stock" && "bg-amber-50 text-amber-600",
-                            row.type === "rapport" && "bg-slate-100 text-slate-600",
-                            row.type === "notification" && "bg-violet-50 text-violet-600"
-                        )}
-                    >
+                    <div className={cn("flex size-8 items-center justify-center rounded-lg", cfg.color)}>
                         <Icon className="size-4" />
                     </div>
-                    <span className="font-medium text-slate-800">{row.action}</span>
+                    <Badge variant={row.status === "Échoué" ? "destructive" : "secondary"}>
+                        {row.action}
+                    </Badge>
                 </div>
             );
         },
@@ -86,34 +85,11 @@ const columns = [
         className: "max-w-xs",
     },
     {
-        header: "Utilisateur",
-        accessorKey: "user",
-    },
-    {
-        header: "Date",
-        accessorKey: "date",
+        header: "Adresse IP",
+        accessorKey: "ip",
         cell: (row) => (
-            <div className="flex flex-col">
-                <span className="text-sm text-slate-700">{formatDate(row.date)}</span>
-                <span className="text-xs text-slate-400">{formatTime(row.date)}</span>
-            </div>
+            <span className="font-mono text-xs text-slate-500">{row.ip || "—"}</span>
         ),
-    },
-    {
-        header: "Type",
-        accessorKey: "type",
-        cell: (row) => {
-            const cfg = typeConfig[row.type] || typeConfig.demande;
-            return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
-        },
-    },
-    {
-        header: "Statut",
-        accessorKey: "status",
-        cell: (row) => {
-            const cfg = statusConfig[row.status] || statusConfig.info;
-            return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
-        },
     },
 ];
 

@@ -46,6 +46,11 @@ class NotificationController extends Controller
         return Inertia::render('Dashboard/Commercial/Notifications', $this->getData($request));
     }
 
+    public function localAdminIndex(Request $request)
+    {
+        return Inertia::render('Dashboard/LocalAdmin/Notifications/Index', $this->getData($request));
+    }
+
     public function unreadCount()
     {
         return response()->json([

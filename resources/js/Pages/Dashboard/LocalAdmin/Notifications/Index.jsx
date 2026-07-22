@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useLocalAdminNotifications } from "@/Hooks/useLocalAdminNotifications";
 import NotificationsHeader from "@/Components/LocalAdmin/Notifications/NotificationsHeader";
 import NotificationStats from "@/Components/LocalAdmin/Notifications/NotificationStats";
@@ -20,40 +19,58 @@ import {
     DialogTitle,
 } from "@/Components/UI/Dialog";
 
-export default function LocalAdminNotifications() {
-    const user = getCurrentUser();
+const readFilterOptions = [
+    { value: "all", label: "Toutes" },
+    { value: "unread", label: "Non lues" },
+    { value: "read", label: "Lues" },
+];
+
+export default function LocalAdminNotifications({
+    notifications: initialNotifications,
+    pagination,
+    stats,
+    unreadCount,
+    filters,
+}) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+
     const {
         notifications,
         search,
         setSearch,
-        categoryFilter,
-        setCategoryFilter,
-        categoryOptions,
+        readFilter,
+        setReadFilter,
         currentPage,
         setCurrentPage,
         totalPages,
         filteredCount,
-        unreadCount,
-        stats,
+        stats: notifStats,
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        deleteAllRead,
         resetFilters,
-    } = useLocalAdminNotifications();
+    } = useLocalAdminNotifications({
+        initialNotifications,
+        initialFilters: filters,
+        initialPagination: pagination,
+        initialStats: stats,
+    });
 
     const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
-    const hasFilters = search || categoryFilter !== "all";
+    const hasFilters = search || readFilter !== "all";
 
     return (
         <DashboardLayout
-            title="Notifications — Agence"
+            title="Notifications"
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
+                { label: "Dashboard", href: "/dashboard-admin-local" },
                 { label: "Notifications" },
             ]}
             user={user}
         >
-            <Head title="Notifications — Agence Casablanca — SUPDATA" />
+            <Head title="Notifications — SUPDATA" />
 
             <div className="flex flex-col gap-6">
                 <motion.div
@@ -64,10 +81,11 @@ export default function LocalAdminNotifications() {
                     <NotificationsHeader
                         unreadCount={unreadCount}
                         onMarkAllRead={markAllAsRead}
+                        agency={user?.agency}
                     />
                 </motion.div>
 
-                <NotificationStats stats={stats} />
+                <NotificationStats stats={notifStats} />
 
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -78,9 +96,9 @@ export default function LocalAdminNotifications() {
                     <NotificationsFilter
                         search={search}
                         onSearchChange={setSearch}
-                        categoryFilter={categoryFilter}
-                        onCategoryChange={setCategoryFilter}
-                        categoryOptions={categoryOptions}
+                        categoryFilter={readFilter}
+                        onCategoryChange={setReadFilter}
+                        categoryOptions={readFilterOptions}
                         onReset={resetFilters}
                         hasFilters={hasFilters}
                     />
@@ -123,7 +141,7 @@ export default function LocalAdminNotifications() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage <= 1}
-                            onClick={() => setCurrentPage((p) => p - 1)}
+                            onClick={() => setCurrentPage(currentPage - 1)}
                         >
                             <ChevronLeft size={14} />
                         </Button>
@@ -134,7 +152,7 @@ export default function LocalAdminNotifications() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage >= totalPages}
-                            onClick={() => setCurrentPage((p) => p + 1)}
+                            onClick={() => setCurrentPage(currentPage + 1)}
                         >
                             <ChevronRight size={14} />
                         </Button>
@@ -163,6 +181,7 @@ export default function LocalAdminNotifications() {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => {
+                                    deleteAllRead();
                                     setConfirmDeleteAll(false);
                                 }}
                             >

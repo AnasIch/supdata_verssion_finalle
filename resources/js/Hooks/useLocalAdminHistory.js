@@ -1,65 +1,70 @@
-import { useState, useMemo } from "react";
-import { localAdminHistory, typeOptions } from "@/Mocks/localAdminHistory";
+import { useCallback } from "react";
+import { router } from "@inertiajs/react";
 
-export function useLocalAdminHistory() {
-    const [search, setSearch] = useState("");
-    const [typeFilter, setTypeFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+export function useLocalAdminHistory({
+    initialLogs = [],
+    initialFilters = {},
+    initialPagination = { currentPage: 1, lastPage: 1, total: 0 },
+    initialStats = {},
+    initialActions = [],
+} = {}) {
+    const buildParams = useCallback((overrides = {}) => {
+        const params = {};
+        const s = overrides.search !== undefined ? overrides.search : initialFilters.search;
+        const action = overrides.action !== undefined ? overrides.action : initialFilters.action;
+        const period = overrides.period !== undefined ? overrides.period : initialFilters.period;
+        const page = overrides.page !== undefined ? overrides.page : initialPagination.currentPage;
 
-    const stats = useMemo(() => {
-        const total = localAdminHistory.length;
-        const validations = localAdminHistory.filter(
-            (h) => h.action.toLowerCase().includes("validation")
-        ).length;
-        const refus = localAdminHistory.filter(
-            (h) => h.action.toLowerCase().includes("refus")
-        ).length;
-        const stockConsults = localAdminHistory.filter(
-            (h) => h.type === "stock"
-        ).length;
+        if (s) params.search = s;
+        if (action && action !== "all") params.action = action;
+        if (period && period !== "all") params.period = period;
+        if (page > 1) params.page = page;
 
-        return { total, validations, refus, stockConsults };
-    }, []);
+        return params;
+    }, [initialFilters, initialPagination]);
 
-    const filtered = useMemo(() => {
-        let result = [...localAdminHistory];
+    const navigate = useCallback((overrides = {}) => {
+        const params = buildParams(overrides);
+        router.get(route("al.history"), params, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [buildParams]);
 
-        if (search) {
-            const q = search.toLowerCase();
-            result = result.filter(
-                (h) =>
-                    h.action.toLowerCase().includes(q) ||
-                    h.description.toLowerCase().includes(q) ||
-                    h.user.toLowerCase().includes(q)
-            );
-        }
+    const handleSearch = useCallback((value) => {
+        navigate({ search: value, page: 1 });
+    }, [navigate]);
 
-        if (typeFilter !== "all") {
-            result = result.filter((h) => h.type === typeFilter);
-        }
+    const handleActionChange = useCallback((value) => {
+        navigate({ action: value, page: 1 });
+    }, [navigate]);
 
-        return result;
-    }, [search, typeFilter]);
+    const handlePeriodChange = useCallback((value) => {
+        navigate({ period: value, page: 1 });
+    }, [navigate]);
 
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-    const paginated = filtered.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const handlePageChange = useCallback((page) => {
+        navigate({ page });
+    }, [navigate]);
+
+    const resetFilters = useCallback(() => {
+        navigate({ search: "", action: "all", period: "all", page: 1 });
+    }, [navigate]);
 
     return {
-        history: paginated,
-        allHistory: filtered,
-        search,
-        setSearch,
-        typeFilter,
-        setTypeFilter,
-        typeOptions,
-        currentPage,
-        setCurrentPage,
-        totalPages,
-        filteredCount: filtered.length,
-        stats,
+        logs: initialLogs,
+        search: initialFilters.search || "",
+        setSearch: handleSearch,
+        actionFilter: initialFilters.action || "all",
+        setActionFilter: handleActionChange,
+        periodFilter: initialFilters.period || "all",
+        setPeriodFilter: handlePeriodChange,
+        actions: initialActions,
+        currentPage: initialPagination.currentPage || 1,
+        setCurrentPage: handlePageChange,
+        totalPages: initialPagination.lastPage || 1,
+        filteredCount: initialPagination.total || 0,
+        stats: initialStats,
+        resetFilters,
     };
 }

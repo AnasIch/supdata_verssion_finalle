@@ -1,8 +1,16 @@
-import { FileText, User, Calendar, MapPin, Tag, Building2, Hash, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
+import { FileText, Calendar, Tag, Building2, Hash, Package } from "lucide-react";
+import { Card, CardContent } from "@/Components/UI/Card";
 import StockStatusBadge from "./StockStatusBadge";
 
+function getAvailabilityStatus(product) {
+    if (product.quantity_in_stock === 0) return "out_of_stock";
+    if (product.quantity_in_stock <= product.minimum_stock) return "low";
+    return "available";
+}
+
 export default function StockDetails({ product }) {
+    const status = getAvailabilityStatus(product);
+
     return (
         <Card>
             <CardContent className="p-6">
@@ -34,7 +42,7 @@ export default function StockDetails({ product }) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500">Agence</p>
-                                    <p className="text-sm font-medium text-slate-900">{product.agency}</p>
+                                    <p className="text-sm font-medium text-slate-900">{product.agency?.name ?? "—"}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -42,28 +50,19 @@ export default function StockDetails({ product }) {
                                     <Hash className="size-4 text-slate-500" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500">Quantité</p>
-                                    <p className={`text-sm font-bold ${product.quantity <= product.minThreshold ? "text-red-500" : "text-slate-900"}`}>
-                                        {product.quantity} unités
+                                    <p className="text-xs text-slate-500">Quantité en stock</p>
+                                    <p className={`text-sm font-bold ${product.quantity_in_stock <= product.minimum_stock ? "text-red-500" : "text-slate-900"}`}>
+                                        {product.quantity_in_stock} unités
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="flex size-8 items-center justify-center rounded-lg bg-slate-100">
-                                    <AlertTriangle className="size-4 text-slate-500" />
+                                    <Package className="size-4 text-slate-500" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500">Seuil minimum</p>
-                                    <p className="text-sm font-medium text-slate-900">{product.minThreshold} unités</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-8 items-center justify-center rounded-lg bg-slate-100">
-                                    <MapPin className="size-4 text-slate-500" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-slate-500">Emplacement</p>
-                                    <p className="text-sm font-medium text-slate-900">{product.location}</p>
+                                    <p className="text-xs text-slate-500">Quantité réservée</p>
+                                    <p className="text-sm font-medium text-slate-900">{product.reserved_quantity} unités</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -72,7 +71,7 @@ export default function StockDetails({ product }) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500">Dernière mise à jour</p>
-                                    <p className="text-sm font-medium text-slate-900">{product.updatedAt}</p>
+                                    <p className="text-sm font-medium text-slate-900">{product.updated_at}</p>
                                 </div>
                             </div>
                         </div>
@@ -82,26 +81,16 @@ export default function StockDetails({ product }) {
                         <div className="rounded-xl border border-slate-100 p-4 text-center">
                             <p className="text-xs text-slate-500">Statut</p>
                             <div className="mt-1 flex justify-center">
-                                <StockStatusBadge status={product.status} />
+                                <StockStatusBadge status={status} />
                             </div>
                         </div>
                         <div className="rounded-xl border border-slate-100 p-4 text-center">
                             <p className="text-xs text-slate-500">Valeur unitaire</p>
-                            <p className="mt-1 text-lg font-bold text-slate-900">{product.unitPrice} MAD</p>
+                            <p className="mt-1 text-lg font-bold text-slate-900">{product.unit_price.toLocaleString("fr-FR")} MAD</p>
                         </div>
                     </div>
                 </div>
             </CardContent>
         </Card>
-    );
-}
-
-function AlertTriangle({ className }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-            <path d="M12 9v4" />
-            <path d="M12 17h.01" />
-        </svg>
     );
 }

@@ -53,10 +53,25 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        $oldName = $user->name;
+        $oldPhone = $user->phone;
+
         $user->update([
             'name' => $request->validated('name'),
             'phone' => $request->validated('phone'),
         ]);
+
+        $this->auditLogService->log(
+            user: $user,
+            action: 'Modification',
+            module: 'Profil',
+            description: 'Modification du profil',
+            target: $user->email,
+            oldValues: ['nom' => $oldName, 'telephone' => $oldPhone],
+            newValues: ['nom' => $request->validated('name'), 'telephone' => $request->validated('phone')],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
 
         return back()->with('success', 'Profil mis à jour avec succès.');
     }

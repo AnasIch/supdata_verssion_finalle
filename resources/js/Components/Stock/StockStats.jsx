@@ -1,4 +1,4 @@
-import { Package, AlertTriangle, XCircle, DollarSign } from "lucide-react";
+import { Package, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const statItems = [
@@ -9,7 +9,7 @@ const statItems = [
 
 export default function StockStats({ data }) {
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {statItems.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -29,17 +29,6 @@ export default function StockStats({ data }) {
                     </div>
                 );
             })}
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgb(0,0,0,0.04)]">
-                <div className="flex items-center justify-between">
-                    <div className="flex size-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                        <DollarSign className="size-5" />
-                    </div>
-                    <span className="text-2xl font-bold tracking-tight text-slate-900">
-                        {data.totalValue.toLocaleString("fr-FR")}
-                    </span>
-                </div>
-                <p className="mt-3 text-sm text-slate-500">Valeur estimée (MAD)</p>
-            </div>
         </div>
     );
 }

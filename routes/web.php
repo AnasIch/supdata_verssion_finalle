@@ -7,6 +7,8 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CommercialDashboardController;
 use App\Http\Controllers\CommercialStockController;
+use App\Http\Controllers\LocalAdminDashboardController;
+use App\Http\Controllers\LocalAdminDemandeController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Foundation\Application;
@@ -62,23 +64,13 @@ Route::get('/notifications', function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-admin-local', function () {
-    return Inertia::render('Dashboard/LocalAdmin/Index', [
-        'user' => [
-            'name' => 'Youssef Benali',
-            'email' => 'y.benali@supdata.ma',
-            'role' => 'Administrateur Local',
-        ],
-    ]);
-})->name('local-admin.dashboard');
-
-Route::get('/demandes', function () {
-    return Inertia::render('Demandes/Index');
-})->name('demandes');
-
-Route::get('/demandes/{id}', function ($id) {
-    return Inertia::render('Demandes/Show', ['demandeId' => $id]);
-})->name('demandes.show');
+Route::middleware(['auth', 'role:admin_local'])->group(function () {
+    Route::get('/dashboard-admin-local', [LocalAdminDashboardController::class, 'index'])->name('local-admin.dashboard');
+    Route::get('/dashboard-admin-local/demandes', [LocalAdminDemandeController::class, 'index'])->name('demandes');
+    Route::post('/dashboard-admin-local/demandes/{id}/confirmer', [LocalAdminDemandeController::class, 'confirm'])->name('demandes.confirm');
+    Route::post('/dashboard-admin-local/demandes/{id}/rejeter', [LocalAdminDemandeController::class, 'reject'])->name('demandes.reject');
+    Route::get('/dashboard-admin-local/demandes/{id}', [LocalAdminDemandeController::class, 'show'])->name('demandes.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -200,37 +192,20 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-admin-local/demandes', function () {
-    return Inertia::render('Demandes/Index');
-})->name('al.demandes');
+Route::middleware(['auth', 'role:admin_local'])->group(function () {
+    Route::get('/dashboard-admin-local/stock', [\App\Http\Controllers\LocalAdminStockController::class, 'index'])->name('al.stock');
 
-Route::get('/dashboard-admin-local/demandes/{id}', function ($id) {
-    return Inertia::render('Demandes/Show', ['demandeId' => $id]);
-})->name('al.demandes.show');
+    Route::get('/dashboard-admin-local/stock/{id}', [\App\Http\Controllers\LocalAdminStockController::class, 'show'])->name('al.stock.show');
 
-Route::get('/dashboard-admin-local/stock', function () {
-    return Inertia::render('Stock/Index');
-})->name('al.stock');
+    Route::get('/dashboard-admin-local/notifications', [\App\Http\Controllers\NotificationController::class, 'localAdminIndex'])->name('al.notifications');
+    Route::get('/dashboard-admin-local/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('al.notifications.unread-count');
+    Route::patch('/dashboard-admin-local/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('al.notifications.read-all');
+    Route::patch('/dashboard-admin-local/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('al.notifications.read');
+    Route::delete('/dashboard-admin-local/notifications/read', [\App\Http\Controllers\NotificationController::class, 'destroyAllRead'])->name('al.notifications.destroy-all-read');
+    Route::delete('/dashboard-admin-local/notifications/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('al.notifications.destroy');
 
-Route::get('/dashboard-admin-local/stock/{id}', function ($id) {
-    return Inertia::render('Stock/Show', ['productId' => (int) $id]);
-})->name('al.stock.show');
-
-Route::get('/dashboard-admin-local/rapports', function () {
-    return Inertia::render('Dashboard/LocalAdmin/Reports/Index');
-})->name('al.reports');
-
-Route::get('/dashboard-admin-local/notifications', function () {
-    return Inertia::render('Dashboard/LocalAdmin/Notifications/Index');
-})->name('al.notifications');
-
-Route::get('/dashboard-admin-local/historique', function () {
-    return Inertia::render('Dashboard/LocalAdmin/History/Index');
-})->name('al.history');
-
-Route::get('/dashboard-admin-local/parametres', function () {
-    return Inertia::render('Dashboard/LocalAdmin/Settings/Index');
-})->name('al.settings');
+    Route::get('/dashboard-admin-local/historique', [\App\Http\Controllers\LocalAdminHistoryController::class, 'index'])->name('al.history');
+});
 
 /*
 |--------------------------------------------------------------------------

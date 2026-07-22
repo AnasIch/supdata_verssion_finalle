@@ -2,7 +2,6 @@ import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useLocalAdminHistory } from "@/Hooks/useLocalAdminHistory";
 import HistoryStats from "@/Components/LocalAdmin/History/HistoryStats";
 import HistoryTable from "@/Components/LocalAdmin/History/HistoryTable";
@@ -10,34 +9,51 @@ import { SearchInput } from "@/Components/UI/SearchInput";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/Components/UI/Select";
 import { Button } from "@/Components/UI/Button";
 
-export default function LocalAdminHistory() {
-    const user = getCurrentUser();
+export default function LocalAdminHistory({ user, logs, pagination, stats, actions, filters }) {
     const {
-        history,
         search,
         setSearch,
-        typeFilter,
-        setTypeFilter,
-        typeOptions,
+        actionFilter,
+        setActionFilter,
+        periodFilter,
+        setPeriodFilter,
         currentPage,
         setCurrentPage,
         totalPages,
         filteredCount,
-        stats,
-    } = useLocalAdminHistory();
+        resetFilters,
+    } = useLocalAdminHistory({
+        initialLogs: logs,
+        initialFilters: filters,
+        initialPagination: pagination,
+        initialStats: stats,
+        initialActions: actions,
+    });
 
-    const hasFilters = search || typeFilter !== "all";
+    const hasFilters = search || actionFilter !== "all" || periodFilter !== "all";
+
+    const periodOptions = [
+        { value: "all", label: "Toutes les périodes" },
+        { value: "today", label: "Aujourd'hui" },
+        { value: "7days", label: "7 derniers jours" },
+        { value: "30days", label: "30 derniers jours" },
+    ];
+
+    const actionOptions = [
+        { value: "all", label: "Toutes les actions" },
+        ...actions.map((a) => ({ value: a, label: a })),
+    ];
 
     return (
         <DashboardLayout
             title="Historique — Agence"
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
+                { label: "Dashboard", href: "/dashboard-admin-local" },
                 { label: "Historique" },
             ]}
             user={user}
         >
-            <Head title="Historique — Agence Casablanca — SUPDATA" />
+            <Head title="Historique — Agence — SUPDATA" />
 
             <div className="flex flex-col gap-6">
                 <motion.div
@@ -65,26 +81,35 @@ export default function LocalAdminHistory() {
                         <SearchInput
                             placeholder="Rechercher une action..."
                             value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setCurrentPage(1);
-                            }}
+                            onChange={(e) => setSearch(e.target.value)}
                             aria-label="Rechercher dans l'historique"
                         />
                     </div>
                     <div className="flex items-center gap-3">
                         <Select
-                            value={typeFilter}
-                            onValueChange={(v) => {
-                                setTypeFilter(v);
-                                setCurrentPage(1);
-                            }}
+                            value={actionFilter}
+                            onValueChange={setActionFilter}
                         >
-                            <SelectTrigger className="w-[180px]" aria-label="Filtrer par type">
-                                <SelectValue placeholder="Type d'activité" />
+                            <SelectTrigger className="w-[180px]" aria-label="Filtrer par action">
+                                <SelectValue placeholder="Type d'action" />
                             </SelectTrigger>
                             <SelectContent>
-                                {typeOptions.map((opt) => (
+                                {actionOptions.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select
+                            value={periodFilter}
+                            onValueChange={setPeriodFilter}
+                        >
+                            <SelectTrigger className="w-[180px]" aria-label="Filtrer par période">
+                                <SelectValue placeholder="Période" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {periodOptions.map((opt) => (
                                     <SelectItem key={opt.value} value={opt.value}>
                                         {opt.label}
                                     </SelectItem>
@@ -95,11 +120,7 @@ export default function LocalAdminHistory() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                    setSearch("");
-                                    setTypeFilter("all");
-                                    setCurrentPage(1);
-                                }}
+                                onClick={resetFilters}
                             >
                                 <RotateCcw size={14} className="mr-1.5" />
                                 Réinitialiser
@@ -120,7 +141,7 @@ export default function LocalAdminHistory() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.2 }}
                 >
-                    <HistoryTable data={history} />
+                    <HistoryTable data={logs} />
                 </motion.div>
 
                 {totalPages > 1 && (
@@ -129,7 +150,7 @@ export default function LocalAdminHistory() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage <= 1}
-                            onClick={() => setCurrentPage((p) => p - 1)}
+                            onClick={() => setCurrentPage(currentPage - 1)}
                         >
                             <ChevronLeft size={14} />
                         </Button>
@@ -140,7 +161,7 @@ export default function LocalAdminHistory() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage >= totalPages}
-                            onClick={() => setCurrentPage((p) => p + 1)}
+                            onClick={() => setCurrentPage(currentPage + 1)}
                         >
                             <ChevronRight size={14} />
                         </Button>

@@ -39,7 +39,7 @@ export default function RefuseDemandeDialog({ open, onOpenChange, demande, onCon
                         Refuser la demande <span className="font-medium text-slate-700">{demande?.id}</span> avec un motif.
                         <br />
                         <span className="text-xs text-slate-400">
-                            Cette action sera implémentée lors de la phase Backend.
+                            Le motif sera enregistré dans le système.
                         </span>
                     </DialogDescription>
                 </DialogHeader>

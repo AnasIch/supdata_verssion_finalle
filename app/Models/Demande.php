@@ -21,6 +21,13 @@ class Demande extends Model
         'quantity',
         'product_name',
         'products',
+        'validated_by',
+        'validated_at',
+        'refusal_reason',
+        'refused_by',
+        'refused_at',
+        'confirmed_by',
+        'confirmed_at',
     ];
 
     protected function casts(): array
@@ -28,6 +35,9 @@ class Demande extends Model
         return [
             'quantity' => 'integer',
             'products' => 'array',
+            'validated_at' => 'datetime',
+            'refused_at' => 'datetime',
+            'confirmed_at' => 'datetime',
         ];
     }
 
@@ -39,5 +49,20 @@ class Demande extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
+    }
+
+    public function validatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validated_by');
+    }
+
+    public function refusedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refused_by');
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
     }
 }
