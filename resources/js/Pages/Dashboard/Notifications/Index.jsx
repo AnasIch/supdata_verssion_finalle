@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Head } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import {
     Bell,
@@ -23,13 +23,12 @@ import {
     Package,
     Shield,
     BarChart3,
-    AlertCircle,
+    Info,
+    CheckCircle2,
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
 import { useNotifications } from "@/Hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import { notificationTypes, notificationSources } from "@/Mocks/notificationsList";
 import { Button } from "@/Components/UI/Button";
 import { Input } from "@/Components/UI/Input";
 import {
@@ -46,6 +45,25 @@ const fadeUp = {
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.35 },
 };
+
+const notificationTypes = {
+    info: { color: "bg-blue-50 text-blue-600", icon: Info },
+    success: { color: "bg-emerald-50 text-emerald-600", icon: CheckCircle2 },
+    warning: { color: "bg-amber-50 text-amber-600", icon: AlertTriangle },
+    error: { color: "bg-red-50 text-red-600", icon: XCircle },
+};
+
+const notificationSources = [
+    { value: "all", label: "Toutes les sources" },
+    { value: "system", label: "Système" },
+    { value: "stock", label: "Stock" },
+    { value: "achats", label: "Achats" },
+    { value: "utilisateurs", label: "Utilisateurs" },
+    { value: "agences", label: "Agences" },
+    { value: "roles", label: "Rôles" },
+    { value: "paramètres", label: "Paramètres" },
+    { value: "rapports", label: "Rapports" },
+];
 
 const sourceIcons = {
     system: Settings,
@@ -67,8 +85,7 @@ function NotificationIcon({ type, size = 16 }) {
 
 function SourceBadge({ source }) {
     const Icon = sourceIcons[source] || Bell;
-    const label =
-        notificationSources.find((s) => s.value === source)?.label || source;
+    const label = notificationSources.find((s) => s.value === source)?.label || source;
     return (
         <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
             <Icon size={12} />
@@ -94,12 +111,7 @@ function EmptyState({ hasFilters, onReset }) {
                     : "Vous recevrez ici les alertes et notifications du système"}
             </p>
             {hasFilters && (
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={onReset}
-                >
+                <Button variant="outline" size="sm" className="mt-4" onClick={onReset}>
                     <RotateCcw size={14} className="mr-1.5" />
                     Réinitialiser les filtres
                 </Button>
@@ -108,13 +120,16 @@ function EmptyState({ hasFilters, onReset }) {
     );
 }
 
-function NotificationRow({ notification }) {
+function NotificationRow({ notification, onMarkAsRead, onDelete }) {
     const [openDetail, setOpenDetail] = useState(false);
 
     return (
         <div>
             <div
-                onClick={() => setOpenDetail(true)}
+                onClick={() => {
+                    setOpenDetail(true);
+                    if (!notification.read) onMarkAsRead(notification.id);
+                }}
                 className={cn(
                     "group flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all hover:shadow-sm sm:items-center sm:p-4",
                     notification.read
@@ -165,18 +180,26 @@ function NotificationRow({ notification }) {
                         )}
                     </div>
                 </div>
+
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(notification.id);
+                    }}
+                    className="hidden shrink-0 rounded-lg p-1.5 text-slate-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                    aria-label="Supprimer"
+                >
+                    <Trash2 size={14} />
+                </button>
             </div>
 
             <Dialog open={openDetail} onOpenChange={setOpenDetail}>
                 <DialogContent className="max-w-lg sm:max-w-xl">
                     <DialogHeader>
-                        <DialogTitle className="pr-8">
-                            {notification.title}
-                        </DialogTitle>
+                        <DialogTitle className="pr-8">{notification.title}</DialogTitle>
                         <DialogDescription className="flex items-center gap-2 text-xs">
                             <Clock size={12} />
-                            {notification.timestamp} ·{" "}
-                            <SourceBadge source={notification.source} />
+                            {notification.timestamp} · <SourceBadge source={notification.source} />
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col gap-4 py-2">
@@ -204,20 +227,17 @@ function NotificationRow({ notification }) {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setOpenDetail(false)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setOpenDetail(false)}>
                             Fermer
                         </Button>
-                        {notification.actionUrl && (
+                        {notification.action_url && (
                             <Button
                                 size="sm"
                                 onClick={() => {
-                                    const currentUser = getCurrentUser();
-                                    const base = getDashboardPath(currentUser.role);
-                                    window.location.href = `${base}${notification.actionUrl}`;
+                                    const base = window.location.pathname.match(
+                                        /^\/dashboard-(super-admin|admin-local|administrative|commercial|stock)/
+                                    )?.[0] || "/dashboard-super-admin";
+                                    window.location.href = `${base}/${notification.action_url}`;
                                 }}
                             >
                                 Voir les détails
@@ -308,8 +328,22 @@ function FilterBar({
     );
 }
 
-export default function NotificationsIndex() {
-    const user = useMemo(() => getCurrentUser(), []);
+export default function NotificationsIndex({
+    notifications: initialNotifications,
+    pagination: initialPagination,
+    stats: initialStats,
+    unreadCount: initialUnreadCount,
+    filters: initialFilters,
+}) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+    const base = user?.role === "Super Admin" ? "/dashboard-super-admin"
+        : user?.role === "Administrateur Local" ? "/dashboard-admin-local"
+        : user?.role === "Gestion Administrative" ? "/dashboard-administrative"
+        : user?.role === "Responsable Commercial" ? "/dashboard-commercial"
+        : user?.role === "Responsable Stock" ? "/dashboard-stock"
+        : "/dashboard-super-admin";
+
     const {
         notifications,
         search,
@@ -324,53 +358,34 @@ export default function NotificationsIndex() {
         setCurrentPage,
         totalPages,
         filteredCount,
-        unreadCount,
-        stats,
+        hasFilters,
+        markAsRead,
         markAllAsRead,
+        deleteNotification,
         deleteAllRead,
         resetFilters,
-    } = useNotifications();
+    } = useNotifications({
+        initialNotifications,
+        initialFilters,
+        initialPagination,
+    });
 
     const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
-    const hasFilters =
-        search || sourceFilter !== "all" || typeFilter !== "all" || readFilter !== "all";
+
+    const stats = initialStats || { total: 0, unread: 0, warning: 0, error: 0 };
 
     const kpiData = [
-        {
-            label: "Total",
-            value: stats.total,
-            icon: Bell,
-            color: "text-slate-600",
-            bg: "bg-slate-50",
-        },
-        {
-            label: "Non lues",
-            value: stats.unread,
-            icon: BellRing,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
-        },
-        {
-            label: "Avertissements",
-            value: stats.warning,
-            icon: AlertTriangle,
-            color: "text-amber-600",
-            bg: "bg-amber-50",
-        },
-        {
-            label: "Erreurs",
-            value: stats.error,
-            icon: XCircle,
-            color: "text-red-600",
-            bg: "bg-red-50",
-        },
+        { label: "Total", value: stats.total, icon: Bell, color: "text-slate-600", bg: "bg-slate-50" },
+        { label: "Non lues", value: stats.unread, icon: BellRing, color: "text-blue-600", bg: "bg-blue-50" },
+        { label: "Avertissements", value: stats.warning, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-50" },
+        { label: "Erreurs", value: stats.error, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
     ];
 
     return (
         <DashboardLayout
             title="Centre de notifications"
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
+                { label: "Dashboard", href: base },
                 { label: "Notifications" },
             ]}
             user={user}
@@ -387,21 +402,12 @@ export default function NotificationsIndex() {
                             transition={{ duration: 0.3, delay: i * 0.05 }}
                             className="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-4"
                         >
-                            <div
-                                className={cn(
-                                    "flex size-10 items-center justify-center rounded-lg",
-                                    kpi.bg
-                                )}
-                            >
+                            <div className={cn("flex size-10 items-center justify-center rounded-lg", kpi.bg)}>
                                 <kpi.icon size={20} className={kpi.color} />
                             </div>
                             <div>
-                                <p className="text-xs text-slate-500">
-                                    {kpi.label}
-                                </p>
-                                <p className="text-xl font-bold text-slate-900">
-                                    {kpi.value}
-                                </p>
+                                <p className="text-xs text-slate-500">{kpi.label}</p>
+                                <p className="text-xl font-bold text-slate-900">{kpi.value}</p>
                             </div>
                         </motion.div>
                     ))}
@@ -428,12 +434,8 @@ export default function NotificationsIndex() {
                         {hasFilters && " (filtré)"}
                     </p>
                     <div className="flex gap-2">
-                        {unreadCount > 0 && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={markAllAsRead}
-                            >
+                        {stats.unread > 0 && (
+                            <Button variant="outline" size="sm" onClick={markAllAsRead}>
                                 <CheckCheck size={14} className="mr-1.5" />
                                 Tout marquer lu
                             </Button>
@@ -451,16 +453,15 @@ export default function NotificationsIndex() {
 
                 <div className="flex flex-col gap-2">
                     {notifications.length === 0 ? (
-                        <EmptyState
-                            hasFilters={hasFilters}
-                            onReset={resetFilters}
-                        />
+                        <EmptyState hasFilters={hasFilters} onReset={resetFilters} />
                     ) : (
                         <div className="flex flex-col gap-2">
                             {notifications.map((n) => (
                                 <NotificationRow
                                     key={n.id}
                                     notification={n}
+                                    onMarkAsRead={markAsRead}
+                                    onDelete={deleteNotification}
                                 />
                             ))}
                         </div>
@@ -473,7 +474,7 @@ export default function NotificationsIndex() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage <= 1}
-                            onClick={() => setCurrentPage((p) => p - 1)}
+                            onClick={() => setCurrentPage(currentPage - 1)}
                         >
                             <ChevronLeft size={14} />
                         </Button>
@@ -484,32 +485,23 @@ export default function NotificationsIndex() {
                             variant="outline"
                             size="sm"
                             disabled={currentPage >= totalPages}
-                            onClick={() => setCurrentPage((p) => p + 1)}
+                            onClick={() => setCurrentPage(currentPage + 1)}
                         >
                             <ChevronRight size={14} />
                         </Button>
                     </div>
                 )}
 
-                <Dialog
-                    open={confirmDeleteAll}
-                    onOpenChange={setConfirmDeleteAll}
-                >
+                <Dialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Supprimer les notifications lues ?</DialogTitle>
                             <DialogDescription>
-                                Cette action est irréversible. Toutes les
-                                notifications lues seront définitivement
-                                supprimées.
+                                Cette action est irréversible. Toutes les notifications lues seront définitivement supprimées.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setConfirmDeleteAll(false)}
-                            >
+                            <Button variant="outline" size="sm" onClick={() => setConfirmDeleteAll(false)}>
                                 Annuler
                             </Button>
                             <Button

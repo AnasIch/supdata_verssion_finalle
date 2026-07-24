@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from "@inertiajs/react";
 import { motion } from "framer-motion";
-import { Loader2, Mail, ArrowRight } from "lucide-react";
+import { Loader2, Mail, ArrowRight, LayoutDashboard, LogOut } from "lucide-react";
 import AuthLayout from "@/Layouts/AuthLayout";
 import AuthCard from "@/Components/Auth/AuthCard";
 import AuthHeader from "@/Components/Auth/AuthHeader";
@@ -10,8 +10,11 @@ import { PasswordInput } from "@/Components/Auth/PasswordInput";
 import { Button } from "@/Components/UI/Button";
 import { Checkbox } from "@/Components/UI/Checkbox";
 import { Label } from "@/Components/UI/Label";
+import { getDashboardPath } from "@/lib/mockAuth";
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, auth }) {
+    const isLoggedIn = !!auth?.user;
+
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
         password: "",
@@ -24,6 +27,53 @@ export default function Login({ status, canResetPassword }) {
             onFinish: () => reset("password"),
         });
     };
+
+    if (isLoggedIn) {
+        const dashboardPath = getDashboardPath(auth.user.role);
+
+        return (
+            <AuthLayout>
+                <Head title="Connexion — SUPDATA ERP" />
+                <AuthCard>
+                    <AuthHeader
+                        title="Déjà connecté"
+                        description={`Vous êtes connecté en tant que ${auth.user.name}.`}
+                    />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex flex-col gap-3"
+                    >
+                        <Link href={dashboardPath}>
+                            <Button className="h-12 w-full rounded-xl bg-slate-900 text-[0.95rem] font-semibold text-white shadow-[0_4px_14px_rgb(15,23,42,0.25)] transition-all duration-200 hover:bg-slate-800 hover:shadow-[0_6px_20px_rgb(15,23,42,0.3)] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0">
+                                <LayoutDashboard className="size-4" />
+                                Accéder au tableau de bord
+                            </Button>
+                        </Link>
+
+                        <Link href={route("logout")} method="post" as="button">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-12 w-full rounded-xl text-[0.95rem] font-semibold"
+                            >
+                                <LogOut className="size-4" />
+                                Se déconnecter
+                            </Button>
+                        </Link>
+                    </motion.div>
+
+                    <AuthFooter>
+                        <p className="text-slate-400">
+                            Changez de compte pour accéder à un autre espace.
+                        </p>
+                    </AuthFooter>
+                </AuthCard>
+            </AuthLayout>
+        );
+    }
 
     return (
         <AuthLayout>

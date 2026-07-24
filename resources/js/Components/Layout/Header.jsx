@@ -26,7 +26,7 @@ export default function Header({ breadcrumbs = [], user, onMobileMenuOpen, showN
             {showNotifications && <NotificationDropdown />}
 
             <div className="hidden border-l border-slate-200 pl-2 md:block">
-                <UserDropdown user={user} />
+                <UserDropdown user={user} hideSettings={user?.role === "Super Admin" || user?.role === "Responsable Commercial" || user?.role === "Administrateur Local"} />
             </div>
         </header>
     );

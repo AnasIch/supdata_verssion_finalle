@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, SlidersHorizontal, ShieldPlus, Users, Lock, Eye, KeyRound } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/Components/UI/Card";
@@ -38,7 +39,7 @@ function RoleCardSkeleton() {
     );
 }
 
-function RoleCard({ role, onViewDetails, index }) {
+function RoleCard({ role, onViewDetails, index, base }) {
     const Icon = role.icon;
     return (
         <motion.div
@@ -95,7 +96,7 @@ function RoleCard({ role, onViewDetails, index }) {
                             Voir les détails
                         </Button>
                         <a
-                            href={`/permissions/${role.id}`}
+                            href={`${base}/permissions/${role.id}`}
                             className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <KeyRound className="size-4" />
@@ -130,6 +131,8 @@ function EmptyState({ search }) {
 }
 
 export default function RolesIndex() {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [search, setSearch] = useState("");
     const [sortBy, setSortBy] = useState("nom");
     const [loading, setLoading] = useState(true);
@@ -162,13 +165,13 @@ export default function RolesIndex() {
     }, [search, sortBy]);
 
     const handleViewDetails = (role) => {
-        window.location.href = `/roles/${role.id}`;
+        window.location.href = `${base}/roles/${role.id}`;
     };
 
     return (
         <DashboardLayout
             title="Rôles & Permissions"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Rôles & Permissions" }]}
+            breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Rôles & Permissions" }]}
         >
             <Head title="Rôles — SUPDATA" />
             <div className="flex flex-col gap-6">
@@ -244,6 +247,7 @@ export default function RolesIndex() {
                                         key={role.id}
                                         role={role}
                                         index={i}
+                                        base={base}
                                         onViewDetails={handleViewDetails}
                                     />
                                 ))}

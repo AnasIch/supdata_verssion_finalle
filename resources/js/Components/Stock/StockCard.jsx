@@ -2,7 +2,15 @@ import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import StockStatusBadge from "./StockStatusBadge";
 
+function getAvailabilityStatus(product) {
+    if (product.quantity_in_stock === 0) return "out_of_stock";
+    if (product.quantity_in_stock <= product.minimum_stock) return "low";
+    return "available";
+}
+
 export default function StockCard({ product, onView, delay = 0 }) {
+    const status = getAvailabilityStatus(product);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -14,15 +22,14 @@ export default function StockCard({ product, onView, delay = 0 }) {
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-slate-500">{product.reference}</span>
-                        <StockStatusBadge status={product.status} />
+                        <StockStatusBadge status={status} />
                     </div>
                     <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{product.name}</h3>
-                    <p className="mt-0.5 text-xs text-slate-500">{product.category} · {product.agency}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{product.category}</p>
                     <div className="mt-2 flex items-center gap-3">
-                        <span className={`text-sm font-bold ${product.quantity <= product.minThreshold ? "text-red-500" : "text-slate-900"}`}>
-                            {product.quantity} unités
+                        <span className={`text-sm font-bold ${product.quantity_in_stock <= product.minimum_stock ? "text-red-500" : "text-slate-900"}`}>
+                            {product.quantity_in_stock} unités
                         </span>
-                        <span className="text-xs text-slate-400">Seuil: {product.minThreshold}</span>
                     </div>
                 </div>
             </div>

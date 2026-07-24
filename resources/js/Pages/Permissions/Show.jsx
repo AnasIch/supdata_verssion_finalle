@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft,
@@ -16,6 +16,7 @@ import {
     LayoutGrid,
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/UI/Card";
@@ -177,6 +178,8 @@ function ModulePermCard({ module, permissionsState, onToggle, filter }) {
 }
 
 export default function PermissionShow({ roleId }) {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const toast = useToast();
     const roleMock = roles.find((r) => r.id === roleId);
     const [loading, setLoading] = useState(true);
@@ -259,18 +262,18 @@ export default function PermissionShow({ roleId }) {
 
     const handleBackClick = useCallback(() => {
         if (isDirty) {
-            setPendingNavigation("/permissions");
+            setPendingNavigation(`${base}/permissions`);
             setLeaveDialogOpen(true);
         } else {
-            navigateAway("/permissions");
+            navigateAway(`${base}/permissions`);
         }
-    }, [isDirty, navigateAway]);
+    }, [isDirty, navigateAway, base]);
 
     if (!roleMock) {
         return (
             <DashboardLayout
                 title="Permissions"
-                breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Permissions", href: "/permissions" }, { label: "Rôle introuvable" }]}
+                breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Permissions", href: `${base}/permissions` }, { label: "Rôle introuvable" }]}
             >
                 <div className="py-12 text-center text-sm text-slate-500">Rôle introuvable.</div>
             </DashboardLayout>
@@ -283,8 +286,8 @@ export default function PermissionShow({ roleId }) {
         <DashboardLayout
             title="Permissions"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Permissions", href: "/permissions" },
+                { label: "Dashboard", href: base },
+                { label: "Permissions", href: `${base}/permissions` },
                 { label: roleMock.nom },
             ]}
         >
@@ -467,7 +470,7 @@ export default function PermissionShow({ roleId }) {
                             onClick={() => {
                                 setLeaveDialogOpen(false);
                                 save();
-                                navigateAway(pendingNavigation || "/permissions");
+                                navigateAway(pendingNavigation || `${base}/permissions`);
                             }}
                         >
                             Quitter sans enregistrer

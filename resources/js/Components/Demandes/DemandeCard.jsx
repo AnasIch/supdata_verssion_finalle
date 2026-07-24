@@ -3,26 +3,34 @@ import { Eye, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/Components/UI/Badge";
 
 const statusLabels = {
-    pending: "En attente",
-    validated: "Validée",
-    rejected: "Refusée",
-    cancelled: "Annulée",
+    approved: "En attente",
+    confirmed: "Confirmée",
+    rejected: "Rejetée",
 };
 
 const statusVariants = {
-    pending: "warning",
-    validated: "success",
+    approved: "warning",
+    confirmed: "success",
     rejected: "destructive",
-    cancelled: "secondary",
+};
+
+const priorityLabels = {
+    urgent: "Urgente",
+    high: "Haute",
+    medium: "Moyenne",
+    low: "Basse",
 };
 
 const priorityVariants = {
-    Haute: "destructive",
-    Moyenne: "warning",
-    Basse: "secondary",
+    urgent: "destructive",
+    high: "destructive",
+    medium: "warning",
+    low: "secondary",
 };
 
-export default function DemandeCard({ demande, onView, onValidate, onRefuse, delay = 0 }) {
+export default function DemandeCard({ demande, onView, onConfirm, onReject, delay = 0 }) {
+    const ref = `DEM-${new Date(demande.created_at).getFullYear()}-${String(demande.id).padStart(4, "0")}`;
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -33,18 +41,17 @@ export default function DemandeCard({ demande, onView, onValidate, onRefuse, del
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-500">{demande.id}</span>
+                        <span className="text-xs font-medium text-slate-500">{ref}</span>
                         <Badge variant={statusVariants[demande.status] || "secondary"}>
                             {statusLabels[demande.status] || demande.status}
                         </Badge>
                     </div>
-                    <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{demande.title}</h3>
-                    <p className="mt-0.5 text-xs text-slate-500">{demande.requester} · {demande.type}</p>
-                    <div className="mt-2 flex items-center gap-2">
+                    <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{demande.product_name || demande.title}</h3>
+                    <p className="mt-0.5 text-xs text-slate-500">{demande.user?.name ?? "—"} · Qté {demande.quantity}</p>
+                    <div className="mt-2">
                         <Badge variant={priorityVariants[demande.priority] || "secondary"}>
-                            {demande.priority}
+                            {priorityLabels[demande.priority] || demande.priority}
                         </Badge>
-                        <span className="text-xs font-medium text-slate-700">{demande.budget} MAD</span>
                     </div>
                 </div>
             </div>
@@ -58,23 +65,23 @@ export default function DemandeCard({ demande, onView, onValidate, onRefuse, del
                     <Eye className="size-3.5" />
                     Voir
                 </button>
-                {demande.status === "pending" && (
+                {demande.status === "approved" && (
                     <>
                         <button
                             type="button"
-                            onClick={() => onValidate(demande)}
+                            onClick={() => onConfirm(demande)}
                             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-100"
                         >
                             <CheckCircle2 className="size-3.5" />
-                            Valider
+                            Confirmer
                         </button>
                         <button
                             type="button"
-                            onClick={() => onRefuse(demande)}
+                            onClick={() => onReject(demande)}
                             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-100"
                         >
                             <XCircle className="size-3.5" />
-                            Refuser
+                            Rejeter
                         </button>
                     </>
                 )}

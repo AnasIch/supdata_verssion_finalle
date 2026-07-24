@@ -1,8 +1,6 @@
 import {
     LayoutDashboard,
     Users,
-    Shield,
-    Building2,
     BarChart3,
     FileText,
     Settings,
@@ -10,11 +8,11 @@ import {
     Package,
     ClipboardList,
     FileSignature,
-    TrendingUp,
     Warehouse,
     AlertTriangle,
     ArrowUpDown,
     ShoppingCart,
+    Bookmark,
 } from "lucide-react";
 
 const sidebarMenus = {
@@ -30,17 +28,13 @@ const sidebarMenus = {
                 title: "Gestion",
                 items: [
                     { title: "Utilisateurs", href: "utilisateurs", icon: Users },
-                    { title: "Rôles & Permissions", href: "roles-permissions", icon: Shield },
-                    { title: "Agences", href: "agences", icon: Building2 },
                 ],
             },
             {
                 title: "Système",
                 items: [
-                    { title: "Rapports & Analytics", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                     { title: "Audit Logs", href: "audit-logs", icon: FileText },
-                    { title: "Paramètres", href: "parametres", icon: Settings },
                 ],
             },
         ],
@@ -64,7 +58,6 @@ const sidebarMenus = {
             {
                 title: "Suivi",
                 items: [
-                    { title: "Rapports", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                     { title: "Historique", href: "historique", icon: FileText },
                 ],
@@ -103,15 +96,14 @@ const sidebarMenus = {
             {
                 title: "Commercial",
                 items: [
-                    { title: "Devis", href: "devis", icon: FileSignature },
-                    { title: "Clients", href: "clients", icon: Users },
-                    { title: "Pipeline", href: "pipeline", icon: TrendingUp },
+                    { title: "Demandes d'achat", href: "demandes", icon: ClipboardList },
+                    { title: "Stock disponible", href: "stock", icon: Package },
+                    { title: "Réservation de stock", href: "reservations", icon: Bookmark },
                 ],
             },
             {
                 title: "Suivi",
                 items: [
-                    { title: "Rapports commerciaux", href: "rapports", icon: BarChart3 },
                     { title: "Notifications", href: "notifications", icon: Bell },
                 ],
             },

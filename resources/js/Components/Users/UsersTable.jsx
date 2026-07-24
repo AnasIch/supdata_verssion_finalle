@@ -13,6 +13,7 @@ import { Skeleton } from "@/Components/UI/Skeleton";
 import UserStatusBadge from "./UserStatusBadge";
 import RoleBadge from "./RoleBadge";
 import AgencyBadge from "./AgencyBadge";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 
 export default function UsersTable({
     users,
@@ -23,6 +24,8 @@ export default function UsersTable({
     onPageChange,
     loading,
 }) {
+    const base = getDashboardBaseFromUrl(window.location.pathname);
+
     if (loading) {
         return (
             <div className="rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_3px_rgb(0,0,0,0.04)]">
@@ -134,13 +137,13 @@ export default function UsersTable({
                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem asChild>
-                                                    <a href={`/utilisateurs/${user.id}`}>
+                                                    <a href={`${base}/utilisateurs/${user.id}`}>
                                                         <Eye className="size-4" />
                                                         Voir
                                                     </a>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem asChild>
-                                                    <a href={`/utilisateurs/${user.id}/modifier`}>
+                                                    <a href={`${base}/utilisateurs/${user.id}/modifier`}>
                                                         <Pencil className="size-4" />
                                                         Modifier
                                                     </a>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { usePage, Link } from "@inertiajs/react";
+import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 import SupdataLogo from "@/Components/Common/SupdataLogo";
+import { getDashboardPath } from "@/lib/mockAuth";
 
 const navLinks = [
     { label: "Accueil", href: "#accueil" },
@@ -13,6 +15,8 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+    const { auth } = usePage().props;
+    const user = auth?.user;
     const [scrolled, setScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -42,12 +46,31 @@ export default function Navbar() {
                 </nav>
 
                 <div className="hidden items-center gap-2 md:flex">
-                    <Button variant="ghost" size="sm" asChild>
-                        <a href="/login">Connexion</a>
-                    </Button>
-                    <Button size="sm" asChild>
-                        <a href="#cta">Commencer</a>
-                    </Button>
+                    {user ? (
+                        <>
+                            <Button variant="ghost" size="sm" asChild>
+                                <Link href={getDashboardPath(user.role)}>
+                                    <LayoutDashboard className="size-4" />
+                                    Dashboard
+                                </Link>
+                            </Button>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={route("logout")} method="post" as="button">
+                                    <LogOut className="size-4" />
+                                    Déconnexion
+                                </Link>
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button variant="ghost" size="sm" asChild>
+                                <a href="/login">Connexion</a>
+                            </Button>
+                            <Button size="sm" asChild>
+                                <a href="#cta">Commencer</a>
+                            </Button>
+                        </>
+                    )}
                 </div>
 
                 <button
@@ -78,14 +101,33 @@ export default function Navbar() {
                                 </a>
                             ))}
                             <div className="mt-2 flex flex-col gap-2 border-t pt-2">
-                                <a href="/login">
-                                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                                        Connexion
-                                    </Button>
-                                </a>
-                                <a href="#cta">
-                                    <Button size="sm" className="w-full">Commencer</Button>
-                                </a>
+                                {user ? (
+                                    <>
+                                        <Link href={getDashboardPath(user.role)}>
+                                            <Button variant="ghost" size="sm" className="w-full justify-start">
+                                                <LayoutDashboard className="size-4" />
+                                                Dashboard
+                                            </Button>
+                                        </Link>
+                                        <Link href={route("logout")} method="post" as="button">
+                                            <Button variant="outline" size="sm" className="w-full justify-start">
+                                                <LogOut className="size-4" />
+                                                Déconnexion
+                                            </Button>
+                                        </Link>
+                                    </>
+                                ) : (
+                                    <>
+                                        <a href="/login">
+                                            <Button variant="ghost" size="sm" className="w-full justify-start">
+                                                Connexion
+                                            </Button>
+                                        </a>
+                                        <a href="#cta">
+                                            <Button size="sm" className="w-full">Commencer</Button>
+                                        </a>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </motion.div>

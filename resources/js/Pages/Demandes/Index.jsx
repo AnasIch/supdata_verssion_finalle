@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Head } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { useToast } from "@/Components/UI/Toast";
@@ -10,76 +10,85 @@ import DemandeTable from "@/Components/Demandes/DemandeTable";
 import DemandeCard from "@/Components/Demandes/DemandeCard";
 import ValidateDemandeDialog from "@/Components/Demandes/ValidateDemandeDialog";
 import RefuseDemandeDialog from "@/Components/Demandes/RefuseDemandeDialog";
-import { useDemandes } from "@/Hooks/useDemandes";
-import { getCurrentUser, getDashboardPath } from "@/lib/mockAuth";
+import { getDashboardPath } from "@/lib/mockAuth";
 
-const PAGE_SIZE = 8;
-
-export default function DemandeIndex() {
-    const user = useMemo(() => getCurrentUser(), []);
+export default function DemandeIndex({ user, demandes, demandesMeta, stats, filters }) {
     const toast = useToast();
-    const {
-        demandes: filtered,
-        stats,
-        filters,
-        updateFilter,
-        resetFilters,
-        handleValidate,
-        handleRefuse,
-    } = useDemandes();
+    const { flash } = usePage().props;
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [validateTarget, setValidateTarget] = useState(null);
-    const [validateOpen, setValidateOpen] = useState(false);
-    const [refuseTarget, setRefuseTarget] = useState(null);
-    const [refuseOpen, setRefuseOpen] = useState(false);
+    const basePath = getDashboardPath(user?.role || "admin_local");
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const [confirmTarget, setConfirmTarget] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [rejectOpen, setRejectOpen] = useState(false);
 
-    const handleFilterChange = (key, value) => {
-        updateFilter(key, value);
-        setCurrentPage(1);
-    };
+    const handleFilterChange = useCallback((key, value) => {
+        const params = { ...filters, [key]: value };
+        if (value === "all") delete params[key];
+        router.get(`${basePath}/demandes`, params, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [filters, basePath]);
 
-    const handleReset = () => {
-        resetFilters();
-        setCurrentPage(1);
-    };
+    const handleReset = useCallback(() => {
+        router.get(`${basePath}/demandes`, {}, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [basePath]);
 
-    const handleView = (demande) => {
-        window.location.href = `${getDashboardPath(user.role)}/demandes/${demande.id}`;
-    };
+    const handleView = useCallback((demande) => {
+        router.get(`${basePath}/demandes/${demande.id}`);
+    }, [basePath]);
 
-    const handleValidateClick = (demande) => {
-        setValidateTarget(demande);
-        setValidateOpen(true);
-    };
+    const handleConfirmClick = useCallback((demande) => {
+        setConfirmTarget(demande);
+        setConfirmOpen(true);
+    }, []);
 
-    const handleRefuseClick = (demande) => {
-        setRefuseTarget(demande);
-        setRefuseOpen(true);
-    };
+    const handleRejectClick = useCallback((demande) => {
+        setRejectTarget(demande);
+        setRejectOpen(true);
+    }, []);
 
-    const handleConfirmValidate = (id) => {
-        handleValidate(id);
-        toast(`Demande « ${validateTarget.id} » validée avec succès.`, "success");
-        setValidateOpen(false);
-        setValidateTarget(null);
-    };
+    const handleConfirmValidate = useCallback((id) => {
+        router.post(`${basePath}/demandes/${id}/confirmer`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast("Demande confirmée avec succès.", "success");
+                setConfirmOpen(false);
+                setConfirmTarget(null);
+            },
+            onError: () => toast("Erreur lors de la confirmation.", "error"),
+        });
+    }, [basePath, toast]);
 
-    const handleConfirmRefuse = (id, reason) => {
-        handleRefuse(id, reason);
-        toast(`Demande « ${refuseTarget.id} » refusée.`, "info");
-        setRefuseOpen(false);
-        setRefuseTarget(null);
-    };
+    const handleConfirmReject = useCallback((id, reason) => {
+        router.post(`${basePath}/demandes/${id}/rejeter`, { reason }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast("Demande rejetée.", "info");
+                setRejectOpen(false);
+                setRejectTarget(null);
+            },
+            onError: () => toast("Erreur lors du rejet.", "error"),
+        });
+    }, [basePath, toast]);
+
+    const handlePageChange = useCallback((page) => {
+        router.get(`${basePath}/demandes`, { ...filters, page }, {
+            preserveState: true,
+            replace: true,
+        });
+    }, [filters, basePath]);
 
     return (
         <DashboardLayout
             title="Demandes"
             breadcrumbs={[
-                { label: "Dashboard", href: getDashboardPath(user.role) },
+                { label: "Dashboard", href: basePath },
                 { label: "Demandes" },
             ]}
             user={user}
@@ -107,43 +116,43 @@ export default function DemandeIndex() {
 
                 <div className="hidden sm:block">
                     <DemandeTable
-                        data={paged}
+                        data={demandes}
                         onView={handleView}
-                        onValidate={handleValidateClick}
-                        onRefuse={handleRefuseClick}
+                        onConfirm={handleConfirmClick}
+                        onReject={handleRejectClick}
                     />
                 </div>
 
                 <div className="flex flex-col gap-3 sm:hidden">
-                    {paged.map((d, i) => (
+                    {demandes.map((d, i) => (
                         <DemandeCard
                             key={d.id}
                             demande={d}
                             onView={handleView}
-                            onValidate={handleValidateClick}
-                            onRefuse={handleRefuseClick}
+                            onConfirm={handleConfirmClick}
+                            onReject={handleRejectClick}
                             delay={i * 0.03}
                         />
                     ))}
                 </div>
 
-                {totalPages > 1 && (
+                {demandesMeta.lastPage > 1 && (
                     <div className="flex items-center justify-center gap-2">
                         <button
                             type="button"
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(demandesMeta.currentPage - 1)}
+                            disabled={demandesMeta.currentPage === 1}
                             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Précédent
                         </button>
                         <span className="px-3 text-sm text-slate-500">
-                            Page {currentPage} / {totalPages}
+                            Page {demandesMeta.currentPage} / {demandesMeta.lastPage}
                         </span>
                         <button
                             type="button"
-                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(demandesMeta.currentPage + 1)}
+                            disabled={demandesMeta.currentPage === demandesMeta.lastPage}
                             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Suivant
@@ -152,21 +161,21 @@ export default function DemandeIndex() {
                 )}
 
                 <div className="text-sm text-slate-500">
-                    {filtered.length} demande{filtered.length !== 1 ? "s" : ""}
+                    {demandesMeta.total} demande{demandesMeta.total !== 1 ? "s" : ""}
                 </div>
             </div>
 
             <ValidateDemandeDialog
-                open={validateOpen}
-                onOpenChange={setValidateOpen}
-                demande={validateTarget}
+                open={confirmOpen}
+                onOpenChange={setConfirmOpen}
+                demande={confirmTarget}
                 onConfirm={handleConfirmValidate}
             />
             <RefuseDemandeDialog
-                open={refuseOpen}
-                onOpenChange={setRefuseOpen}
-                demande={refuseTarget}
-                onConfirm={handleConfirmRefuse}
+                open={rejectOpen}
+                onOpenChange={setRejectOpen}
+                demande={rejectTarget}
+                onConfirm={handleConfirmReject}
             />
         </DashboardLayout>
     );

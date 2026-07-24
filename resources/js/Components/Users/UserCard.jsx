@@ -11,8 +11,10 @@ import {
 import UserStatusBadge from "./UserStatusBadge";
 import RoleBadge from "./RoleBadge";
 import AgencyBadge from "./AgencyBadge";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 
 export default function UserCard({ user, onDelete, onToggleStatus, delay = 0 }) {
+    const base = getDashboardBaseFromUrl(window.location.pathname);
     const initials = user.name
         .split(" ")
         .map((w) => w[0])
@@ -57,13 +59,13 @@ export default function UserCard({ user, onDelete, onToggleStatus, delay = 0 }) 
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem asChild>
-                            <a href={`/utilisateurs/${user.id}`}>
+                            <a href={`${base}/utilisateurs/${user.id}`}>
                                 <Eye className="size-4" />
                                 Voir
                             </a>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <a href={`/utilisateurs/${user.id}/modifier`}>
+                            <a href={`${base}/utilisateurs/${user.id}/modifier`}>
                                 <Pencil className="size-4" />
                                 Modifier
                             </a>

@@ -9,14 +9,16 @@ import { AuthInput } from "@/Components/Auth/AuthInput";
 import { Button } from "@/Components/UI/Button";
 import { Label } from "@/Components/UI/Label";
 
-export default function ForgotPassword() {
-    const { data, setData, post, processing, errors } = useForm({
+export default function ForgotPassword({ status }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route("password.email"));
+        post(route("password.email"), {
+            onFinish: () => reset("email"),
+        });
     };
 
     return (
@@ -28,6 +30,16 @@ export default function ForgotPassword() {
                     title="Mot de passe oublié"
                     description="Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe."
                 />
+
+                {status && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-sm font-medium text-emerald-700"
+                    >
+                        {status}
+                    </motion.div>
+                )}
 
                 <form onSubmit={submit} className="flex flex-col gap-5">
                     <motion.div

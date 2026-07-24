@@ -15,8 +15,9 @@ import {
     Search,
     SlidersHorizontal,
 } from "lucide-react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Button } from "@/Components/UI/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/UI/Card";
@@ -125,6 +126,8 @@ function StockStatusBadge({ status }) {
 }
 
 export default function AgencyShow({ agencyId }) {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [loading, setLoading] = useState(true);
     const [userSearch, setUserSearch] = useState("");
     const [userSort, setUserSort] = useState("name");
@@ -202,7 +205,7 @@ export default function AgencyShow({ agencyId }) {
 
     if (!agence) {
         return (
-            <DashboardLayout title="Agence" breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Agences", href: "/agences" }, { label: "Introuvable" }]}>
+            <DashboardLayout title="Agence" breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Agences", href: `${base}/agences` }, { label: "Introuvable" }]}>
                 <div className="py-12 text-center text-sm text-slate-500">Agence introuvable.</div>
             </DashboardLayout>
         );
@@ -212,8 +215,8 @@ export default function AgencyShow({ agencyId }) {
         <DashboardLayout
             title="Détail agence"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard-super-admin" },
-                { label: "Agences", href: "/agences" },
+                { label: "Dashboard", href: base },
+                { label: "Agences", href: `${base}/agences` },
                 { label: agence.name },
             ]}
         >
@@ -223,13 +226,13 @@ export default function AgencyShow({ agencyId }) {
                     <PageTitle title={agence.name} description={agence.city} />
                     <div className="flex items-center gap-2">
                         <Button variant="outline" asChild>
-                            <a href="/agences">
+                            <a href={`${base}/agences`}>
                                 <ArrowLeft className="size-4" />
                                 Retour
                             </a>
                         </Button>
                         <Button asChild>
-                            <a href={`/agences/${agence.id}/modifier`}>
+                            <a href={`${base}/agences/${agence.id}/modifier`}>
                                 <Pencil className="size-4" />
                                 Modifier
                             </a>

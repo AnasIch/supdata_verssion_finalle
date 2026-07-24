@@ -1,21 +1,12 @@
 import { motion } from "framer-motion";
-import { Badge } from "@/Components/UI/Badge";
 import { cn } from "@/lib/utils";
-
-const users = [
-    { name: "Youssef Alami", role: "Admin", agency: "Casablanca", status: "active", initials: "YA" },
-    { name: "Fatima Zahra", role: "Gestionnaire", agency: "Marrakech", status: "active", initials: "FZ" },
-    { name: "Omar Benani", role: "Technicien", agency: "Rabat", status: "active", initials: "OB" },
-    { name: "Sara Idrissi", role: "Gestionnaire", agency: "Tanger", status: "inactive", initials: "SI" },
-    { name: "Karim Tazi", role: "Admin", agency: "Fès", status: "active", initials: "KT" },
-];
 
 const statusStyles = {
     active: "bg-emerald-50 text-emerald-700",
     inactive: "bg-slate-100 text-slate-500",
 };
 
-export default function RecentUsers() {
+export default function RecentUsers({ users = [] }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -25,7 +16,7 @@ export default function RecentUsers() {
         >
             <div className="mb-4">
                 <h3 className="text-sm font-semibold text-slate-900">Derniers utilisateurs</h3>
-                <p className="text-xs text-slate-500">5 utilisateurs récents</p>
+                <p className="text-xs text-slate-500">{users.length} utilisateur{users.length !== 1 ? "s" : ""} récent{users.length !== 1 ? "s" : ""}</p>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -38,25 +29,39 @@ export default function RecentUsers() {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((u) => (
-                            <tr key={u.name} className="border-b border-slate-50 last:border-0">
-                                <td className="py-2.5 pr-4">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
-                                            {u.initials}
-                                        </div>
-                                        <span className="font-medium text-slate-900">{u.name}</span>
-                                    </div>
-                                </td>
-                                <td className="py-2.5 pr-4 text-slate-600">{u.role}</td>
-                                <td className="py-2.5 pr-4 text-slate-600">{u.agency}</td>
-                                <td className="py-2.5">
-                                    <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", statusStyles[u.status])}>
-                                        {u.status === "active" ? "Actif" : "Inactif"}
-                                    </span>
+                        {users.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-8 text-center text-sm text-slate-400">
+                                    Aucun utilisateur pour le moment
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            users.map((u) => {
+                                const initials = u.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+                                return (
+                                    <tr key={u.id} className="border-b border-slate-50 last:border-0">
+                                        <td className="py-2.5 pr-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                                                    {initials}
+                                                </div>
+                                                <div>
+                                                    <span className="font-medium text-slate-900">{u.name}</span>
+                                                    <p className="text-xs text-slate-400">{u.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-2.5 pr-4 text-slate-600">{u.role}</td>
+                                        <td className="py-2.5 pr-4 text-slate-600">{u.agency}</td>
+                                        <td className="py-2.5">
+                                            <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", statusStyles[u.status] || statusStyles.active)}>
+                                                {u.status === "active" ? "Actif" : "Inactif"}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
                     </tbody>
                 </table>
             </div>

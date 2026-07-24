@@ -1,16 +1,18 @@
 import { motion } from "framer-motion";
 import { Server, Database, Wifi, Clock, CheckCircle2, HardDrive } from "lucide-react";
 
-const items = [
-    { label: "Version", value: "SUPDATA ERP v1.0", icon: Server },
-    { label: "Statut", value: "En ligne", icon: Wifi, badge: true },
-    { label: "Base de données", value: "Connectée", icon: Database, badge: true },
-    { label: "Dernière synchronisation", value: "Il y a 2 min", icon: Clock },
-    { label: "Espace utilisé", value: "12.4 Go / 50 Go", icon: HardDrive },
-    { label: "Uptime", value: "99.98%", icon: CheckCircle2, badge: true },
-];
+const defaultStats = { users: 0, agencies: 0, products: 0, demandes: 0, activeProducts: 0, lowStockProducts: 0 };
 
-export default function SystemOverview() {
+export default function SystemOverview({ stats = defaultStats }) {
+    const items = [
+        { label: "Version", value: "SUPDATA ERP v1.0", icon: Server },
+        { label: "Statut", value: "En ligne", icon: Wifi, badge: true },
+        { label: "Base de données", value: "MySQL — Connectée", icon: Database, badge: true },
+        { label: "Utilisateurs actifs", value: `${stats.users} comptes`, icon: CheckCircle2 },
+        { label: "Produits actifs", value: `${stats.activeProducts} sur ${stats.products}`, icon: HardDrive },
+        { label: "Alertes stock bas", value: `${stats.lowStockProducts} produit${stats.lowStockProducts !== 1 ? "s" : ""}`, icon: Clock },
+    ];
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}

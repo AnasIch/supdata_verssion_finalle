@@ -7,7 +7,7 @@ import {
     SelectItem,
 } from "@/Components/UI/Select";
 
-export default function UserProfessionalInformation({ form, onChange, errors }) {
+export default function UserProfessionalInformation({ form, onChange, errors, roles = [], agencies = [] }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -27,11 +27,9 @@ export default function UserProfessionalInformation({ form, onChange, errors }) 
                             <SelectValue placeholder="Choisir une agence" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Casablanca">Casablanca</SelectItem>
-                            <SelectItem value="Marrakech">Marrakech</SelectItem>
-                            <SelectItem value="Rabat">Rabat</SelectItem>
-                            <SelectItem value="Tanger">Tanger</SelectItem>
-                            <SelectItem value="Fès">Fès</SelectItem>
+                            {agencies.map((a) => (
+                                <SelectItem key={a.id} value={a.city}>{a.city}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     {errors.agency && <p className="mt-1 text-xs text-red-500">{errors.agency}</p>}
@@ -46,11 +44,9 @@ export default function UserProfessionalInformation({ form, onChange, errors }) 
                             <SelectValue placeholder="Choisir un rôle" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Super Admin">Super Admin</SelectItem>
-                            <SelectItem value="Administrateur Local">Administrateur Local</SelectItem>
-                            <SelectItem value="Gestion Administrative">Gestion Administrative</SelectItem>
-                            <SelectItem value="Responsable Commercial">Responsable Commercial</SelectItem>
-                            <SelectItem value="Responsable Stock">Responsable Stock</SelectItem>
+                            {roles.map((r) => (
+                                <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     {errors.role && <p className="mt-1 text-xs text-red-500">{errors.role}</p>}

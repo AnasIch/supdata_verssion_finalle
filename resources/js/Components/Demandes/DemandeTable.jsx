@@ -1,62 +1,70 @@
 import { Eye, CheckCircle2, XCircle } from "lucide-react";
 import { DataTable } from "@/Components/UI/DataTable";
 import { Badge } from "@/Components/UI/Badge";
-import { Button } from "@/Components/UI/Button";
 
 const statusLabels = {
-    pending: "En attente",
-    validated: "Validée",
-    rejected: "Refusée",
-    cancelled: "Annulée",
+    approved: "En attente",
+    confirmed: "Confirmée",
+    rejected: "Rejetée",
 };
 
 const statusVariants = {
-    pending: "warning",
-    validated: "success",
+    approved: "warning",
+    confirmed: "success",
     rejected: "destructive",
-    cancelled: "secondary",
+};
+
+const priorityLabels = {
+    urgent: "Urgente",
+    high: "Haute",
+    medium: "Moyenne",
+    low: "Basse",
 };
 
 const priorityVariants = {
-    Haute: "destructive",
-    Moyenne: "warning",
-    Basse: "secondary",
+    urgent: "destructive",
+    high: "destructive",
+    medium: "warning",
+    low: "secondary",
 };
 
 const columns = [
     {
         header: "Référence",
-        accessorKey: "id",
-        className: "font-medium text-slate-900",
+        cell: (row) => (
+            <span className="font-medium text-slate-900">
+                DEM-{new Date(row.created_at).getFullYear()}-{String(row.id).padStart(4, "0")}
+            </span>
+        ),
     },
     {
-        header: "Titre",
-        accessorKey: "title",
+        header: "Produit",
+        accessorKey: "product_name",
         className: "max-w-[200px] truncate",
     },
     {
         header: "Demandeur",
-        accessorKey: "requester",
+        cell: (row) => row.user?.name ?? "—",
     },
     {
-        header: "Type",
-        accessorKey: "type",
+        header: "Quantité",
+        accessorKey: "quantity",
     },
     {
         header: "Priorité",
         cell: (row) => (
             <Badge variant={priorityVariants[row.priority] || "secondary"}>
-                {row.priority}
+                {priorityLabels[row.priority] || row.priority}
             </Badge>
         ),
     },
     {
-        header: "Budget",
-        cell: (row) => <span className="font-medium text-slate-900">{row.budget} MAD</span>,
-    },
-    {
         header: "Date",
-        accessorKey: "createdAt",
+        cell: (row) => (
+            <span className="text-slate-500">
+                {new Date(row.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+        ),
     },
     {
         header: "Statut",
@@ -68,7 +76,7 @@ const columns = [
     },
 ];
 
-export default function DemandeTable({ data, onView, onValidate, onRefuse }) {
+export default function DemandeTable({ data, onView, onConfirm, onReject }) {
     const extendedColumns = [
         ...columns,
         {
@@ -84,21 +92,21 @@ export default function DemandeTable({ data, onView, onValidate, onRefuse }) {
                         <Eye className="size-3.5" />
                         Voir
                     </button>
-                    {row.status === "pending" && (
+                    {row.status === "approved" && (
                         <>
                             <button
                                 type="button"
-                                onClick={() => onValidate(row)}
+                                onClick={() => onConfirm(row)}
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-100"
-                                aria-label={`Valider la demande ${row.id}`}
+                                aria-label={`Confirmer la demande ${row.id}`}
                             >
                                 <CheckCircle2 className="size-3.5" />
                             </button>
                             <button
                                 type="button"
-                                onClick={() => onRefuse(row)}
+                                onClick={() => onReject(row)}
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-100"
-                                aria-label={`Refuser la demande ${row.id}`}
+                                aria-label={`Rejeter la demande ${row.id}`}
                             >
                                 <XCircle className="size-3.5" />
                             </button>

@@ -2,6 +2,18 @@ import { Eye } from "lucide-react";
 import { DataTable } from "@/Components/UI/DataTable";
 import StockStatusBadge from "./StockStatusBadge";
 
+function getAvailabilityStatus(row) {
+    if (row.quantity_in_stock === 0) return "out_of_stock";
+    if (row.quantity_in_stock <= row.minimum_stock) return "low";
+    return "available";
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return "—";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+}
+
 const columns = [
     {
         header: "Référence",
@@ -18,28 +30,20 @@ const columns = [
         accessorKey: "category",
     },
     {
-        header: "Agence",
-        accessorKey: "agency",
-    },
-    {
         header: "Quantité",
         cell: (row) => (
-            <span className={`font-medium ${row.quantity <= row.minThreshold ? "text-red-500" : "text-slate-900"}`}>
-                {row.quantity}
+            <span className={`font-medium ${row.quantity_in_stock <= row.minimum_stock ? "text-red-500" : "text-slate-900"}`}>
+                {row.quantity_in_stock}
             </span>
         ),
     },
     {
-        header: "Seuil min.",
-        accessorKey: "minThreshold",
-    },
-    {
         header: "Statut",
-        cell: (row) => <StockStatusBadge status={row.status} />,
+        cell: (row) => <StockStatusBadge status={getAvailabilityStatus(row)} />,
     },
     {
         header: "Dernière MAJ",
-        accessorKey: "updatedAt",
+        cell: (row) => formatDate(row.updated_at),
     },
 ];
 

@@ -6,11 +6,11 @@ import DashboardCharts from "@/Components/Dashboard/DashboardCharts";
 import SystemOverview from "@/Components/Dashboard/SystemOverview";
 import RecentActivity from "@/Components/Dashboard/RecentActivity";
 import RecentUsers from "@/Components/Dashboard/RecentUsers";
-import RecentPurchaseRequests from "@/Components/Dashboard/RecentPurchaseRequests";
+import RecentDemandes from "@/Components/Dashboard/RecentDemandes";
 import AgencyStatus from "@/Components/Dashboard/AgencyStatus";
 import QuickActionsCard from "@/Components/Dashboard/QuickActionsCard";
 
-export default function Dashboard({ user }) {
+export default function Dashboard({ user, stats, recentUsers, recentDemandes, agencyStats, recentActivity, charts }) {
     return (
         <DashboardLayout
             title="Dashboard"
@@ -19,29 +19,29 @@ export default function Dashboard({ user }) {
         >
             <Head title="Dashboard — SUPDATA" />
             <div className="flex flex-col gap-6">
-                <WelcomeBanner />
+                <WelcomeBanner user={user} />
 
-                <DashboardStats />
+                <DashboardStats stats={stats} />
 
-                <DashboardCharts />
+                <DashboardCharts charts={charts} agencyStats={agencyStats} />
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="lg:col-span-2">
-                        <RecentUsers />
+                        <RecentUsers users={recentUsers} />
                     </div>
                     <QuickActionsCard />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="lg:col-span-2">
-                        <RecentPurchaseRequests />
+                        <RecentDemandes demandes={recentDemandes} />
                     </div>
-                    <AgencyStatus />
+                    <AgencyStatus agencies={agencyStats} />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <RecentActivity />
-                    <SystemOverview />
+                    <RecentActivity activity={recentActivity} />
+                    <SystemOverview stats={stats} />
                 </div>
             </div>
         </DashboardLayout>

@@ -3,37 +3,30 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, Save, KeyRound, Shield } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 import { Input } from "@/Components/UI/Input";
-
 import { cn } from "@/lib/utils";
 
-export default function ChangePasswordForm({ form, onSubmit }) {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = form;
-
+export default function ChangePasswordForm({ onSubmit, mustChange }) {
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
     const passwordFields = [
         {
-            name: "currentPassword",
+            name: "current_password",
             label: "Mot de passe actuel",
             icon: Lock,
             show: showCurrent,
             toggle: () => setShowCurrent((p) => !p),
         },
         {
-            name: "newPassword",
+            name: "new_password",
             label: "Nouveau mot de passe",
             icon: KeyRound,
             show: showNew,
             toggle: () => setShowNew((p) => !p),
         },
         {
-            name: "confirmPassword",
+            name: "new_password_confirmation",
             label: "Confirmer le mot de passe",
             icon: Shield,
             show: showConfirm,
@@ -53,13 +46,23 @@ export default function ChangePasswordForm({ form, onSubmit }) {
                     Changer le mot de passe
                 </h3>
                 <p className="mt-0.5 text-xs text-slate-500">
-                    Assurez-vous d'utiliser un mot de passe fort
+                    {mustChange
+                        ? "Vous devez modifier votre mot de passe temporaire pour continuer."
+                        : "Assurez-vous d'utiliser un mot de passe fort"}
                 </p>
             </div>
 
             <hr className="my-5 border-slate-100" />
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <form onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                onSubmit({
+                    current_password: fd.get("current_password"),
+                    new_password: fd.get("new_password"),
+                    new_password_confirmation: fd.get("new_password_confirmation"),
+                });
+            }} className="flex flex-col gap-4">
                 {passwordFields.map((field) => (
                     <div key={field.name}>
                         <label className="mb-1.5 block text-xs font-medium text-slate-600">
@@ -71,15 +74,12 @@ export default function ChangePasswordForm({ form, onSubmit }) {
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                             />
                             <Input
-                                {...register(field.name)}
+                                name={field.name}
                                 type={field.show ? "text" : "password"}
                                 placeholder="••••••••"
-                                aria-invalid={errors[field.name] ? "true" : "false"}
+                                required
                                 aria-required="true"
-                                className={cn(
-                                    "pl-9 pr-10",
-                                    errors[field.name] && "border-red-300 focus:border-red-500 focus:ring-red-500/20"
-                                )}
+                                className="pl-9 pr-10"
                             />
                             <button
                                 type="button"
@@ -90,11 +90,6 @@ export default function ChangePasswordForm({ form, onSubmit }) {
                                 {field.show ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                         </div>
-                        {errors[field.name] && (
-                            <p className="mt-1 text-xs text-red-500" role="alert">
-                                {errors[field.name].message}
-                            </p>
-                        )}
                     </div>
                 ))}
 
@@ -110,13 +105,9 @@ export default function ChangePasswordForm({ form, onSubmit }) {
                     </ul>
                 </div>
 
-                <Button
-                    type="submit"
-                    className="w-full sm:w-auto"
-                    disabled={isSubmitting}
-                >
+                <Button type="submit" className="w-full sm:w-auto">
                     <Save size={14} className="mr-1.5" />
-                    {isSubmitting ? "Modification en cours…" : "Modifier le mot de passe"}
+                    Modifier le mot de passe
                 </Button>
             </form>
         </motion.div>

@@ -30,7 +30,7 @@ export default function ValidateDemandeDialog({ open, onOpenChange, demande, onC
                         <span className="font-medium text-slate-700">{demande?.id}</span> ?
                         <br />
                         <span className="text-xs text-slate-400">
-                            Cette action sera implémentée lors de la phase Backend.
+                            Le statut de la demande sera mis à jour dans le système.
                         </span>
                     </DialogDescription>
                 </DialogHeader>

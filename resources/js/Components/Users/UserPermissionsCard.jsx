@@ -1,16 +1,5 @@
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
-
-const permissions = [
-    "Créer utilisateur",
-    "Modifier utilisateur",
-    "Supprimer utilisateur",
-    "Consulter rapports",
-    "Gérer permissions",
-    "Gérer agences",
-    "Gérer les stocks",
-    "Approuver demandes",
-];
+import { ShieldOff } from "lucide-react";
 
 export default function UserPermissionsCard() {
     return (
@@ -21,19 +10,12 @@ export default function UserPermissionsCard() {
             className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgb(0,0,0,0.04)] sm:p-6"
         >
             <h3 className="mb-4 text-sm font-semibold text-slate-900">Permissions</h3>
-            <div className="flex flex-wrap gap-2">
-                {permissions.map((perm, i) => (
-                    <motion.span
-                        key={perm}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.25, delay: 0.3 + i * 0.04 }}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700"
-                    >
-                        <Check className="size-3" />
-                        {perm}
-                    </motion.span>
-                ))}
+            <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                    <ShieldOff className="size-6" />
+                </div>
+                <p className="text-sm text-slate-500">Aucun système de permissions configuré.</p>
+                <p className="text-xs text-slate-400">Les permissions seront disponibles prochainement.</p>
             </div>
         </motion.div>
     );

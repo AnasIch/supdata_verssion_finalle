@@ -12,6 +12,7 @@ import { Label } from "@/Components/UI/Label";
 
 export default function ResetPassword({ email, token }) {
     const { data, setData, post, processing, errors, reset } = useForm({
+        token: token || "",
         email: email || "",
         password: "",
         password_confirmation: "",

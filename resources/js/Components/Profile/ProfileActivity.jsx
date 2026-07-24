@@ -8,6 +8,7 @@ import {
     BarChart3,
     Settings,
 } from "lucide-react";
+import { Badge } from "@/Components/UI/Badge";
 import { cn } from "@/lib/utils";
 
 const iconMap = {
@@ -28,6 +29,26 @@ const colorMap = {
     agency: "bg-cyan-50 text-cyan-600 ring-cyan-100",
     report: "bg-rose-50 text-rose-600 ring-rose-100",
     settings: "bg-slate-100 text-slate-600 ring-slate-200",
+};
+
+const badgeVariant = {
+    login: "info",
+    profile: "default",
+    password: "warning",
+    user: "success",
+    agency: "info",
+    report: "default",
+    settings: "secondary",
+};
+
+const typeLabel = {
+    login: "Connexion",
+    profile: "Profil",
+    password: "Sécurité",
+    user: "Utilisateur",
+    agency: "Agence",
+    report: "Rapport",
+    settings: "Paramètres",
 };
 
 const container = {
@@ -82,9 +103,17 @@ export default function ProfileActivity({ activities }) {
                                 </div>
                                 <div className="flex-1 pt-1">
                                     <div className="flex items-start justify-between gap-2">
-                                        <p className="text-sm font-medium text-slate-900">
-                                            {activity.action}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-medium text-slate-900">
+                                                {activity.action}
+                                            </p>
+                                            <Badge
+                                                variant={badgeVariant[activity.type] || "secondary"}
+                                                className="text-[10px]"
+                                            >
+                                                {typeLabel[activity.type] || activity.type}
+                                            </Badge>
+                                        </div>
                                         <span className="shrink-0 text-xs text-slate-400">
                                             {activity.timestamp}
                                         </span>

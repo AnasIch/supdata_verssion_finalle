@@ -1,10 +1,9 @@
 import { motion } from "framer-motion";
-import { UserPlus, Building2, BarChart3, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { UserPlus, Building2, ShieldCheck, ArrowUpRight } from "lucide-react";
 
 const actions = [
     { label: "Nouvel utilisateur", icon: UserPlus, color: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
     { label: "Nouvelle agence", icon: Building2, color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100" },
-    { label: "Voir les rapports", icon: BarChart3, color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" },
     { label: "Consulter les audits", icon: ShieldCheck, color: "bg-amber-50 text-amber-600 hover:bg-amber-100" },
 ];
 

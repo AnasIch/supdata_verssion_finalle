@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { Eye, Users, Lock } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
+import { getDashboardBaseFromUrl } from "@/lib/utils";
 import PageTitle from "@/Components/Layout/PageTitle";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/Components/UI/Card";
 import { Badge } from "@/Components/UI/Badge";
@@ -33,7 +34,7 @@ function RolePermSkeleton() {
     );
 }
 
-function RolePermCard({ role, index }) {
+function RolePermCard({ role, index, base }) {
     const Icon = role.icon;
     return (
         <motion.div
@@ -79,7 +80,7 @@ function RolePermCard({ role, index }) {
 
                 <CardFooter className="border-t border-slate-100 bg-slate-50/50 pt-4">
                     <a
-                        href={`/permissions/${role.id}`}
+                        href={`${base}/permissions/${role.id}`}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                         <Eye className="size-4" />
@@ -92,6 +93,8 @@ function RolePermCard({ role, index }) {
 }
 
 export default function PermissionsIndex() {
+    const { url } = usePage();
+    const base = getDashboardBaseFromUrl(url);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -102,7 +105,7 @@ export default function PermissionsIndex() {
     return (
         <DashboardLayout
             title="Permissions"
-            breadcrumbs={[{ label: "Dashboard", href: "/dashboard-super-admin" }, { label: "Permissions" }]}
+            breadcrumbs={[{ label: "Dashboard", href: base }, { label: "Permissions" }]}
         >
             <Head title="Permissions — SUPDATA" />
             <div className="flex flex-col gap-6">
@@ -126,7 +129,7 @@ export default function PermissionsIndex() {
                 ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {roles.map((role, i) => (
-                            <RolePermCard key={role.id} role={role} index={i} />
+                            <RolePermCard key={role.id} role={role} index={i} base={base} />
                         ))}
                     </div>
                 )}

@@ -1,8 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { profileData as defaultProfile } from "@/Mocks/profile";
+import { getProfileData } from "@/Mocks/profile";
+import { getCurrentUser } from "@/lib/mockAuth";
 import { sessions as defaultSessions } from "@/Mocks/sessions";
 import { activityLog as defaultActivities } from "@/Mocks/activity";
 
@@ -27,7 +28,9 @@ const passwordSchema = z.object({
     path: ["confirmPassword"],
 });
 
-export function useProfile({ profile = defaultProfile, sessions: initialSessions = defaultSessions, activities: initialActivities = defaultActivities } = {}) {
+export function useProfile({ sessions: initialSessions = defaultSessions, activities: initialActivities = defaultActivities } = {}) {
+    const user = useMemo(() => getCurrentUser(), []);
+    const profile = useMemo(() => getProfileData(user), [user]);
     const [sessions, setSessions] = useState(initialSessions);
     const [isEditing, setIsEditing] = useState(false);
     const [toasts, setToasts] = useState([]);
