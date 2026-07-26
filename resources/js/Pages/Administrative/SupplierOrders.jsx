@@ -4,8 +4,8 @@ import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useAdministrativeSupplierOrders } from "@/Hooks/useAdministrativeSupplierOrders";
 import { administrativeUser } from "@/Mocks/administrativeDashboard";
 
-export default function AdministrativeApprovedRequestsPage() {
-    const operations = useAdministrativeSupplierOrders();
+export default function AdministrativeApprovedRequestsPage({ approvedRequests, user: routeUser }) {
+    const operations = useAdministrativeSupplierOrders(approvedRequests);
 
     return <DashboardLayout
         title="Demandes acceptées"
@@ -13,7 +13,7 @@ export default function AdministrativeApprovedRequestsPage() {
             { label: "Dashboard", href: "/dashboard-administrative" },
             { label: "Demandes acceptées" },
         ]}
-        user={administrativeUser}
+        user={routeUser || administrativeUser}
         showNotifications={false}
     >
         <Head title="Demandes acceptées — SUPDATA" />

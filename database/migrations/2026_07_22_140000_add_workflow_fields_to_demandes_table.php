@@ -16,12 +16,16 @@ return new class extends Migration
             $table->timestamp('shipped_at')->nullable();
         });
 
-        DB::statement("ALTER TABLE demandes MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'in_progress', 'completed', 'preparing', 'shipped') DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE demandes MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'in_progress', 'completed', 'preparing', 'shipped') DEFAULT 'pending'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE demandes MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'in_progress', 'completed') DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE demandes MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'in_progress', 'completed') DEFAULT 'pending'");
+        }
 
         Schema::table('demandes', function (Blueprint $table) {
             $table->dropForeign(['prepared_by']);

@@ -5,8 +5,8 @@ import AdministrativeWorkspace from "@/Components/Administrative/AdministrativeW
 import { useAdministrativeDashboard } from "@/Hooks/useAdministrativeDashboard";
 import { setCurrentUser } from "@/lib/mockAuth";
 
-export default function AdministrativeDashboard({ user }) {
-    const dashboard = useAdministrativeDashboard();
+export default function AdministrativeDashboard({ user, dashboardData }) {
+    const dashboard = useAdministrativeDashboard(dashboardData);
     const currentUser = user || dashboard.user;
     useEffect(() => { setCurrentUser(currentUser); }, [currentUser]);
     return <DashboardLayout title="Gestion administrative" breadcrumbs={[{ label: "Gestion administrative" }, { label: "Vue d’ensemble" }]} user={currentUser} showNotifications={false}><Head title="Gestion administrative — SUPDATA"/><AdministrativeWorkspace dashboard={{ ...dashboard, user: currentUser }}/></DashboardLayout>;

@@ -11,13 +11,34 @@ use App\Http\Controllers\LocalAdminDashboardController;
 use App\Http\Controllers\LocalAdminDemandeController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\AdministrativeDashboardController;
+use App\Http\Controllers\StockDashboardController;
+use App\Http\Controllers\AdministrativeRecordController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Landing/Index');
 })->name('home');
+
+if (app()->isLocal()) {
+    Route::get('/preview/dashboard-administrative', [AdministrativeDashboardController::class, 'index'])
+        ->name('preview.administrative.dashboard');
+    Route::get('/preview/dashboard-stock', [StockDashboardController::class, 'index'])
+        ->name('preview.stock.dashboard');
+}
+
+Route::get('/dashboard', function (Request $request) {
+    return match ($request->user()->role?->slug) {
+        'super-admin' => redirect()->route('super-admin.dashboard'),
+        'admin-local' => redirect()->route('local-admin.dashboard'),
+        'gestion-administrative' => redirect()->route('administrative.dashboard'),
+        'responsable-stock' => redirect()->route('stock.dashboard'),
+        default => redirect()->route('commercial.dashboard'),
+    };
+})->middleware('auth')->name('dashboard');
 
 /*
 |--------------------------------------------------------------------------
@@ -78,15 +99,19 @@ Route::middleware(['auth', 'role:admin_local'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-administrative', function () {
-    return Inertia::render('Dashboard/Administrative/Index', [
-        'user' => [
-            'name' => 'Fatima Zahra El Mansouri',
-            'email' => 'f.elmansouri@supdata.ma',
-            'role' => 'Gestion Administrative',
-        ],
-    ]);
-})->name('administrative.dashboard');
+Route::middleware(['auth', 'role:gestion_administrative'])->group(function () {
+Route::get('/dashboard-administrative/{type}', [AdministrativeRecordController::class, 'index'])->whereIn('type', ['documents', 'notes', 'contrats'])->name('ga.records');
+Route::post('/dashboard-administrative/{type}', [AdministrativeRecordController::class, 'store'])->whereIn('type', ['documents', 'notes', 'contrats'])->name('ga.records.store');
+Route::put('/dashboard-administrative/{type}/{record}', [AdministrativeRecordController::class, 'update'])->whereIn('type', ['documents', 'notes', 'contrats'])->name('ga.records.update');
+Route::delete('/dashboard-administrative/{type}/{record}', [AdministrativeRecordController::class, 'destroy'])->whereIn('type', ['documents', 'notes', 'contrats'])->name('ga.records.destroy');
+Route::get('/dashboard-administrative/notifications', [NotificationController::class, 'index'])->name('ga.notifications');
+Route::get('/dashboard-administrative/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('ga.notifications.unread-count');
+Route::patch('/dashboard-administrative/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('ga.notifications.read-all');
+Route::patch('/dashboard-administrative/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('ga.notifications.read');
+Route::delete('/dashboard-administrative/notifications/read', [NotificationController::class, 'destroyAllRead'])->name('ga.notifications.destroy-all-read');
+Route::delete('/dashboard-administrative/notifications/{notification}', [NotificationController::class, 'destroy'])->name('ga.notifications.destroy');
+    Route::get('/dashboard-administrative', [AdministrativeDashboardController::class, 'index'])->name('administrative.dashboard');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -120,15 +145,15 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-stock', function () {
-    return Inertia::render('Dashboard/Stock/Index', [
-        'user' => [
-            'name' => 'Rachid Amrani',
-            'email' => 'r.amrani@supdata.ma',
-            'role' => 'Responsable Stock',
-        ],
-    ]);
-})->name('stock.dashboard');
+Route::middleware(['auth', 'role:responsable_stock'])->group(function () {
+Route::get('/dashboard-stock/notifications', [NotificationController::class, 'index'])->name('rs.notifications');
+Route::get('/dashboard-stock/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('rs.notifications.unread-count');
+Route::patch('/dashboard-stock/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('rs.notifications.read-all');
+Route::patch('/dashboard-stock/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('rs.notifications.read');
+Route::delete('/dashboard-stock/notifications/read', [NotificationController::class, 'destroyAllRead'])->name('rs.notifications.destroy-all-read');
+Route::delete('/dashboard-stock/notifications/{notification}', [NotificationController::class, 'destroy'])->name('rs.notifications.destroy');
+    Route::get('/dashboard-stock', [StockDashboardController::class, 'index'])->name('stock.dashboard');
+});
 
 Route::get('/stock', function () {
     return Inertia::render('Stock/Index');
@@ -148,6 +173,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profil/password', [ProfileController::class, 'changePassword'])->name('profile.password');
+    Route::get('/profile', [ProfileController::class, 'index']);
+    Route::patch('/profile', [ProfileController::class, 'standardUpdate']);
+    Route::delete('/profile', [ProfileController::class, 'destroy']);
 });
 
 /*
@@ -213,23 +241,18 @@ Route::middleware(['auth', 'role:admin_local'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-administrative/demandes', function () {
-    return Inertia::render('Administrative/Workspace', ['section' => 'demandes']);
-})->name('ga.requests');
+Route::middleware(['auth', 'role:gestion_administrative'])->group(function () {
+Route::get('/dashboard-administrative/demandes', fn (Request $request) => app(AdministrativeDashboardController::class)->operations('demandes', $request))->name('ga.requests');
 
-Route::get('/dashboard-administrative/stock', function () {
-    return Inertia::render('Administrative/Workspace', ['section' => 'stock']);
-})->name('ga.stock');
+Route::get('/dashboard-administrative/stock', fn (Request $request) => app(AdministrativeDashboardController::class)->operations('stock', $request))->name('ga.stock');
 
-Route::get('/dashboard-administrative/validations', function () {
-    return Inertia::render('Administrative/Workspace', ['section' => 'validations']);
-})->name('ga.validations');
+Route::get('/dashboard-administrative/validations', fn (Request $request) => app(AdministrativeDashboardController::class)->operations('validations', $request))->name('ga.validations');
 
-Route::get('/dashboard-administrative/demandes-acceptees', function () {
-    return Inertia::render('Administrative/SupplierOrders');
-})->name('ga.approved-requests');
+Route::get('/dashboard-administrative/demandes-acceptees', [AdministrativeDashboardController::class, 'approved'])->name('ga.approved-requests');
+Route::post('/dashboard-administrative/demandes/{id}/decision', [AdministrativeDashboardController::class, 'decide'])->name('ga.requests.decide');
 
 Route::redirect('/dashboard-administrative/commandes-fournisseurs', '/dashboard-administrative/demandes-acceptees');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -237,30 +260,24 @@ Route::redirect('/dashboard-administrative/commandes-fournisseurs', '/dashboard-
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-stock/produits', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'produits']);
-})->name('rs.products');
+Route::middleware(['auth', 'role:responsable_stock'])->group(function () {
+Route::get('/dashboard-stock/produits', fn (Request $request) => app(StockDashboardController::class)->operations('produits', $request))->name('rs.products');
 
-Route::get('/dashboard-stock/categories', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'categories']);
-})->name('rs.categories');
+Route::get('/dashboard-stock/categories', fn (Request $request) => app(StockDashboardController::class)->operations('categories', $request))->name('rs.categories');
 
-Route::get('/dashboard-stock/mouvements', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'mouvements']);
-})->name('rs.movements');
+Route::get('/dashboard-stock/mouvements', fn (Request $request) => app(StockDashboardController::class)->operations('mouvements', $request))->name('rs.movements');
 
-Route::get('/dashboard-stock/receptions', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'receptions']);
-})->name('rs.receptions');
+Route::get('/dashboard-stock/receptions', fn (Request $request) => app(StockDashboardController::class)->operations('receptions', $request))->name('rs.receptions');
 
-Route::get('/dashboard-stock/inventaires', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'inventaires']);
-})->name('rs.inventories');
+Route::get('/dashboard-stock/inventaires', fn (Request $request) => app(StockDashboardController::class)->operations('inventaires', $request))->name('rs.inventories');
 
-Route::get('/dashboard-stock/livraisons', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'livraisons']);
-})->name('rs.deliveries');
+Route::get('/dashboard-stock/livraisons', fn (Request $request) => app(StockDashboardController::class)->operations('livraisons', $request))->name('rs.deliveries');
 
-Route::get('/dashboard-stock/alertes', function () {
-    return Inertia::render('Stock/Operations', ['section' => 'alertes']);
-})->name('rs.alerts');
+Route::get('/dashboard-stock/alertes', fn (Request $request) => app(StockDashboardController::class)->operations('alertes', $request))->name('rs.alerts');
+Route::post('/dashboard-stock/mouvement', [StockDashboardController::class, 'movement'])->name('rs.movement.store');
+Route::patch('/dashboard-stock/receptions/{id}/valider', [StockDashboardController::class, 'validateReception'])->name('rs.receptions.validate');
+Route::patch('/dashboard-stock/alertes/{productId}/traiter', [StockDashboardController::class, 'resolveAlert'])->name('rs.alerts.resolve');
+Route::post('/dashboard-stock/{section}', [StockDashboardController::class, 'store'])->name('rs.operations.store');
+Route::put('/dashboard-stock/{section}/{id}', [StockDashboardController::class, 'update'])->name('rs.operations.update');
+Route::delete('/dashboard-stock/{section}/{id}', [StockDashboardController::class, 'destroy'])->name('rs.operations.destroy');
+});

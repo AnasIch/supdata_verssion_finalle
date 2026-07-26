@@ -13,6 +13,7 @@ import {
     ArrowUpDown,
     ShoppingCart,
     Bookmark,
+    Shield,
 } from "lucide-react";
 
 const sidebarMenus = {
@@ -128,6 +129,7 @@ const sidebarMenus = {
                     { title: "Inventaires", href: "inventaires", icon: Warehouse },
                     { title: "Livraisons", href: "livraisons", icon: ShoppingCart },
                     { title: "Alertes de stock", href: "alertes", icon: AlertTriangle },
+                    { title: "Notifications", href: "notifications", icon: Bell },
                 ],
             },
         ],
