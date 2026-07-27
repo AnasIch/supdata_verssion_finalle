@@ -6,46 +6,55 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phone')->nullable();
-            $table->string('position')->nullable();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
-            $table->foreignId('agency_id')->constrained('agences')->cascadeOnDelete();
-            $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamp('last_login_at')->nullable();
-            $table->rememberToken();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->string('phone')->nullable();
+                $table->string('position')->nullable();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password');
+                $table->foreignId('role_id')->constrained('roles')->cascadeOnDelete();
+                $table->foreignId('agency_id')->constrained('agences')->cascadeOnDelete();
+                $table->enum('status', ['active', 'inactive'])->default('active');
+                $table->timestamp('last_login_at')->nullable();
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('users', function (Blueprint $table) {
+                if (!Schema::hasColumn('users', 'phone')) $table->string('phone')->nullable();
+                if (!Schema::hasColumn('users', 'position')) $table->string('position')->nullable();
+                if (!Schema::hasColumn('users', 'role_id')) $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
+                if (!Schema::hasColumn('users', 'agency_id')) $table->foreignId('agency_id')->nullable()->constrained('agences')->nullOnDelete();
+                if (!Schema::hasColumn('users', 'status')) $table->enum('status', ['active', 'inactive'])->default('active');
+                if (!Schema::hasColumn('users', 'last_login_at')) $table->timestamp('last_login_at')->nullable();
+            });
+        }
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
+        if (!Schema::hasTable('password_reset_tokens')) {
+            Schema::create('password_reset_tokens', function (Blueprint $table) {
+                $table->string('email')->primary();
+                $table->string('token');
+                $table->timestamp('created_at')->nullable();
+            });
+        }
 
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
+        if (!Schema::hasTable('sessions')) {
+            Schema::create('sessions', function (Blueprint $table) {
+                $table->string('id')->primary();
+                $table->foreignId('user_id')->nullable()->index();
+                $table->string('ip_address', 45)->nullable();
+                $table->text('user_agent')->nullable();
+                $table->longText('payload');
+                $table->integer('last_activity')->index();
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');

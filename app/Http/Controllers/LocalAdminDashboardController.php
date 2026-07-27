@@ -73,10 +73,14 @@ class LocalAdminDashboardController extends Controller
             ]);
         }
 
+        $monthExpression = DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', created_at)"
+            : "DATE_FORMAT(created_at, '%Y-%m')";
+
         $demandes = Demande::where('agency_id', $agencyId)
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
             ->select(
-                DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month_key"),
+                DB::raw("{$monthExpression} as month_key"),
                 DB::raw('count(*) as total'),
                 DB::raw("SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved"),
                 DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected")

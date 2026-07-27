@@ -1,8 +1,19 @@
 import { useState, useCallback } from "react";
 import { demandes as initialDemandes, demandeStats } from "@/Mocks/demandes";
 
+const STORAGE_KEY = "supdata_demandes";
+
+const readDemandes = () => {
+    if (typeof window === "undefined") return initialDemandes;
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || initialDemandes;
+    } catch {
+        return initialDemandes;
+    }
+};
+
 export function useDemandes() {
-    const [demandes, setDemandes] = useState(initialDemandes);
+    const [demandes, setDemandes] = useState(readDemandes);
     const [filters, setFilters] = useState({
         search: "",
         type: "all",
@@ -35,23 +46,27 @@ export function useDemandes() {
     });
 
     const handleValidate = useCallback((demandeId) => {
-        setDemandes((prev) =>
-            prev.map((d) =>
+        setDemandes((prev) => {
+            const next = prev.map((d) =>
                 d.id === demandeId
                     ? { ...d, status: "validated", validator: "Youssef Benali", validatedAt: new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) + " — " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) }
                     : d
-            )
-        );
+            );
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+            return next;
+        });
     }, []);
 
     const handleRefuse = useCallback((demandeId, reason) => {
-        setDemandes((prev) =>
-            prev.map((d) =>
+        setDemandes((prev) => {
+            const next = prev.map((d) =>
                 d.id === demandeId
                     ? { ...d, status: "rejected", validator: "Youssef Benali", rejectReason: reason }
                     : d
-            )
-        );
+            );
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+            return next;
+        });
     }, []);
 
     return {

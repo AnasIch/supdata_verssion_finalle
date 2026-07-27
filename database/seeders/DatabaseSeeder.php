@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             AgencySeeder::class,
             SuperAdminSeeder::class,
+            OperationalUsersSeeder::class,
             ProductSeeder::class,
             DemandeSeeder::class,
             AuditLogSeeder::class,
