@@ -46,7 +46,7 @@ export default function UserEdit() {
         setSummary(form);
         const { password, passwordConfirm, avatar, ...rest } = form;
         const { password: _, passwordConfirm: __, avatar: ___, ...initialRest } = initialUser;
-        setIsDirty(!shallowEqual(rest, initialRest) || form.password.length > 0);
+        setIsDirty(!shallowEqual(rest, initialRest) || (form.password && form.password.length > 0));
     }, [initialUser]);
 
     useEffect(() => {

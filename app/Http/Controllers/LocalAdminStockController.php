@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Agency;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,9 +18,8 @@ class LocalAdminStockController extends Controller
     {
         $user = $request->user();
         $user->load(['role', 'agency']);
-        $agencyId = $user->agency_id;
 
-        $query = Product::where('agency_id', $agencyId)->with('agency');
+        $query = Product::with('agency');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -31,6 +31,13 @@ class LocalAdminStockController extends Controller
 
         if ($request->filled('category') && $request->category !== 'all') {
             $query->where('category', $request->category);
+        }
+
+        if ($request->filled('agency') && $request->agency !== 'all') {
+            $agency = Agency::where('name', $request->agency)->first();
+            if ($agency) {
+                $query->where('agency_id', $agency->id);
+            }
         }
 
         if ($request->filled('status') && $request->status !== 'all') {
@@ -47,32 +54,37 @@ class LocalAdminStockController extends Controller
 
         $products = $query->paginate(10)->withQueryString();
 
-        $allAgency = Product::where('agency_id', $agencyId);
+        $allProducts = Product::query();
+        $cbId = Agency::where('name', 'like', '%Casablanca%')->value('id');
+        $mkId = Agency::where('name', 'like', '%Marrakech%')->value('id');
 
         $stats = [
-            'total' => (clone $allAgency)->count(),
-            'critical' => (clone $allAgency)
+            'total' => (clone $allProducts)->count(),
+            'critical' => (clone $allProducts)
                 ->whereColumn('quantity_in_stock', '<=', 'minimum_stock')
                 ->where('quantity_in_stock', '>', 0)
                 ->count(),
-            'outOfStock' => (clone $allAgency)
+            'outOfStock' => (clone $allProducts)
                 ->where('quantity_in_stock', 0)
                 ->count(),
+            'casablanca' => $cbId ? (clone $allProducts)->where('agency_id', $cbId)->count() : 0,
+            'marrakech' => $mkId ? (clone $allProducts)->where('agency_id', $mkId)->count() : 0,
         ];
 
-        $categories = Product::where('agency_id', $agencyId)
-            ->distinct()
+        $categories = Product::distinct()
             ->pluck('category')
             ->filter()
             ->sort()
             ->values()
             ->toArray();
 
+        $agencies = Agency::orderBy('name')->pluck('name')->toArray();
+
         $this->auditLogService->log(
             user: $user,
             action: 'Consultation',
             module: 'Stock',
-            description: 'Consultation du stock agence',
+            description: 'Consultation du stock global (toutes agences)',
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
         );
@@ -94,7 +106,8 @@ class LocalAdminStockController extends Controller
             ],
             'stats' => $stats,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'category', 'status']),
+            'agencies' => $agencies,
+            'filters' => $request->only(['search', 'category', 'status', 'agency']),
         ]);
     }
 
@@ -104,7 +117,6 @@ class LocalAdminStockController extends Controller
         $user->load(['role', 'agency']);
 
         $product = Product::where('id', $id)
-            ->where('agency_id', $user->agency_id)
             ->with('agency')
             ->first();
 

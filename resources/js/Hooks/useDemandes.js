@@ -73,7 +73,7 @@ export function useDemandes() {
         demandes: filtered,
         stats: {
             total: demandes.length,
-            pending: demandes.filter((d) => d.status === "pending").length,
+            pending: demandes.filter((d) => d.status === "submitted").length,
             validated: demandes.filter((d) => d.status === "validated").length,
             rejected: demandes.filter((d) => d.status === "rejected").length,
             cancelled: demandes.filter((d) => d.status === "cancelled").length,

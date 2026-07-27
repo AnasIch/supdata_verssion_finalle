@@ -259,7 +259,6 @@ class ReservationService
         $user = $request->user();
 
         return Product::where('agency_id', $user->agency_id)
-            ->where('quantity_in_stock', '>', 0)
             ->orderBy('name')
             ->get()
             ->map(fn ($p) => [

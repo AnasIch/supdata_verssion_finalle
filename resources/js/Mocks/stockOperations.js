@@ -19,11 +19,6 @@ export const stockOperationsData = {
         { id: "REC-0187", nom: "Office Pro", detail: "80 unités · 5 références", agence: "Marrakech", quantite: 80, statut: "En transit" },
         { id: "REC-0184", nom: "Network Systems", detail: "24 unités · 2 références", agence: "Casablanca", quantite: 24, statut: "À valider" },
     ],
-    inventaires: [
-        { id: "INV-014", nom: "Inventaire trimestriel", detail: "72 % · 4 écarts", agence: "Casablanca", quantite: 72, statut: "En cours" },
-        { id: "INV-013", nom: "Inventaire trimestriel", detail: "46 % · 2 écarts", agence: "Marrakech", quantite: 46, statut: "En cours" },
-        { id: "INV-009", nom: "Contrôle ciblé IT", detail: "100 % · aucun écart", agence: "Casablanca", quantite: 100, statut: "Terminé" },
-    ],
     livraisons: [
         { id: "LIV-0098", nom: "Atlas Digital", detail: "8 ordinateurs portables", agence: "Casablanca", quantite: 8, statut: "À confirmer" },
         { id: "LIV-0096", nom: "Riad Partners", detail: "12 chaises ergonomiques", agence: "Marrakech", quantite: 12, statut: "En préparation" },
@@ -41,7 +36,6 @@ export const stockSectionConfig = {
     categories: { titre: "Catégories", description: "Organisez les produits par famille.", action: "Nouvelle catégorie", canCrud: true, idPrefix: "CAT", createStatus: "Active" },
     mouvements: { titre: "Mouvements de stock", description: "Tracez les entrées, sorties et transferts.", action: "Nouveau mouvement", canCreate: true, idPrefix: "MVT", createStatus: "Enregistré" },
     receptions: { titre: "Réceptions", description: "Réceptionnez, contrôlez et validez les marchandises arrivées.", action: "Nouvelle réception", canCreate: true, idPrefix: "REC", createStatus: "Marchandise reçue", workflow: "reception" },
-    inventaires: { titre: "Inventaires", description: "Suivez les comptages physiques et les écarts.", action: "Nouvel inventaire", canCreate: true, canCrud: true, idPrefix: "INV", createStatus: "En cours" },
     livraisons: { titre: "Livraisons clients", description: "Confirmez la remise des marchandises au client.", action: null, workflow: "livraison" },
     alertes: { titre: "Alertes de stock", description: "Traitez les ruptures et informez les commerciaux concernés.", action: null, workflow: "alerte" },
 };

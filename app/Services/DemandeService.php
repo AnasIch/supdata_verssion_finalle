@@ -34,7 +34,7 @@ class DemandeService
                 'description' => $data['comment'] ?? null,
                 'user_id' => $user->id,
                 'agency_id' => $user->agency_id,
-                'status' => 'pending',
+                'status' => 'submitted',
                 'priority' => $data['priority'] ?? 'medium',
                 'quantity' => $totalQuantity,
                 'product_name' => $firstProductName,
@@ -167,15 +167,15 @@ class DemandeService
         $query = Demande::where('user_id', $user->id);
 
         $total = (clone $query)->count();
-        $pending = (clone $query)->where('status', 'pending')->count();
-        $approved = (clone $query)->where('status', 'approved')->count();
-        $rejected = (clone $query)->where('status', 'rejected')->count();
+        $pending = (clone $query)->where('status', 'submitted')->count();
+        $accepted = (clone $query)->whereIn('status', ['pending_local_admin', 'confirmed_local_admin'])->count();
+        $refused = (clone $query)->whereIn('status', ['rejected', 'rejected_local_admin'])->count();
 
         return [
             'total' => $total,
             'pending' => $pending,
-            'accepted' => $approved,
-            'refused' => $rejected,
+            'accepted' => $accepted,
+            'refused' => $refused,
         ];
     }
 

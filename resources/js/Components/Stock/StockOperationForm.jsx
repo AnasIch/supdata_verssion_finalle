@@ -4,7 +4,7 @@ import { Label } from "@/Components/UI/Label";
 const unique = (values) => [...new Set(values.filter(Boolean))];
 const Select = ({ id, value, onChange, children }) => <select id={id} className="mt-2 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm" value={value} onChange={onChange}>{children}</select>;
 
-export default function StockOperationForm({ section, values, onChange, productOptions = [], categoryOptions = [] }) {
+export default function StockOperationForm({ section, values, onChange, productOptions = [], categoryOptions = [], agencies = [] }) {
     const products = unique([...productOptions.map((p) => p.name), values.nom]);
     const categories = unique([...categoryOptions, values.detail]);
 
@@ -23,13 +23,19 @@ export default function StockOperationForm({ section, values, onChange, productO
         <div><Label htmlFor="reception-quantity">Quantité reçue</Label><Input id="reception-quantity" className="mt-2" type="number" min="1" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
     </div>;
 
-    if (section === "inventaires") return <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2"><Label htmlFor="inventory-name">Campagne d’inventaire</Label><Input id="inventory-name" className="mt-2" value={values.nom} onChange={e=>onChange("nom",e.target.value)} placeholder="Ex. Inventaire trimestriel"/></div>
-        <div className="sm:col-span-2"><Label htmlFor="inventory-scope">Périmètre et écarts constatés</Label><Input id="inventory-scope" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)} placeholder="Ex. Informatique · 4 écarts"/></div>
-        <div><Label htmlFor="inventory-agency">Agence inventoriée</Label><Select id="inventory-agency" value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option>Casablanca</option><option>Marrakech</option></Select></div>
-        <div><Label htmlFor="inventory-progress">Progression (%)</Label><Input id="inventory-progress" className="mt-2" type="number" min="0" max="100" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
-    </div>;
-
     const isCategory = section === "categories";
-    return <div className="grid gap-4 sm:grid-cols-2"><div className="sm:col-span-2"><Label htmlFor="stock-name">{isCategory ? "Catégorie" : "Produit"}</Label><Select id="stock-name" value={values.nom} onChange={e=>onChange("nom",e.target.value)}><option value="">Sélectionner {isCategory ? "une catégorie" : "un produit"}</option>{(isCategory?categories:products).map(v=><option key={v}>{v}</option>)}</Select></div><div className="sm:col-span-2"><Label htmlFor="stock-detail">{isCategory ? "Description" : "Catégorie"}</Label>{isCategory?<Input id="stock-detail" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)}/>:<Select id="stock-detail" value={values.detail} onChange={e=>onChange("detail",e.target.value)}><option value="">Sélectionner une catégorie</option>{categories.map(v=><option key={v}>{v}</option>)}</Select>}</div><div><Label>Agence</Label><Select value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option>Casablanca</option><option>Marrakech</option><option>Toutes</option></Select></div><div><Label>Quantité disponible</Label><Input className="mt-2" type="number" min="0" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div></div>;
+
+    if (isCategory) {
+        return <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2"><Label htmlFor="category-name">Nom de la catégorie</Label><Input id="category-name" className="mt-2" value={values.nom} onChange={e=>onChange("nom",e.target.value)} placeholder="Ex. Informatique, Mobilier…"/></div>
+            <div className="sm:col-span-2"><Label htmlFor="category-desc">Description</Label><Input id="category-desc" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)} placeholder="Description facultative…"/></div>
+        </div>;
+    }
+
+    return <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2"><Label htmlFor="product-name">Nom du produit</Label><Input id="product-name" className="mt-2" value={values.nom} onChange={e=>onChange("nom",e.target.value)} placeholder="Ex. Écran Dell 24&quot;"/></div>
+        <div><Label htmlFor="product-category">Catégorie</Label><Select id="product-category" value={values.detail} onChange={e=>onChange("detail",e.target.value)}><option value="">Sélectionner une catégorie</option>{categories.map(v=><option key={v}>{v}</option>)}</Select></div>
+        <div><Label htmlFor="product-agency">Agence</Label><Select id="product-agency" value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option value="">Sélectionner une agence</option>{agencies.map(a=><option key={a.id} value={a.name}>{a.name}</option>)}</Select></div>
+        <div className="sm:col-span-2"><Label htmlFor="product-quantity">Quantité initiale</Label><Input id="product-quantity" className="mt-2" type="number" min="0" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
+    </div>;
 }

@@ -8,16 +8,20 @@ use App\Models\StockOperation;
 use App\Models\StockCategory;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Reservation;
+use App\Mail\ReservationDeliveredMail;
+use App\Mail\ReservationCancelledMail;
 use App\Services\NotificationService;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class StockDashboardController extends Controller
 {
-    private const SECTIONS = ['produits', 'categories', 'mouvements', 'receptions', 'inventaires', 'livraisons', 'alertes'];
+    private const SECTIONS = ['produits', 'categories', 'mouvements', 'receptions', 'livraisons', 'alertes'];
 
     public function __construct(private NotificationService $notifications, private AuditLogService $auditLogs) {}
 
@@ -25,14 +29,16 @@ class StockDashboardController extends Controller
     {
         $products = Product::with('agency')->get();
         $operations = StockOperation::with(['agency', 'product'])->latest()->get();
+        $reservations = Reservation::all();
         $available = $products->sum(fn ($p) => max(0, $p->quantity_in_stock - $p->reserved_quantity));
         $low = $products->filter(fn ($p) => $p->quantity_in_stock > 0 && $p->isLowStock())->count();
         $out = $products->where('quantity_in_stock', 0)->count();
         $stockValue = $products->sum(fn ($p) => $p->quantity_in_stock * (float) $p->unit_price);
+        $pendingDeliveries = $reservations->where('status', 'reserved')->count();
+        $completedDeliveries = $reservations->where('status', 'delivered')->count();
 
         $movements = $operations->where('section', 'mouvements')->take(20);
         $receptions = $operations->where('section', 'receptions')->take(8);
-        $inventories = $operations->where('section', 'inventaires')->take(6);
         $resolvedProductIds = $operations->where('section', 'alertes')->where('status', 'Traitée')->pluck('product_id');
         $alerts = $products->filter(fn ($p) => $p->isLowStock() && !$resolvedProductIds->contains($p->id));
 
@@ -51,9 +57,9 @@ class StockDashboardController extends Controller
             'dashboardData' => [
                 'stats' => [
                     ['id' => 'products', 'label' => 'Produits', 'value' => $products->count(), 'detail' => 'références actives'],
-                    ['id' => 'available', 'label' => 'Disponible', 'value' => $available, 'detail' => 'unités disponibles'],
-                    ['id' => 'low', 'label' => 'Stock faible', 'value' => $low, 'detail' => 'sous le seuil minimum'],
-                    ['id' => 'out', 'label' => 'Ruptures', 'value' => $out, 'detail' => 'produits indisponibles'],
+                    ['id' => 'critical', 'label' => 'Stock critique', 'value' => $low + $out, 'detail' => $low . ' faibles, ' . $out . ' ruptures'],
+                    ['id' => 'pending', 'label' => 'Livraisons en attente', 'value' => $pendingDeliveries, 'detail' => 'réservations à livrer'],
+                    ['id' => 'delivered', 'label' => 'Livraisons effectuées', 'value' => $completedDeliveries, 'detail' => 'commandes livrées'],
                     ['id' => 'value', 'label' => 'Valeur stock', 'value' => number_format($stockValue, 0, ',', ' ') . ' MAD', 'detail' => 'valorisation actuelle'],
                     ['id' => 'receptions', 'label' => 'Réceptions', 'value' => $receptions->whereNotIn('status', ['Validée'])->count(), 'detail' => 'à contrôler'],
                 ],
@@ -73,11 +79,6 @@ class StockDashboardController extends Controller
                 'receptions' => $receptions->map(fn ($op) => [
                     'id' => $op->id, 'supplier' => $op->name, 'agency' => $op->agency?->name ?? '—',
                     'items' => $op->detail ?: $op->quantity . ' unité(s)', 'status' => $op->status,
-                ])->values(),
-                'inventories' => $inventories->map(fn ($op) => [
-                    'id' => $op->id, 'agency' => $op->agency?->name ?? '—',
-                    'progress' => $op->quantity, 'differences' => $op->metadata['differences'] ?? 0,
-                    'due' => $op->metadata['due'] ?? '—',
                 ])->values(),
                 'activity' => $movements->map(fn ($op) => [
                     'id' => $op->id, 'type' => $op->metadata['type'] ?? 'Mouvement',
@@ -108,13 +109,19 @@ class StockDashboardController extends Controller
     public function store(string $section, Request $request)
     {
         abort_unless(in_array($section, self::SECTIONS, true), 404);
-        $data = $request->validate([
+
+        $rules = [
             'nom' => ['required', 'string', 'max:255'],
             'detail' => ['nullable', 'string', 'max:1000'],
-            'agence' => ['required', 'string', 'max:255'],
-            'quantite' => ['required', 'integer', 'min:0', $section === 'inventaires' ? 'max:100' : 'max:1000000'],
             'type' => ['nullable', Rule::in(['Entrée', 'Sortie'])],
-        ]);
+        ];
+
+        if ($section !== 'categories') {
+            $rules['agence'] = ['required', 'string', 'max:255'];
+            $rules['quantite'] = ['required', 'integer', 'min:0', 'max:1000000'];
+        }
+
+        $data = $request->validate($rules);
 
         if ($section === 'categories') {
             StockCategory::create(['name' => $data['nom'], 'description' => $data['detail'], 'active' => true]);
@@ -136,10 +143,17 @@ class StockDashboardController extends Controller
 
     public function update(string $section, int $id, Request $request)
     {
-        $data = $request->validate([
-            'nom' => ['required', 'string', 'max:255'], 'detail' => ['nullable', 'string', 'max:1000'],
-            'agence' => ['required', 'string'], 'quantite' => ['required', 'integer', 'min:0'],
-        ]);
+        $rules = [
+            'nom' => ['required', 'string', 'max:255'],
+            'detail' => ['nullable', 'string', 'max:1000'],
+        ];
+
+        if ($section !== 'categories') {
+            $rules['agence'] = ['required', 'string'];
+            $rules['quantite'] = ['required', 'integer', 'min:0'];
+        }
+
+        $data = $request->validate($rules);
 
         if ($section === 'categories') {
             $category = StockCategory::findOrFail($id);
@@ -230,11 +244,136 @@ class StockDashboardController extends Controller
             ['Responsable Commercial', 'Gestion Administrative'],
             $product->agency_id,
             'Alerte de stock traitée',
-            "L’alerte concernant « {$product->name} » a été traitée par le Responsable Stock.",
+            "L'alerte concernant « {$product->name} » a été traitée par le Responsable Stock.",
             '/dashboard-stock/alertes',
         );
         $this->audit($request, 'Traitement', 'alertes', $product->name);
         return back()->with('success', 'Alerte traitée.');
+    }
+
+    public function deliverLivraison(int $id, Request $request)
+    {
+        $reservation = Reservation::with(['product', 'user', 'agency'])->findOrFail($id);
+
+        if ($reservation->status !== 'reserved') {
+            return back()->withErrors(['reservation' => 'Cette réservation ne peut plus être livrée.']);
+        }
+
+        $rs = $request->user();
+
+        DB::transaction(function () use ($reservation, $rs) {
+            $reservation->update([
+                'status' => 'delivered',
+                'delivered_by' => $rs->id,
+                'delivered_at' => now(),
+            ]);
+
+            $product = $reservation->product;
+            $product->decrement('quantity_in_stock', $reservation->quantity);
+            $product->decrement('reserved_quantity', $reservation->quantity);
+            $product->refresh()->update([
+                'status' => $product->quantity_in_stock > 0 ? 'active' : 'out_of_stock',
+            ]);
+
+            StockOperation::create([
+                'reference' => 'LIV-' . now()->format('ymdHis'),
+                'section' => 'livraisons',
+                'name' => $reservation->client_name,
+                'detail' => $reservation->product?->name . ' · ' . $reservation->quantity . ' unité(s) · Livré',
+                'agency_id' => $reservation->agency_id,
+                'product_id' => $reservation->product_id,
+                'created_by' => $rs->id,
+                'quantity' => $reservation->quantity,
+                'status' => 'Livrée',
+                'metadata' => ['reservation_id' => $reservation->id, 'type' => 'Sortie'],
+            ]);
+        });
+
+        $this->notifyRoles(
+            ['Responsable Commercial', 'Gestion Administrative', 'Administrateur Local'],
+            $reservation->agency_id,
+            'Livraison confirmée',
+            "La réservation {$reservation->reference} ({$reservation->product?->name}) a été livrée au client {$reservation->client_name}.",
+            '/dashboard-stock/livraisons',
+        );
+
+        $rcUsers = User::whereHas('role', fn ($q) => $q->where('slug', 'responsable-commercial'))
+            ->where('agency_id', $reservation->agency_id)
+            ->where('status', 'active')
+            ->get();
+        foreach ($rcUsers as $rcUser) {
+            Mail::to($rcUser->email)->send(new ReservationDeliveredMail($reservation, $rs));
+        }
+
+        $this->audit($request, 'Livraison', 'livraisons', $reservation->reference, [
+            'produit' => $reservation->product?->name,
+            'quantité' => $reservation->quantity,
+            'client' => $reservation->client_name,
+        ]);
+
+        return back()->with('success', 'Livraison confirmée. Stock mis à jour.');
+    }
+
+    public function cancelLivraison(int $id, Request $request)
+    {
+        $reservation = Reservation::with(['product', 'user', 'agency'])->findOrFail($id);
+
+        if ($reservation->status !== 'reserved') {
+            return back()->withErrors(['reservation' => 'Cette réservation ne peut plus être annulée.']);
+        }
+
+        $data = $request->validate([
+            'cancellation_reason' => ['required', 'string', 'min:20', 'max:1000'],
+        ]);
+
+        $rs = $request->user();
+
+        DB::transaction(function () use ($reservation, $rs, $data) {
+            $reservation->update([
+                'status' => 'cancelled',
+                'cancelled_by' => $rs->id,
+                'cancelled_at' => now(),
+                'cancellation_reason' => $data['cancellation_reason'],
+            ]);
+
+            StockOperation::create([
+                'reference' => 'ANN-' . now()->format('ymdHis'),
+                'section' => 'livraisons',
+                'name' => $reservation->client_name,
+                'detail' => $reservation->product?->name . ' · ' . $reservation->quantity . ' unité(s) · Annulée',
+                'agency_id' => $reservation->agency_id,
+                'product_id' => $reservation->product_id,
+                'created_by' => $rs->id,
+                'quantity' => $reservation->quantity,
+                'status' => 'Annulée',
+                'metadata' => ['reservation_id' => $reservation->id, 'type' => 'Sortie', 'reason' => $data['cancellation_reason']],
+            ]);
+        });
+
+        $this->notifyRoles(
+            ['Responsable Commercial', 'Gestion Administrative', 'Administrateur Local'],
+            $reservation->agency_id,
+            'Réservation annulée',
+            "La réservation {$reservation->reference} ({$reservation->product?->name}) a été annulée par le Responsable Stock.",
+            '/dashboard-stock/livraisons',
+        );
+
+        $rcUsers = User::whereHas('role', fn ($q) => $q->where('slug', 'responsable-commercial'))
+            ->where('agency_id', $reservation->agency_id)
+            ->where('status', 'active')
+            ->get();
+        foreach ($rcUsers as $rcUser) {
+            Mail::to($rcUser->email)->send(new ReservationCancelledMail($reservation, $rs, $data['cancellation_reason']));
+        }
+
+        $this->audit($request, 'Annulation', 'livraisons', $reservation->reference, [
+            'produit' => $reservation->product?->name,
+            'quantité' => $reservation->quantity,
+            'client' => $reservation->client_name,
+            'motif' => $data['cancellation_reason'],
+        ]);
+
+        return back()->with('success', 'Réservation annulée.');
     }
 
     private function createOperation(string $section, array $data, Request $request, ?Product $product = null): StockOperation
@@ -246,7 +385,7 @@ class StockDashboardController extends Controller
             'agency_id' => $this->agency($data['agence'])?->id, 'product_id' => $product?->id,
             'created_by' => $request->user()?->id, 'quantity' => $data['quantite'],
             'status' => match ($section) {
-                'receptions' => 'À contrôler', 'inventaires' => 'En cours',
+                'receptions' => 'À contrôler',
                 'livraisons' => 'En préparation', default => 'Enregistré',
             },
             'metadata' => ['type' => $data['type'] ?? null],
@@ -274,6 +413,28 @@ class StockDashboardController extends Controller
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
                 'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : 'Stock faible',
             ])->values();
+        }
+        if ($section === 'livraisons') {
+            return Reservation::with(['product', 'user', 'agency'])
+                ->latest()
+                ->get()
+                ->map(fn (Reservation $r) => [
+                    'id' => $r->id,
+                    'nom' => $r->user?->name ?? '—',
+                    'detail' => $r->product?->name . ' · ' . $r->quantity . ' unité(s)',
+                    'agence' => $r->agency?->name ?? '—',
+                    'quantite' => $r->quantity,
+                    'statut' => match ($r->status) {
+                        'reserved' => 'En préparation',
+                        'delivered' => 'Livrée',
+                        'cancelled' => 'Annulée',
+                        default => $r->status,
+                    },
+                    'reference' => $r->reference,
+                    'client' => $r->client_name,
+                    'produit' => $r->product?->name ?? '—',
+                    'cancellation_reason' => $r->cancellation_reason,
+                ]);
         }
         return StockOperation::with('agency')->where('section', $section)->latest()->get()->map(fn ($op) => [
             'id' => $op->id, 'nom' => $op->name, 'detail' => $op->detail,

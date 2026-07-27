@@ -26,11 +26,9 @@ class LocalAdminDemandeController extends Controller
     {
         $user = $request->user();
         $user->load(['role', 'agency']);
-        $agencyId = $user->agency_id;
 
-        $query = Demande::where('agency_id', $agencyId)
-            ->whereIn('status', ['approved', 'confirmed', 'rejected'])
-            ->with(['user', 'confirmedBy']);
+        $query = Demande::whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
+            ->with(['user', 'agency', 'confirmedBy']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -54,10 +52,10 @@ class LocalAdminDemandeController extends Controller
         $demandes = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'total' => Demande::where('agency_id', $agencyId)->whereIn('status', ['approved', 'confirmed', 'rejected'])->count(),
-            'approved' => Demande::where('agency_id', $agencyId)->where('status', 'approved')->count(),
-            'confirmed' => Demande::where('agency_id', $agencyId)->where('status', 'confirmed')->count(),
-            'rejected' => Demande::where('agency_id', $agencyId)->where('status', 'rejected')->count(),
+            'total' => Demande::whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])->count(),
+            'pending' => Demande::where('status', 'pending_local_admin')->count(),
+            'confirmed' => Demande::where('status', 'confirmed_local_admin')->count(),
+            'rejected' => Demande::where('status', 'rejected_local_admin')->count(),
         ];
 
         return Inertia::render('Demandes/Index', [
@@ -86,7 +84,6 @@ class LocalAdminDemandeController extends Controller
         $user->load(['role', 'agency']);
 
         $demande = Demande::where('id', $id)
-            ->where('agency_id', $user->agency_id)
             ->with(['user', 'agency', 'confirmedBy', 'refusedBy'])
             ->first();
 
@@ -155,8 +152,8 @@ class LocalAdminDemandeController extends Controller
         $user = $request->user();
 
         $demande = Demande::where('id', $id)
-            ->where('agency_id', $user->agency_id)
-            ->where('status', 'approved')
+            ->where('status', 'pending_local_admin')
+            ->with(['user', 'agency'])
             ->first();
 
         if (!$demande) {
@@ -165,7 +162,7 @@ class LocalAdminDemandeController extends Controller
 
         DB::transaction(function () use ($demande, $user) {
             $demande->update([
-                'status' => 'confirmed',
+                'status' => 'confirmed_local_admin',
                 'confirmed_by' => $user->id,
                 'confirmed_at' => now(),
             ]);
@@ -176,8 +173,8 @@ class LocalAdminDemandeController extends Controller
                 module: 'Demandes',
                 description: "Confirmation de la demande d'achat {$demande->title}",
                 target: $demande->title,
-                oldValues: ['statut' => 'approved'],
-                newValues: ['statut' => 'confirmed'],
+                oldValues: ['statut' => 'pending_local_admin'],
+                newValues: ['statut' => 'confirmed_local_admin'],
                 ipAddress: request()->ip(),
                 userAgent: request()->userAgent(),
             );
@@ -201,12 +198,12 @@ class LocalAdminDemandeController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'reason' => 'required|string|min:3',
+            'reason' => 'required|string|min:20',
         ]);
 
         $demande = Demande::where('id', $id)
-            ->where('agency_id', $user->agency_id)
-            ->where('status', 'approved')
+            ->where('status', 'pending_local_admin')
+            ->with(['user', 'agency'])
             ->first();
 
         if (!$demande) {
@@ -215,7 +212,7 @@ class LocalAdminDemandeController extends Controller
 
         DB::transaction(function () use ($demande, $user, $request) {
             $demande->update([
-                'status' => 'rejected',
+                'status' => 'rejected_local_admin',
                 'refused_by' => $user->id,
                 'refused_at' => now(),
                 'refusal_reason' => $request->reason,
@@ -227,8 +224,8 @@ class LocalAdminDemandeController extends Controller
                 module: 'Demandes',
                 description: "Rejet de la demande d'achat {$demande->title} — Motif : {$request->reason}",
                 target: $demande->title,
-                oldValues: ['statut' => 'approved'],
-                newValues: ['statut' => 'rejected', 'motif' => $request->reason],
+                oldValues: ['statut' => 'pending_local_admin'],
+                newValues: ['statut' => 'rejected_local_admin', 'motif' => $request->reason],
                 ipAddress: request()->ip(),
                 userAgent: request()->userAgent(),
             );
@@ -274,7 +271,7 @@ class LocalAdminDemandeController extends Controller
                 description: $descriptions[$action],
                 type: $types[$action],
                 source: 'demandes',
-                actionUrl: "/demandes/{$demande->id}",
+                actionUrl: "/dashboard-commercial/demandes/{$demande->id}",
             );
         } catch (\Throwable $e) {
             Log::error("Erreur notification demande {$demande->id}: {$e->getMessage()}");
@@ -285,25 +282,22 @@ class LocalAdminDemandeController extends Controller
     {
         try {
             $rcRole = Role::where('name', 'Responsable Commercial')->first();
-            $rsRole = Role::where('name', 'Responsable Stock')->first();
 
-            $roleIds = array_filter([$rcRole?->id, $rsRole?->id]);
-            if (empty($roleIds)) return;
+            if (!$rcRole) return;
 
-            $users = User::whereIn('role_id', $roleIds)
+            $users = User::where('role_id', $rcRole->id)
                 ->where('agency_id', $demande->agency_id)
                 ->where('status', 'active')
-                ->where('id', '!=', $admin->id)
                 ->get();
 
             foreach ($users as $recipient) {
                 $this->notificationService->create(
                     user: $recipient,
                     title: 'Demande confirmée',
-                    description: "La demande « {$demande->title} » a été confirmée par l'Administrateur Local {$admin->name}.",
+                    description: "La demande « {$demande->title} » a été confirmée par l'Administrateur Local {$admin->name}. Elle est maintenant transmise au Responsable Stock.",
                     type: 'success',
                     source: 'demandes',
-                    actionUrl: "/demandes/{$demande->id}",
+                    actionUrl: "/dashboard-commercial/demandes/{$demande->id}",
                 );
             }
         } catch (\Throwable $e) {
@@ -314,16 +308,13 @@ class LocalAdminDemandeController extends Controller
     private function notifyOnReject(Demande $demande, User $admin, string $reason): void
     {
         try {
-            $gaRole = Role::where('name', 'Gestion Administrative')->first();
             $rcRole = Role::where('name', 'Responsable Commercial')->first();
 
-            $roleIds = array_filter([$gaRole?->id, $rcRole?->id]);
-            if (empty($roleIds)) return;
+            if (!$rcRole) return;
 
-            $users = User::whereIn('role_id', $roleIds)
+            $users = User::where('role_id', $rcRole->id)
                 ->where('agency_id', $demande->agency_id)
                 ->where('status', 'active')
-                ->where('id', '!=', $admin->id)
                 ->get();
 
             foreach ($users as $recipient) {
@@ -333,7 +324,7 @@ class LocalAdminDemandeController extends Controller
                     description: "La demande « {$demande->title} » a été rejetée par l'Administrateur Local {$admin->name}. Motif : {$reason}",
                     type: 'warning',
                     source: 'demandes',
-                    actionUrl: "/demandes/{$demande->id}",
+                    actionUrl: "/dashboard-commercial/demandes/{$demande->id}",
                 );
             }
         } catch (\Throwable $e) {
@@ -344,12 +335,10 @@ class LocalAdminDemandeController extends Controller
     private function sendConfirmEmails(Demande $demande, User $admin): void
     {
         $rcRole = Role::where('name', 'Responsable Commercial')->first();
-        $rsRole = Role::where('name', 'Responsable Stock')->first();
 
-        $roleIds = array_filter([$rcRole?->id, $rsRole?->id]);
-        if (empty($roleIds)) return;
+        if (!$rcRole) return;
 
-        $users = User::whereIn('role_id', $roleIds)
+        $users = User::where('role_id', $rcRole->id)
             ->where('agency_id', $demande->agency_id)
             ->where('status', 'active')
             ->get();
@@ -363,13 +352,11 @@ class LocalAdminDemandeController extends Controller
 
     private function sendRejectEmails(Demande $demande, User $admin, string $reason): void
     {
-        $gaRole = Role::where('name', 'Gestion Administrative')->first();
         $rcRole = Role::where('name', 'Responsable Commercial')->first();
 
-        $roleIds = array_filter([$gaRole?->id, $rcRole?->id]);
-        if (empty($roleIds)) return;
+        if (!$rcRole) return;
 
-        $users = User::whereIn('role_id', $roleIds)
+        $users = User::where('role_id', $rcRole->id)
             ->where('agency_id', $demande->agency_id)
             ->where('status', 'active')
             ->get();
@@ -405,7 +392,7 @@ class LocalAdminDemandeController extends Controller
                 description: $descriptions[$action],
                 type: $types[$action],
                 source: 'demandes',
-                actionUrl: "/demandes/{$demande->id}",
+                actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
             );
         } catch (\Throwable $e) {
             Log::error("Erreur notification self demande {$demande->id}: {$e->getMessage()}");

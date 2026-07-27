@@ -12,9 +12,9 @@ class CommercialDashboardService
     public function getStats(User $user): array
     {
         $totalDemandes = Demande::where('user_id', $user->id)->count();
-        $pendingDemandes = Demande::where('user_id', $user->id)->where('status', 'pending')->count();
-        $approvedDemandes = Demande::where('user_id', $user->id)->where('status', 'approved')->count();
-        $rejectedDemandes = Demande::where('user_id', $user->id)->where('status', 'rejected')->count();
+        $pendingDemandes = Demande::where('user_id', $user->id)->where('status', 'submitted')->count();
+        $approvedDemandes = Demande::where('user_id', $user->id)->whereIn('status', ['pending_local_admin', 'confirmed_local_admin'])->count();
+        $rejectedDemandes = Demande::where('user_id', $user->id)->whereIn('status', ['rejected', 'rejected_local_admin'])->count();
         $inProgressDemandes = Demande::where('user_id', $user->id)->where('status', 'in_progress')->count();
         $completedDemandes = Demande::where('user_id', $user->id)->where('status', 'completed')->count();
         $unreadNotifications = DB::table('notifications')
@@ -41,8 +41,8 @@ class CommercialDashboardService
             ->select(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
                 DB::raw('count(*) as total'),
-                DB::raw("sum(case when status in ('approved','completed') then 1 else 0 end) as validees"),
-                DB::raw("sum(case when status = 'rejected' then 1 else 0 end) as refusees")
+                DB::raw("sum(case when status in ('confirmed_local_admin','completed') then 1 else 0 end) as validees"),
+                DB::raw("sum(case when status in ('rejected','rejected_local_admin') then 1 else 0 end) as refusees")
             )
             ->groupBy('month')
             ->orderBy('month')

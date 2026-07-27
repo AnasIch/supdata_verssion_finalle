@@ -8,7 +8,7 @@ import {
     Package,
     ClipboardList,
     FileSignature,
-    Warehouse,
+
     AlertTriangle,
     ArrowUpDown,
     ShoppingCart,
@@ -126,7 +126,6 @@ const sidebarMenus = {
                     { title: "Catégories", href: "categories", icon: FileText },
                     { title: "Mouvements", href: "mouvements", icon: ArrowUpDown },
                     { title: "Réceptions", href: "receptions", icon: ClipboardList },
-                    { title: "Inventaires", href: "inventaires", icon: Warehouse },
                     { title: "Livraisons", href: "livraisons", icon: ShoppingCart },
                     { title: "Alertes de stock", href: "alertes", icon: AlertTriangle },
                     { title: "Notifications", href: "notifications", icon: Bell },

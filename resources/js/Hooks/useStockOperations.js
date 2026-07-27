@@ -18,17 +18,27 @@ export function useStockOperations(section, initialItems = [], options = {}) {
     const deleteItem = (id) => router.delete(`/dashboard-stock/${section}/${id}`, { preserveScroll: true });
     const transitionItem = (id) => {
         if (section === "receptions") router.patch(`/dashboard-stock/receptions/${id}/valider`, {}, { preserveScroll: true });
+        if (section === "livraisons") router.patch(`/dashboard-stock/livraisons/${id}/livrer`, {}, { preserveScroll: true });
         if (section === "alertes") router.patch(`/dashboard-stock/alertes/${id}/traiter`, {}, { preserveScroll: true });
         return { ok: true };
     };
-    const canTransition = (item) => section === "receptions"
-        ? !["Validée", "En transit"].includes(item.statut)
-        : section === "alertes" && item.statut !== "Traitée";
+    const cancelItem = (id, reason) => {
+        if (section === "livraisons") router.patch(`/dashboard-stock/livraisons/${id}/annuler`, { cancellation_reason: reason }, { preserveScroll: true });
+        return { ok: true };
+    };
+    const canTransition = (item) => {
+        if (section === "receptions") return !["Validée", "En transit"].includes(item.statut);
+        if (section === "livraisons") return item.statut === "En préparation";
+        if (section === "alertes") return item.statut !== "Traitée";
+        return false;
+    };
+    const canCancel = (item) => section === "livraisons" && item.statut === "En préparation";
 
     return {
         config, section, items: filteredItems, search, setSearch, agency, setAgency,
-        createItem, updateItem, deleteItem, transitionItem, canTransition,
+        createItem, updateItem, deleteItem, transitionItem, canTransition, cancelItem, canCancel,
         reset: () => router.reload({ only: ["initialItems"] }),
         productOptions: options.products || [], categoryOptions: options.categories || [],
+        agencies: options.agencies || [],
     };
 }

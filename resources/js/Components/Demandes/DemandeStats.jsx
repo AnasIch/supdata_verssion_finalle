@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const stats = [
     { key: "total", label: "Total", icon: ClipboardList, color: "bg-slate-100 text-slate-600" },
-    { key: "approved", label: "En attente", icon: Clock, color: "bg-amber-50 text-amber-600" },
+    { key: "pending", label: "En attente de décision", icon: Clock, color: "bg-amber-50 text-amber-600" },
     { key: "confirmed", label: "Confirmées", icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
     { key: "rejected", label: "Rejetées", icon: XCircle, color: "bg-red-50 text-red-500" },
 ];

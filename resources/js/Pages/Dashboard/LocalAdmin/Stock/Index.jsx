@@ -3,10 +3,9 @@ import { motion } from "framer-motion";
 import { Head, router } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import PageTitle from "@/Components/Layout/PageTitle";
-import StockStats from "@/Components/Stock/StockStats";
-import StockFilters from "@/Components/Stock/StockFilters";
-import StockTable from "@/Components/Stock/StockTable";
-import StockCard from "@/Components/Stock/StockCard";
+import LocalAdminStockStats from "@/Components/LocalAdmin/LocalAdminStockStats";
+import LocalAdminStockFilters from "@/Components/LocalAdmin/LocalAdminStockFilters";
+import LocalAdminStockTable from "@/Components/LocalAdmin/LocalAdminStockTable";
 
 export default function LocalAdminStockIndex({
     user,
@@ -14,6 +13,7 @@ export default function LocalAdminStockIndex({
     productsMeta,
     stats,
     categories,
+    agencies,
     filters,
 }) {
     const [currentPage, setCurrentPage] = useState(productsMeta.currentPage || 1);
@@ -71,32 +71,62 @@ export default function LocalAdminStockIndex({
                     transition={{ duration: 0.3 }}
                 >
                     <PageTitle
-                        title="Gestion du stock"
-                        description={`Produits de l'agence ${user.agency}`}
+                        title="Stock global"
+                        description="Consultation du stock de toutes les agences (lecture seule)"
                     />
                 </motion.div>
 
-                <StockStats data={stats} />
+                <LocalAdminStockStats data={stats} />
 
-                <StockFilters
+                <LocalAdminStockFilters
                     filters={filters}
                     categories={categories}
+                    agencies={agencies}
                     onFilterChange={handleFilterChange}
                     onReset={handleReset}
                 />
 
                 <div className="hidden sm:block">
-                    <StockTable data={products} onView={handleView} />
+                    <LocalAdminStockTable data={products} onView={handleView} />
                 </div>
 
-                <div className="flex flex-col gap-3 sm:hidden">
-                    {products.map((p, i) => (
-                        <StockCard
+                <div className="sm:hidden">
+                    {products.length === 0 && (
+                        <p className="py-8 text-center text-sm text-slate-500">
+                            Aucun produit trouvé
+                        </p>
+                    )}
+                    {products.map((p) => (
+                        <button
                             key={p.id}
-                            product={p}
-                            onView={handleView}
-                            delay={i * 0.03}
-                        />
+                            type="button"
+                            onClick={() => handleView(p)}
+                            className="mb-3 w-full rounded-2xl border border-slate-200/70 bg-white p-4 text-left shadow-[0_1px_3px_rgb(0,0,0,0.04)]"
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-slate-900">
+                                    {p.name}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                    {p.reference}
+                                </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                                <span>{p.category}</span>
+                                <span>·</span>
+                                <span>{p.agency?.name ?? "—"}</span>
+                                <span>·</span>
+                                <span
+                                    className={
+                                        p.quantity_in_stock <= p.minimum_stock
+                                            ? "font-medium text-red-500"
+                                            : "text-slate-700"
+                                    }
+                                >
+                                    Qté {p.quantity_in_stock}
+                                </span>
+                            </div>
+                        </button>
                     ))}
                 </div>
 

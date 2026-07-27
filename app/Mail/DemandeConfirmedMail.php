@@ -27,7 +27,7 @@ class DemandeConfirmedMail extends Mailable
                 config('mail.from.address'),
                 config('mail.from.name', 'SUPDATA ERP'),
             ),
-            subject: "Nouvelle demande confirmée — {$this->demande->title}",
+            subject: "Votre demande a été approuvée — {$this->demande->title}",
         );
     }
 

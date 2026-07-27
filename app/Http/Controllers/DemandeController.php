@@ -45,8 +45,7 @@ class DemandeController extends Controller
         $user = $request->user();
         $user->load(['role', 'agency']);
 
-        $products = \App\Models\Product::where('status', 'active')
-            ->where('agency_id', $user->agency_id)
+        $products = \App\Models\Product::where('agency_id', $user->agency_id)
             ->orderBy('name')
             ->get()
             ->map(fn ($p) => [
@@ -55,6 +54,8 @@ class DemandeController extends Controller
                 'reference' => $p->reference,
                 'category' => $p->category,
                 'unit_price' => (float) $p->unit_price,
+                'quantity_in_stock' => $p->quantity_in_stock,
+                'minimum_stock' => $p->minimum_stock,
             ]);
 
         return Inertia::render('Commercial/Demandes/Create', [

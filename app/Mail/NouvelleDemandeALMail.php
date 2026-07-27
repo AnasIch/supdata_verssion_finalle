@@ -11,14 +11,13 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class DemandeRejectedMail extends Mailable
+class NouvelleDemandeALMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public Demande $demande,
-        public User $actor,
-        public string $reason,
+        public User $validator,
     ) {}
 
     public function envelope(): Envelope
@@ -28,14 +27,14 @@ class DemandeRejectedMail extends Mailable
                 config('mail.from.address'),
                 config('mail.from.name', 'SUPDATA ERP'),
             ),
-            subject: "Votre demande a été rejetée — {$this->demande->title}",
+            subject: "Nouvelle demande à traiter — {$this->demande->title}",
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.demande-rejected',
+            view: 'emails.nouvelle-demande-al',
         );
     }
 

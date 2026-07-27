@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Demande;
+use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,14 +11,13 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class DemandeRejectedMail extends Mailable
+class ReservationDeliveredMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public Demande $demande,
+        public Reservation $reservation,
         public User $actor,
-        public string $reason,
     ) {}
 
     public function envelope(): Envelope
@@ -28,14 +27,14 @@ class DemandeRejectedMail extends Mailable
                 config('mail.from.address'),
                 config('mail.from.name', 'SUPDATA ERP'),
             ),
-            subject: "Votre demande a été rejetée — {$this->demande->title}",
+            subject: "Votre réservation a été livrée — {$this->reservation->reference}",
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.demande-rejected',
+            view: 'emails.reservation-delivered',
         );
     }
 

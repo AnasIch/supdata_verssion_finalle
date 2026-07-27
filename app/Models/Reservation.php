@@ -20,6 +20,11 @@ class Reservation extends Model
         'status',
         'remark',
         'delivery_date',
+        'delivered_by',
+        'delivered_at',
+        'cancelled_by',
+        'cancelled_at',
+        'cancellation_reason',
     ];
 
     protected function casts(): array
@@ -27,6 +32,8 @@ class Reservation extends Model
         return [
             'quantity' => 'integer',
             'delivery_date' => 'date',
+            'delivered_at' => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -43,5 +50,15 @@ class Reservation extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
+    }
+
+    public function deliveredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'delivered_by');
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 }

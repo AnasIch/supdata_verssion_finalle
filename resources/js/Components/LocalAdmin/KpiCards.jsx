@@ -3,8 +3,7 @@ import {
     ClipboardList,
     CheckCircle2,
     XCircle,
-    Wallet,
-    AlertTriangle,
+    Hash,
     Bell,
     TrendingUp,
     TrendingDown,
@@ -15,14 +14,13 @@ const iconMap = {
     pending: ClipboardList,
     validated: CheckCircle2,
     rejected: XCircle,
-    budget: Wallet,
-    critical: AlertTriangle,
+    total: Hash,
     notifications: Bell,
 };
 
 export default function KpiCards({ data }) {
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {data.map((kpi, i) => {
                 const Icon = iconMap[kpi.id] || ClipboardList;
                 return (
@@ -53,7 +51,6 @@ export default function KpiCards({ data }) {
                         <div className="mt-4">
                             <div className="flex items-baseline gap-1.5">
                                 <p className="text-2xl font-bold tracking-tight text-slate-900">{kpi.value}</p>
-                                {kpi.unit && <p className="text-sm font-medium text-slate-500">{kpi.unit}</p>}
                             </div>
                             <p className="mt-0.5 text-sm text-slate-500">{kpi.label}</p>
                             {kpi.description && <p className="mt-1 text-xs text-slate-400">{kpi.description}</p>}

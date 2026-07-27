@@ -4,11 +4,11 @@ import { Input } from "@/Components/UI/Input";
 
 const statusOptions = [
     { value: "all", label: "Tous les statuts" },
-    { value: "pending", label: "En attente" },
-    { value: "approved", label: "Approuvée" },
-    { value: "rejected", label: "Rejetée" },
-    { value: "in_progress", label: "En cours" },
-    { value: "completed", label: "Terminée" },
+    { value: "submitted", label: "En attente GA" },
+    { value: "pending_local_admin", label: "En attente AL" },
+    { value: "confirmed_local_admin", label: "Confirmée" },
+    { value: "rejected", label: "Rejetée par GA" },
+    { value: "rejected_local_admin", label: "Rejetée par AL" },
 ];
 
 const priorityOptions = [

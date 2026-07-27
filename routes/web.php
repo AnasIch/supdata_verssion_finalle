@@ -52,32 +52,34 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| User Management (CRUD)
+| User Management (CRUD) — Super Admin Only
 |--------------------------------------------------------------------------
 */
 
-Route::get('/utilisateurs/creer', [UserController::class, 'create'])->name('users.create');
-Route::post('/utilisateurs', [UserController::class, 'store'])->name('users.store');
-Route::get('/utilisateurs', [UserController::class, 'index'])->name('users');
-Route::get('/utilisateurs/{user}', [UserController::class, 'show'])->name('users.show');
-Route::get('/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('users.edit');
-Route::put('/utilisateurs/{user}', [UserController::class, 'update'])->name('users.update');
-Route::patch('/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-Route::delete('/utilisateurs/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::get('/utilisateurs/creer', [UserController::class, 'create'])->name('users.create');
+    Route::post('/utilisateurs', [UserController::class, 'store'])->name('users.store');
+    Route::get('/utilisateurs', [UserController::class, 'index'])->name('users');
+    Route::get('/utilisateurs/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/utilisateurs/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::patch('/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::delete('/utilisateurs/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
-Route::get('/roles-permissions', function () {
-    return Inertia::render('Roles/Index');
-})->name('roles');
+    Route::get('/roles-permissions', function () {
+        return Inertia::render('Roles/Index');
+    })->name('roles');
 
-Route::get('/roles/{id}', function ($id) {
-    return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
-})->name('roles.show');
+    Route::get('/roles/{id}', function ($id) {
+        return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
+    })->name('roles.show');
 
-Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs');
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs');
 
-Route::get('/notifications', function () {
-    return Inertia::render('Dashboard/Notifications/Index');
-})->name('notifications');
+    Route::get('/notifications', function () {
+        return Inertia::render('Dashboard/Notifications/Index');
+    })->name('notifications');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -155,13 +157,15 @@ Route::delete('/dashboard-stock/notifications/{notification}', [NotificationCont
     Route::get('/dashboard-stock', [StockDashboardController::class, 'index'])->name('stock.dashboard');
 });
 
-Route::get('/stock', function () {
-    return Inertia::render('Stock/Index');
-})->name('stock');
+Route::middleware('auth')->group(function () {
+    Route::get('/stock', function () {
+        return Inertia::render('Stock/Index');
+    })->name('stock');
 
-Route::get('/stock/{id}', function ($id) {
-    return Inertia::render('Stock/Show', ['productId' => (int) $id]);
-})->name('stock.show');
+    Route::get('/stock/{id}', function ($id) {
+        return Inertia::render('Stock/Show', ['productId' => (int) $id]);
+    })->name('stock.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -184,33 +188,31 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::get('/dashboard-super-admin/utilisateurs/creer', [UserController::class, 'create'])->name('sa.users.create');
-Route::post('/dashboard-super-admin/utilisateurs', [UserController::class, 'store'])->name('sa.users.store');
-Route::get('/dashboard-super-admin/utilisateurs', [UserController::class, 'index'])->name('sa.users');
-Route::get('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'show'])->name('sa.users.show');
-Route::get('/dashboard-super-admin/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('sa.users.edit');
-Route::put('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'update'])->name('sa.users.update');
-Route::patch('/dashboard-super-admin/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('sa.users.toggle-status');
-Route::delete('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'destroy'])->name('sa.users.destroy');
+Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::get('/dashboard-super-admin/utilisateurs/creer', [UserController::class, 'create'])->name('sa.users.create');
+    Route::post('/dashboard-super-admin/utilisateurs', [UserController::class, 'store'])->name('sa.users.store');
+    Route::get('/dashboard-super-admin/utilisateurs', [UserController::class, 'index'])->name('sa.users');
+    Route::get('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'show'])->name('sa.users.show');
+    Route::get('/dashboard-super-admin/utilisateurs/{user}/modifier', [UserController::class, 'edit'])->name('sa.users.edit');
+    Route::put('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'update'])->name('sa.users.update');
+    Route::patch('/dashboard-super-admin/utilisateurs/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('sa.users.toggle-status');
+    Route::delete('/dashboard-super-admin/utilisateurs/{user}', [UserController::class, 'destroy'])->name('sa.users.destroy');
 
-Route::get('/dashboard-super-admin/roles-permissions', function () {
-    return Inertia::render('Roles/Index');
-})->name('sa.roles');
+    Route::get('/dashboard-super-admin/roles-permissions', function () {
+        return Inertia::render('Roles/Index');
+    })->name('sa.roles');
 
-Route::get('/dashboard-super-admin/roles/{id}', function ($id) {
-    return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
-})->name('sa.roles.show');
+    Route::get('/dashboard-super-admin/roles/{id}', function ($id) {
+        return Inertia::render('Roles/Show', ['roleId' => (int) $id]);
+    })->name('sa.roles.show');
 
-Route::middleware('auth')->group(function () {
     Route::get('/dashboard-super-admin/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('sa.notifications.unread-count');
     Route::get('/dashboard-super-admin/notifications', [NotificationController::class, 'index'])->name('sa.notifications');
     Route::patch('/dashboard-super-admin/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('sa.notifications.read-all');
     Route::patch('/dashboard-super-admin/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('sa.notifications.read');
     Route::delete('/dashboard-super-admin/notifications/read', [NotificationController::class, 'destroyAllRead'])->name('sa.notifications.destroy-all-read');
     Route::delete('/dashboard-super-admin/notifications/{notification}', [NotificationController::class, 'destroy'])->name('sa.notifications.destroy');
-});
 
-Route::middleware('auth')->group(function () {
     Route::get('/dashboard-super-admin/audit-logs', [AuditLogController::class, 'index'])->name('sa.audit-logs');
 });
 
@@ -269,13 +271,13 @@ Route::get('/dashboard-stock/mouvements', fn (Request $request) => app(StockDash
 
 Route::get('/dashboard-stock/receptions', fn (Request $request) => app(StockDashboardController::class)->operations('receptions', $request))->name('rs.receptions');
 
-Route::get('/dashboard-stock/inventaires', fn (Request $request) => app(StockDashboardController::class)->operations('inventaires', $request))->name('rs.inventories');
-
 Route::get('/dashboard-stock/livraisons', fn (Request $request) => app(StockDashboardController::class)->operations('livraisons', $request))->name('rs.deliveries');
 
 Route::get('/dashboard-stock/alertes', fn (Request $request) => app(StockDashboardController::class)->operations('alertes', $request))->name('rs.alerts');
 Route::post('/dashboard-stock/mouvement', [StockDashboardController::class, 'movement'])->name('rs.movement.store');
 Route::patch('/dashboard-stock/receptions/{id}/valider', [StockDashboardController::class, 'validateReception'])->name('rs.receptions.validate');
+Route::patch('/dashboard-stock/livraisons/{id}/livrer', [StockDashboardController::class, 'deliverLivraison'])->name('rs.livraisons.deliver');
+Route::patch('/dashboard-stock/livraisons/{id}/annuler', [StockDashboardController::class, 'cancelLivraison'])->name('rs.livraisons.cancel');
 Route::patch('/dashboard-stock/alertes/{productId}/traiter', [StockDashboardController::class, 'resolveAlert'])->name('rs.alerts.resolve');
 Route::post('/dashboard-stock/{section}', [StockDashboardController::class, 'store'])->name('rs.operations.store');
 Route::put('/dashboard-stock/{section}/{id}', [StockDashboardController::class, 'update'])->name('rs.operations.update');

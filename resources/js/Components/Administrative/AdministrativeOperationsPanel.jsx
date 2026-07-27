@@ -18,8 +18,8 @@ import { Textarea } from "@/Components/UI/Textarea";
 import { useToast } from "@/Components/UI/Toast";
 
 const statusVariant = (status) => {
-    if (["Rupture", "Critique", "Rejetée", "Incomplet"].includes(status)) return "destructive";
-    if (["À vérifier", "En attente"].includes(status)) return "warning";
+    if (["Rupture", "Critique", "Rejetée", "Rejetée par Administrateur Local", "Incomplet"].includes(status)) return "destructive";
+    if (["À vérifier", "En attente", "En attente Administrateur Local"].includes(status)) return "warning";
     return "success";
 };
 
@@ -153,10 +153,10 @@ export default function AdministrativeOperationsPanel({ operations }) {
                     </div>}
                 </>}
 
-                {isRequest && selected && !canDecide && <Alert variant={selected.statut === "Rejetée" ? "warning" : "success"}>
-                    {selected.statut === "Rejetée" ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
+                {isRequest && selected && !canDecide && <Alert variant={selected.statut?.includes("Rejetée") ? "warning" : "success"}>
+                    {selected.statut?.includes("Rejetée") ? <XCircle className="size-4" /> : <CheckCircle2 className="size-4" />}
                     <AlertTitle>{selected.statut}</AlertTitle>
-                    <AlertDescription>{selected.statut === "Rejetée" ? "Le Responsable Commercial a été informé avec le motif du rejet." : "La demande a été transmise à l’Administrateur Local et le Responsable Commercial a été informé."}</AlertDescription>
+                    <AlertDescription>{selected.statut?.includes("Rejetée") ? "Le Responsable Commercial a été informé avec le motif du rejet." : "La demande a été transmise à l'Administrateur Local et le Responsable Commercial a été informé."}</AlertDescription>
                 </Alert>}
 
                 <DialogFooter>

@@ -5,62 +5,52 @@ export function useLocalAdminDashboard({
     stats = {},
     evolutionData = [],
     decisionsData = [],
-    pendingDemandes = [],
-    recentActivity = [],
-    importantNotifications = [],
+    lastDemandes = [],
+    unreadNotifications = 0,
 } = {}) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const kpiData = [
         {
             id: "pending",
-            label: "Demandes en attente",
-            value: String(stats.pendingDemandes ?? 0),
-            description: "À traiter",
+            label: "Demandes à traiter",
+            value: String(stats.pendingLocalAdmin ?? 0),
+            description: "En attente de décision",
             trend: "",
             trendUp: true,
             color: "bg-amber-50 text-amber-600",
         },
         {
             id: "validated",
-            label: "Validées",
-            value: String(stats.approvedDemandes ?? 0),
-            description: "Demandes approuvées",
+            label: "Confirmées",
+            value: String(stats.confirmedLocalAdmin ?? 0),
+            description: "Transmises au RS",
             trend: "",
             trendUp: true,
             color: "bg-emerald-50 text-emerald-600",
         },
         {
             id: "rejected",
-            label: "Refusées",
-            value: String(stats.rejectedDemandes ?? 0),
-            description: "Demandes rejetées",
+            label: "Rejetées",
+            value: String(stats.rejectedLocalAdmin ?? 0),
+            description: "Avec motif enregistré",
             trend: "",
             trendUp: false,
             color: "bg-red-50 text-red-600",
         },
         {
             id: "total",
-            label: "Total demandes",
-            value: String(stats.totalDemandes ?? 0),
-            description: "Toutes les demandes",
+            label: "Total traitées",
+            value: String(stats.totalProcessed ?? 0),
+            description: "Confirmées + Rejetées",
             trend: "",
             trendUp: false,
             color: "bg-blue-50 text-blue-600",
         },
         {
-            id: "critical",
-            label: "Stock critique",
-            value: String(stats.lowStockProducts ?? 0),
-            description: "Produits sous le seuil",
-            trend: "",
-            trendUp: true,
-            color: "bg-orange-50 text-orange-600",
-        },
-        {
             id: "notifications",
             label: "Notifications non lues",
-            value: String(stats.unreadNotifications ?? 0),
+            value: String(unreadNotifications ?? 0),
             description: "À consulter",
             trend: "",
             trendUp: false,
@@ -68,16 +58,10 @@ export function useLocalAdminDashboard({
         },
     ];
 
-    const quickActions = [
-        { label: "Voir les demandes", href: "/demandes", color: "bg-blue-50 text-blue-600 hover:bg-blue-100" },
-        { label: "Consulter le stock", href: "/stock", color: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" },
-        { label: "Historique", href: "/historique", color: "bg-amber-50 text-amber-600 hover:bg-amber-100" },
-    ];
-
     const refresh = useCallback(() => {
         setIsRefreshing(true);
         router.reload({
-            only: ["stats", "evolutionData", "decisionsData", "pendingDemandes", "recentActivity", "importantNotifications", "unreadNotifications"],
+            only: ["stats", "evolutionData", "decisionsData", "lastDemandes", "unreadNotifications"],
             onFinish: () => setIsRefreshing(false),
         });
     }, []);
@@ -86,10 +70,7 @@ export function useLocalAdminDashboard({
         kpiData,
         evolutionData,
         decisionsData,
-        pendingDemandes,
-        recentActivity,
-        importantNotifications,
-        quickActions,
+        lastDemandes,
         isRefreshing,
         refresh,
     };

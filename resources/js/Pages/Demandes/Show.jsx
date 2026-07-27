@@ -13,15 +13,15 @@ import RefuseDemandeDialog from "@/Components/Demandes/RefuseDemandeDialog";
 import { getDashboardPath } from "@/lib/mockAuth";
 
 const statusLabels = {
-    approved: "En attente",
-    confirmed: "Confirmée",
-    rejected: "Rejetée",
+    pending_local_admin: "En attente de décision",
+    confirmed_local_admin: "Confirmée",
+    rejected_local_admin: "Rejetée",
 };
 
 const statusVariants = {
-    approved: "warning",
-    confirmed: "success",
-    rejected: "destructive",
+    pending_local_admin: "warning",
+    confirmed_local_admin: "success",
+    rejected_local_admin: "destructive",
 };
 
 const priorityLabels = {
@@ -101,7 +101,7 @@ export default function DemandeShow({ user, demande, auditLogs }) {
                                 Retour à la liste
                             </Link>
                         </Button>
-                        {demande.status === "approved" && (
+                        {demande.status === "pending_local_admin" && (
                             <>
                                 <Button
                                     className="bg-emerald-600 text-white hover:bg-emerald-700"
@@ -238,6 +238,85 @@ export default function DemandeShow({ user, demande, auditLogs }) {
                     </Card>
                 </motion.div>
 
+                <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.15 }}
+                >
+                    {demande.status === "pending_local_admin" ? (
+                        <Card className="border-amber-200 bg-amber-50/30">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                    <AlertTriangle className="size-4 text-amber-500" />
+                                    Décision finale
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="mb-4 text-sm text-slate-600">
+                                    Cette demande attend votre décision. Veuillez confirmer ou rejeter cette demande.
+                                </p>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <Button
+                                        className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+                                        onClick={() => setConfirmOpen(true)}
+                                    >
+                                        <CheckCircle2 className="size-4" />
+                                        Confirmer
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        className="flex-1"
+                                        onClick={handleReject}
+                                    >
+                                        <XCircle className="size-4" />
+                                        Rejeter
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : demande.status === "confirmed_local_admin" ? (
+                        <Card className="border-emerald-200 bg-emerald-50/30">
+                            <CardContent className="p-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex size-12 items-center justify-center rounded-full bg-emerald-100">
+                                        <CheckCircle2 className="size-6 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-base font-semibold text-emerald-700">Demande approuvée</p>
+                                        <p className="text-sm text-slate-600">
+                                            Confirmée le {demande.confirmed_at || "—"}
+                                            {demande.confirmedBy && ` par ${demande.confirmedBy}`}
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : demande.status === "rejected_local_admin" ? (
+                        <Card className="border-red-200 bg-red-50/30">
+                            <CardContent className="p-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100">
+                                        <XCircle className="size-6 text-red-600" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-base font-semibold text-red-700">Demande refusée</p>
+                                        <p className="text-sm text-slate-600">
+                                            Rejetée le {demande.refused_at || "—"}
+                                            {demande.refuser && ` par ${demande.refuser}`}
+                                        </p>
+                                        {demande.rejection_reason && (
+                                            <div className="mt-2 rounded-lg border border-red-200 bg-white p-3">
+                                                <p className="text-xs font-medium text-slate-500">Motif du refus</p>
+                                                <p className="mt-0.5 text-sm text-red-600">{demande.rejection_reason}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : null}
+                </motion.div>
+
                 {demande.description && (
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
@@ -250,26 +329,6 @@ export default function DemandeShow({ user, demande, auditLogs }) {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm leading-relaxed text-slate-600">{demande.description}</p>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
-
-                {demande.rejection_reason && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.35, delay: 0.2 }}
-                    >
-                        <Card className="border-red-100 bg-red-50/30">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-red-700">
-                                    <XCircle className="size-4" />
-                                    Motif du rejet
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm leading-relaxed text-red-600">{demande.rejection_reason}</p>
                             </CardContent>
                         </Card>
                     </motion.div>

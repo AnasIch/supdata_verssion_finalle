@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,5 +65,10 @@ class Demande extends Model
     public function confirmedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function scopeCreatedByRole(Builder $query, string $roleName): Builder
+    {
+        return $query->whereHas('user', fn (Builder $q) => $q->whereHas('role', fn (Builder $qr) => $qr->where('name', $roleName)));
     }
 }

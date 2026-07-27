@@ -11,13 +11,13 @@ import {
 import { Button } from "@/Components/UI/Button";
 import { Textarea } from "@/Components/UI/Textarea";
 
-export default function RefuseDemandeDialog({ open, onOpenChange, demande, onConfirm }) {
+export default function CancelLivraisonDialog({ open, onOpenChange, reservation, onConfirm }) {
     const [reason, setReason] = useState("");
     const minLen = 20;
 
     const handleConfirm = () => {
-        if (demande) {
-            onConfirm(demande.id, reason);
+        if (reservation) {
+            onConfirm(reservation.id, reason);
         }
         setReason("");
         onOpenChange(false);
@@ -35,22 +35,22 @@ export default function RefuseDemandeDialog({ open, onOpenChange, demande, onCon
                     <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-red-50">
                         <XCircle className="size-6 text-red-500" />
                     </div>
-                    <DialogTitle className="text-center">Refuser la demande</DialogTitle>
+                    <DialogTitle className="text-center">Annuler la livraison</DialogTitle>
                     <DialogDescription className="text-center">
-                        Refuser la demande <span className="font-medium text-slate-700">{demande?.id}</span> avec un motif.
+                        Annuler la réservation <span className="font-medium text-slate-700">{reservation?.reference}</span> avec un motif.
                         <br />
                         <span className="text-xs text-slate-400">
-                            Le motif sera enregistré dans le système.
+                            Le motif sera enregistré et le Commercial sera notifié.
                         </span>
                     </DialogDescription>
                 </DialogHeader>
                 <div className="px-1">
-                    <label htmlFor="refuse-reason" className="mb-1.5 block text-sm font-medium text-slate-700">
-                        Motif du refus <span className="text-red-500">*</span>
+                    <label htmlFor="cancel-reason" className="mb-1.5 block text-sm font-medium text-slate-700">
+                        Motif de l'annulation <span className="text-red-500">*</span>
                     </label>
                     <Textarea
-                        id="refuse-reason"
-                        placeholder="Saisissez le motif du refus..."
+                        id="cancel-reason"
+                        placeholder="Saisissez le motif de l'annulation..."
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={4}
@@ -70,7 +70,7 @@ export default function RefuseDemandeDialog({ open, onOpenChange, demande, onCon
                         onClick={handleConfirm}
                         disabled={reason.trim().length < minLen}
                     >
-                        Confirmer le refus
+                        Confirmer l'annulation
                     </Button>
                 </DialogFooter>
             </DialogContent>

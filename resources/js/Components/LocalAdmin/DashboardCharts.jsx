@@ -40,7 +40,7 @@ export default function DashboardCharts({ evolutionData, decisionsData }) {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm font-semibold text-slate-900">
-                            Évolution des demandes
+                            Décisions de l'Administrateur Local par mois
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -51,9 +51,8 @@ export default function DashboardCharts({ evolutionData, decisionsData }) {
                                     <XAxis dataKey="mois" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
                                     <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Line type="monotone" dataKey="demandes" name="Total" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="validees" name="Validées" stroke="#10b981" strokeWidth={2} dot={false} />
-                                    <Line type="monotone" dataKey="refusees" name="Refusées" stroke="#ef4444" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="confirmees" name="Confirmées" stroke="#10b981" strokeWidth={2} dot={false} />
+                                    <Line type="monotone" dataKey="rejetees" name="Rejetées" stroke="#ef4444" strokeWidth={2} dot={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

@@ -31,8 +31,12 @@ export default function SupplierOrdersPanel({ operations }) {
         { header: "Type", accessorKey: "type" },
         { header: "Budget", cell: (item) => <span className="font-medium">{item.budget} MAD</span> },
         {
-            header: "Validation Administrateur Local",
-            cell: (item) => <div><p className="text-sm">{item.validatedAt || "Validée"}</p><p className="text-xs text-slate-500">par {item.validator || "Administrateur Local"}</p></div>,
+            header: "Validation GA",
+            cell: (item) => <p className="text-sm">{item.validatedAt || "—"}</p>,
+        },
+        {
+            header: "Confirmation AL",
+            cell: (item) => <div><p className="text-sm">{item.confirmedAt || "—"}</p><p className="text-xs text-slate-500">par {item.validator}</p></div>,
         },
         { header: "État", cell: () => <Badge variant="success">Acceptée</Badge> },
         {
@@ -46,7 +50,7 @@ export default function SupplierOrdersPanel({ operations }) {
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Demande acceptée · {selected?.id}</DialogTitle>
-                    <DialogDescription>Dossier interne validé par l’Administrateur Local.</DialogDescription>
+                    <DialogDescription>Demandes validées par la Gestion Administrative et confirmées par l’Administrateur Local.</DialogDescription>
                 </DialogHeader>
                 {selected && <div className="grid gap-3 sm:grid-cols-2">
                     <Detail label="Employé demandeur" value={selected.requester} />
@@ -55,7 +59,8 @@ export default function SupplierOrdersPanel({ operations }) {
                     <Detail label="Type" value={selected.type} />
                     <Detail label="Budget" value={selected.budget ? `${selected.budget} MAD` : null} />
                     <Detail label="Priorité" value={selected.priority} />
-                    <Detail label="Validée le" value={selected.validatedAt} />
+                    <Detail label="Validée par GA le" value={selected.validatedAt} />
+                    <Detail label="Confirmée par AL le" value={selected.confirmedAt} />
                     <Detail label="Administrateur Local" value={selected.validator} />
                     <div className="sm:col-span-2"><Detail label="Description" value={selected.description} /></div>
                 </div>}
@@ -66,7 +71,7 @@ export default function SupplierOrdersPanel({ operations }) {
         <header className="border-b-2 border-slate-900 pb-5">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">Gestion Administrative</p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">Demandes acceptées</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-500">Archive interne des demandes approuvées par l’Administrateur Local.</p>
+            <p className="mt-2 max-w-3xl text-sm text-slate-500">Demandes validées par la Gestion Administrative et confirmées par l’Administrateur Local.</p>
         </header>
 
         <div className="grid gap-3 sm:grid-cols-3">

@@ -62,41 +62,51 @@ export function useNotifications({
         navigate({ page });
     }, [navigate]);
 
+    const getBasePath = useCallback(() => {
+        return window.location.pathname.match(
+            /^\/dashboard-(super-admin|admin-local|administrative|commercial|stock)/
+        )?.[0] || "/dashboard-super-admin";
+    }, []);
+
     const markAsRead = useCallback((id) => {
-        router.patch(`/dashboard-super-admin/notifications/${id}/read`, {}, {
+        const base = getBasePath();
+        router.patch(`${base}/notifications/${id}/read`, {}, {
             preserveScroll: true,
             onSuccess: () => {
                 router.reload({ only: ["notifications", "unreadCount", "stats"] });
             },
         });
-    }, []);
+    }, [getBasePath]);
 
     const markAllAsRead = useCallback(() => {
-        router.patch("/dashboard-super-admin/notifications/read-all", {}, {
+        const base = getBasePath();
+        router.patch(`${base}/notifications/read-all`, {}, {
             preserveScroll: true,
             onSuccess: () => {
                 router.reload({ only: ["notifications", "unreadCount", "stats"] });
             },
         });
-    }, []);
+    }, [getBasePath]);
 
     const deleteNotification = useCallback((id) => {
-        router.delete(`/dashboard-super-admin/notifications/${id}`, {
+        const base = getBasePath();
+        router.delete(`${base}/notifications/${id}`, {
             preserveScroll: true,
             onSuccess: () => {
                 router.reload({ only: ["notifications", "unreadCount", "stats"] });
             },
         });
-    }, []);
+    }, [getBasePath]);
 
     const deleteAllRead = useCallback(() => {
-        router.delete("/dashboard-super-admin/notifications/read", {
+        const base = getBasePath();
+        router.delete(`${base}/notifications/read`, {
             preserveScroll: true,
             onSuccess: () => {
                 router.reload({ only: ["notifications", "unreadCount", "stats"] });
             },
         });
-    }, []);
+    }, [getBasePath]);
 
     const resetFilters = useCallback(() => {
         setSearch("");

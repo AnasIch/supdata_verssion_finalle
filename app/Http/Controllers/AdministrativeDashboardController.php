@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NouvelleDemandeALMail;
 use App\Models\Agency;
 use App\Models\Demande;
 use App\Models\Product;
@@ -10,6 +11,8 @@ use App\Services\AuditLogService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class AdministrativeDashboardController extends Controller
@@ -21,10 +24,10 @@ class AdministrativeDashboardController extends Controller
 
     public function index(Request $request)
     {
-        $requests = Demande::with(['user', 'agency'])->latest()->get();
-        $pending = $requests->where('status', 'pending');
-        $approved = $requests->where('status', 'approved');
-        $confirmed = $requests->where('status', 'confirmed');
+        $requests = Demande::with(['user', 'agency'])->createdByRole('Responsable Commercial')->latest()->get();
+        $pending = $requests->where('status', 'submitted');
+        $pendingLocal = $requests->where('status', 'pending_local_admin');
+        $confirmedLocal = $requests->where('status', 'confirmed_local_admin');
         $rejected = $requests->where('status', 'rejected');
 
         return Inertia::render('Dashboard/Administrative/Index', [
@@ -32,16 +35,16 @@ class AdministrativeDashboardController extends Controller
             'dashboardData' => [
                 'stats' => [
                     ['id' => 'review', 'label' => 'À vérifier', 'value' => $pending->count(), 'detail' => $pending->where('priority', 'urgent')->count() . ' urgentes'],
-                    ['id' => 'approval', 'label' => 'Chez Admin local', 'value' => $approved->count(), 'detail' => 'en validation finale'],
-                    ['id' => 'approved', 'label' => 'Demandes acceptées', 'value' => $confirmed->count(), 'detail' => 'validations finales reçues'],
-                    ['id' => 'processed', 'label' => 'Traitées', 'value' => $approved->count() + $confirmed->count() + $rejected->count(), 'detail' => 'demandes traitées'],
+                    ['id' => 'approval', 'label' => 'Chez Admin local', 'value' => $pendingLocal->count(), 'detail' => 'en validation finale'],
+                    ['id' => 'approved', 'label' => 'Demandes acceptées', 'value' => $confirmedLocal->count(), 'detail' => 'validations finales reçues'],
+                    ['id' => 'processed', 'label' => 'Traitées', 'value' => $pendingLocal->count() + $confirmedLocal->count() + $rejected->count(), 'detail' => 'demandes traitées'],
                     ['id' => 'rejected', 'label' => 'Rejetées', 'value' => $rejected->count(), 'detail' => 'avec motif enregistré'],
                     ['id' => 'delay', 'label' => 'Délai moyen', 'value' => '—', 'detail' => 'calculé sur les dossiers'],
                 ],
                 'requests' => $pending->take(12)->map(fn ($d) => $this->dashboardRequest($d))->values(),
                 'flow' => [
                     ['label' => 'Reçues', 'value' => $requests->count(), 'color' => '#2563eb'],
-                    ['label' => 'Validées', 'value' => $approved->count() + $confirmed->count(), 'color' => '#10b981'],
+                    ['label' => 'Validées', 'value' => $pendingLocal->count() + $confirmedLocal->count(), 'color' => '#10b981'],
                     ['label' => 'En attente', 'value' => $pending->count(), 'color' => '#f59e0b'],
                     ['label' => 'Rejetées', 'value' => $rejected->count(), 'color' => '#ef4444'],
                 ],
@@ -49,9 +52,9 @@ class AdministrativeDashboardController extends Controller
                     $start = now()->subWeeks($weeksAgo)->startOfWeek();
                     $end = $start->copy()->endOfWeek();
                     $week = $requests->filter(fn ($d) => $d->created_at->between($start, $end));
-                    return ['week' => 'S' . $start->weekOfYear, 'recues' => $week->count(), 'traitees' => $week->whereIn('status', ['approved', 'confirmed', 'rejected'])->count()];
+                    return ['week' => 'S' . $start->weekOfYear, 'recues' => $week->count(), 'traitees' => $week->whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected'])->count()];
                 })->values(),
-                'approvedRequests' => $confirmed->take(5)->map(fn ($d) => [
+                'approvedRequests' => $confirmedLocal->take(5)->map(fn ($d) => [
                     'id' => $d->id, 'requester' => $d->user?->name ?? '—',
                     'agency' => $d->agency?->name ?? '—', 'amount' => $this->amount($d),
                     'approved' => $d->confirmed_at?->locale('fr')->isoFormat('DD MMM YYYY') ?? '—',
@@ -59,7 +62,7 @@ class AdministrativeDashboardController extends Controller
                 ])->values(),
                 'notifications' => [
                     ['id' => 1, 'title' => 'Demandes à vérifier', 'text' => $pending->count() . ' dossier(s) attendent votre décision.', 'tone' => 'warning'],
-                    ['id' => 2, 'title' => 'Validations finales', 'text' => $confirmed->count() . ' demande(s) acceptée(s) par les Administrateurs Locaux.', 'tone' => 'success'],
+                    ['id' => 2, 'title' => 'Validations finales', 'text' => $confirmedLocal->count() . ' demande(s) acceptée(s) par les Administrateurs Locaux.', 'tone' => 'success'],
                 ],
             ],
         ]);
@@ -77,15 +80,18 @@ class AdministrativeDashboardController extends Controller
 
     public function approved(Request $request)
     {
-        $items = Demande::with(['user', 'agency', 'confirmedBy'])
-            ->where('status', 'confirmed')->latest('confirmed_at')->get()
+        $items = Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
+            ->createdByRole('Responsable Commercial')
+            ->where('status', 'confirmed_local_admin')->latest('confirmed_at')->get()
             ->map(fn ($d) => [
                 'id' => $d->id, 'title' => $d->title, 'requester' => $d->user?->name ?? '—',
                 'requesterEmail' => $d->user?->email, 'agency' => $d->agency?->name ?? '—',
                 'type' => 'Achat', 'priority' => $this->priority($d->priority),
-                'budget' => $this->rawAmount($d), 'status' => 'validated',
-                'description' => $d->description, 'validatedAt' => $d->confirmed_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
-                'validator' => $d->confirmedBy?->name ?? 'Administrateur Local',
+                'budget' => $this->rawAmount($d), 'status' => 'Acceptée',
+                'description' => $d->description,
+                'validatedAt' => $d->validated_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
+                'confirmedAt' => $d->confirmed_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
+                'validator' => $d->confirmedBy?->name ?? '—',
             ]);
 
         return Inertia::render('Administrative/SupplierOrders', [
@@ -99,12 +105,14 @@ class AdministrativeDashboardController extends Controller
             'decision' => ['required', 'in:approved,rejected'],
             'reason' => ['nullable', 'required_if:decision,rejected', 'string', 'min:5'],
         ]);
-        $demande = Demande::with('user')->where('status', 'pending')->findOrFail($id);
+        $demande = Demande::with(['user', 'agency'])->createdByRole('Responsable Commercial')->where('status', 'submitted')->findOrFail($id);
         $actor = $request->user();
 
-        DB::transaction(function () use ($demande, $data, $actor, $request) {
+        $newStatus = $data['decision'] === 'approved' ? 'pending_local_admin' : 'rejected';
+
+        DB::transaction(function () use ($demande, $data, $actor, $newStatus, $request) {
             $demande->update([
-                'status' => $data['decision'],
+                'status' => $newStatus,
                 'validated_by' => $data['decision'] === 'approved' ? $actor?->id : null,
                 'validated_at' => $data['decision'] === 'approved' ? now() : null,
                 'refused_by' => $data['decision'] === 'rejected' ? $actor?->id : null,
@@ -116,8 +124,8 @@ class AdministrativeDashboardController extends Controller
                 $this->auditLogs->log(
                     user: $actor, action: $data['decision'] === 'approved' ? 'Validation' : 'Rejet',
                     module: 'Demandes', description: "Traitement administratif de la demande « {$demande->title} »",
-                    target: $demande->title, oldValues: ['statut' => 'pending'],
-                    newValues: ['statut' => $data['decision']], ipAddress: $request->ip(), userAgent: $request->userAgent(),
+                    target: $demande->title,                     oldValues: ['statut' => 'submitted'],
+                    newValues: ['statut' => $newStatus], ipAddress: $request->ip(), userAgent: $request->userAgent(),
                 );
             }
         });
@@ -127,7 +135,7 @@ class AdministrativeDashboardController extends Controller
                 user: $demande->user,
                 title: $data['decision'] === 'approved' ? 'Demande transmise' : 'Demande rejetée',
                 description: $data['decision'] === 'approved'
-                    ? "Votre demande « {$demande->title} » a été validée administrativement et transmise à l’Administrateur Local."
+                    ? "Votre demande « {$demande->title} » a été validée administrativement et transmise à l'Administrateur Local."
                     : "Votre demande « {$demande->title} » a été rejetée. Motif : {$data['reason']}",
                 type: $data['decision'] === 'approved' ? 'success' : 'warning',
                 source: 'demandes', actionUrl: "/dashboard-commercial/demandes/{$demande->id}",
@@ -139,28 +147,49 @@ class AdministrativeDashboardController extends Controller
             User::where('role_id', $localAdminRole)
                 ->where('agency_id', $demande->agency_id)
                 ->where('status', 'active')
-                ->each(fn (User $user) => $this->notifications->create(
-                    user: $user,
-                    title: 'Demande à confirmer',
-                    description: "La demande « {$demande->title} » a été validée administrativement et attend votre confirmation.",
-                    type: 'info', source: 'demandes',
-                    actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
-                ));
+                ->each(function (User $user) use ($demande) {
+                    $this->notifications->create(
+                        user: $user,
+                        title: 'Demande à confirmer',
+                        description: "La demande « {$demande->title} » a été validée administrativement et attend votre confirmation.",
+                        type: 'info', source: 'demandes',
+                        actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
+                    );
+                });
+
+            try {
+                $localAdminUsers = User::where('role_id', $localAdminRole)
+                    ->where('agency_id', $demande->agency_id)
+                    ->where('status', 'active')
+                    ->get();
+
+                foreach ($localAdminUsers as $recipient) {
+                    Mail::to($recipient->email)->send(
+                        new NouvelleDemandeALMail($demande, $actor)
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::error("Erreur envoi email AL demande {$demande->id}: {$e->getMessage()}");
+            }
         }
 
-        return back()->with('success', $data['decision'] === 'approved' ? 'Demande transmise à l’Administrateur Local.' : 'Demande rejetée.');
+        return back()->with('success', $data['decision'] === 'approved' ? 'Demande transmise à l\u2019Administrateur Local.' : 'Demande rejetée.');
     }
 
     private function requestItems(string $section)
     {
-        $statuses = $section === 'demandes' ? ['pending'] : ['approved', 'confirmed', 'rejected'];
+        $statuses = $section === 'demandes'
+            ? ['submitted']
+            : ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'];
         return Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
+            ->createdByRole('Responsable Commercial')
             ->whereIn('status', $statuses)->latest()->get()->map(fn ($d) => [
                 'id' => $d->id, 'nom' => $d->title, 'demandeur' => $d->user?->name ?? '—',
                 'agence' => $d->agency?->name ?? '—', 'montant' => $this->amount($d),
                 'date' => $d->created_at->locale('fr')->isoFormat('DD/MM/YYYY HH:mm'),
                 'auteur' => $d->validatedBy?->name ?? $d->confirmedBy?->name,
-                'historique' => $this->statusLabel($d->status), 'statut' => $this->statusLabel($d->status),
+                'historique' => $this->statusLabel($d->status, $section),
+                'statut' => $this->statusLabel($d->status, $section),
                 'produits' => $d->product_name ?: collect($d->products)->pluck('name')->join(', '),
                 'completude' => filled($d->title) && filled($d->agency_id) && (filled($d->product_name) || filled($d->products)) ? 100 : 75,
                 'priorite' => $this->priority($d->priority), 'motif' => $d->refusal_reason,
@@ -197,11 +226,21 @@ class AdministrativeDashboardController extends Controller
         return $this->rawAmount($d) . ' MAD';
     }
 
-    private function statusLabel(string $status): string
+    private function statusLabel(string $status, string $section = 'demandes'): string
     {
+        if ($section === 'validations') {
+            return match ($status) {
+                'pending_local_admin' => 'En attente Administrateur Local',
+                'confirmed_local_admin' => 'Confirmée par Administrateur Local',
+                'rejected_local_admin' => 'Rejetée par Administrateur Local',
+                default => ucfirst($status),
+            };
+        }
+
         return match ($status) {
-            'pending' => 'À vérifier', 'approved' => 'En attente',
-            'confirmed' => 'Validation finale', 'rejected' => 'Rejetée', default => ucfirst($status),
+            'submitted' => 'À vérifier', 'pending_local_admin' => 'En attente',
+            'confirmed_local_admin' => 'Validation finale', 'rejected' => 'Rejetée',
+            'rejected_local_admin' => 'Rejetée', default => ucfirst($status),
         };
     }
 
