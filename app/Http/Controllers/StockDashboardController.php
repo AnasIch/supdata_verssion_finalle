@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Reservation;
 use App\Mail\ReservationDeliveredMail;
 use App\Mail\ReservationCancelledMail;
+use App\Mail\StockMovementMail;
 use App\Services\NotificationService;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class StockDashboardController extends Controller
         $available = $products->sum(fn ($p) => max(0, $p->quantity_in_stock - $p->reserved_quantity));
         $low = $products->filter(fn ($p) => $p->quantity_in_stock > 0 && $p->isLowStock())->count();
         $out = $products->where('quantity_in_stock', 0)->count();
-        $stockValue = $products->sum(fn ($p) => $p->quantity_in_stock * (float) $p->unit_price);
+        $totalUnits = $products->sum(fn ($p) => $p->quantity_in_stock);
         $pendingDeliveries = $reservations->where('status', 'reserved')->count();
         $completedDeliveries = $reservations->where('status', 'delivered')->count();
 
@@ -60,7 +61,7 @@ class StockDashboardController extends Controller
                     ['id' => 'critical', 'label' => 'Stock critique', 'value' => $low + $out, 'detail' => $low . ' faibles, ' . $out . ' ruptures'],
                     ['id' => 'pending', 'label' => 'Livraisons en attente', 'value' => $pendingDeliveries, 'detail' => 'réservations à livrer'],
                     ['id' => 'delivered', 'label' => 'Livraisons effectuées', 'value' => $completedDeliveries, 'detail' => 'commandes livrées'],
-                    ['id' => 'value', 'label' => 'Valeur stock', 'value' => number_format($stockValue, 0, ',', ' ') . ' MAD', 'detail' => 'valorisation actuelle'],
+                    ['id' => 'total_units', 'label' => 'Unités en stock', 'value' => number_format($totalUnits, 0, ',', ' '), 'detail' => 'unités disponibles'],
                     ['id' => 'receptions', 'label' => 'Réceptions', 'value' => $receptions->whereNotIn('status', ['Validée'])->count(), 'detail' => 'à contrôler'],
                 ],
                 'health' => [
@@ -96,10 +97,13 @@ class StockDashboardController extends Controller
         abort_unless(in_array($section, self::SECTIONS, true), 404);
 
         $this->syncCategories();
+        $result = $this->itemsFor($section, $request);
+
         return Inertia::render('Stock/Operations', [
             'section' => $section,
             'user' => $this->userPayload($request),
-            'initialItems' => $this->itemsFor($section),
+            'initialItems' => $result['items'],
+            'initialPagination' => ['currentPage' => $result['currentPage'], 'totalPages' => $result['totalPages']],
             'products' => Product::orderBy('name')->get(['id', 'name', 'category']),
             'categories' => StockCategory::where('active', true)->orderBy('name')->pluck('name'),
             'agencies' => Agency::orderBy('name')->get(['id', 'name']),
@@ -204,7 +208,9 @@ class StockDashboardController extends Controller
         if ($data['type'] === 'Sortie' && $product->quantity_in_stock < $data['quantity']) {
             return back()->withErrors(['quantity' => 'Quantité insuffisante en stock.']);
         }
-        DB::transaction(function () use ($data, $product, $request) {
+        $actor = $request->user();
+        $agency = $this->agency($data['agency']);
+        DB::transaction(function () use ($data, $product, $request, $actor) {
             $product->increment('quantity_in_stock', $data['type'] === 'Entrée' ? $data['quantity'] : -$data['quantity']);
             $product->refresh()->update(['status' => $product->quantity_in_stock > 0 ? 'active' : 'out_of_stock']);
             $this->createOperation('mouvements', [
@@ -212,7 +218,44 @@ class StockDashboardController extends Controller
                 'agence' => $data['agency'], 'quantite' => $data['quantity'], 'type' => $data['type'],
             ], $request, $product);
         });
-        $this->audit($request, 'Mouvement', 'mouvements', $product->name, ['type' => $data['type'], 'quantité' => $data['quantity']]);
+
+        $description = "Un nouveau mouvement de stock a été enregistré.";
+        $this->notifyRoles(
+            ['Responsable Commercial', 'Gestion Administrative', 'Administrateur Local'],
+            $agency?->id,
+            'Nouveau mouvement de stock',
+            $description,
+            '/dashboard-stock/mouvements',
+        );
+
+        $rolesToNotify = ['responsable-commercial', 'gestion-administrative', 'admin-local'];
+        $recipients = User::whereHas('role', fn ($q) => $q->whereIn('slug', $rolesToNotify))
+            ->where('status', 'active')
+            ->where(function ($query) use ($agency) {
+                $query->where('agency_id', $agency?->id)
+                    ->orWhereHas('role', fn ($role) => $role->where('name', 'Gestion Administrative'));
+            })
+            ->get();
+
+        foreach ($recipients as $recipient) {
+            Mail::to($recipient->email)->send(new StockMovementMail(
+                type: $data['type'],
+                product: $product,
+                quantity: $data['quantity'],
+                agency: $data['agency'],
+                actor: $actor,
+            ));
+        }
+
+        $this->audit($request, 'Mouvement', 'mouvements', $product->name, [
+            'type' => $data['type'],
+            'quantité' => $data['quantity'],
+            'produit' => $product->name,
+            'catégorie' => $product->category ?? '—',
+            'agence' => $data['agency'],
+            'effectué par' => $actor->name,
+        ]);
+
         return back()->with('success', 'Mouvement enregistré.');
     }
 
@@ -392,55 +435,115 @@ class StockDashboardController extends Controller
         ]);
     }
 
-    private function itemsFor(string $section)
+    private function itemsFor(string $section, Request $request): array
     {
+        $search = $request->input('search', '');
+        $agency = $request->input('agency', 'Toutes');
+        $perPage = 15;
+
         if ($section === 'produits') {
-            return Product::with('agency')->latest()->get()->map(fn ($p) => [
+            $query = Product::with('agency')->latest();
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('category', 'like', "%{$search}%")
+                      ->orWhere('reference', 'like', "%{$search}%");
+                });
+            }
+            if ($agency !== 'Toutes') {
+                $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+            }
+            $paginator = $query->paginate($perPage);
+            $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->category,
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
                 'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Stock faible' : 'Disponible'),
-            ]);
-        }
-        if ($section === 'categories') {
-            return StockCategory::orderBy('name')->get()->map(fn ($category) => [
+            ])->values();
+        } elseif ($section === 'categories') {
+            $query = StockCategory::query()->orderBy('name');
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+            if ($agency !== 'Toutes') {
+                $query->whereIn('name', Product::whereHas('agency', fn ($q) => $q->where('name', $agency))->distinct()->pluck('category'));
+            }
+            $paginator = $query->paginate($perPage);
+            $items = $paginator->getCollection()->map(fn ($category) => [
                 'id' => $category->id, 'nom' => $category->name, 'detail' => $category->description ?: Product::where('category', $category->name)->count() . ' produits',
                 'agence' => 'Toutes', 'quantite' => Product::where('category', $category->name)->count(), 'statut' => $category->active ? 'Active' : 'Inactive',
-            ]);
-        }
-        if ($section === 'alertes') {
-            return Product::with('agency')->get()->filter->isLowStock()->map(fn ($p) => [
+            ])->values();
+        } elseif ($section === 'alertes') {
+            $query = Product::with('agency')->where(function ($q) {
+                $q->where('quantity_in_stock', '<', DB::raw('minimum_stock'))
+                  ->orWhere('quantity_in_stock', 0);
+            });
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+            if ($agency !== 'Toutes') {
+                $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+            }
+            $paginator = $query->latest()->paginate($perPage);
+            $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->quantity_in_stock . ' disponible(s)',
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
                 'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : 'Stock faible',
             ])->values();
+        } elseif ($section === 'livraisons') {
+            $query = Reservation::with(['product', 'user', 'agency'])->latest();
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('client_name', 'like', "%{$search}%")
+                      ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%"))
+                      ->orWhere('reference', 'like', "%{$search}%");
+                });
+            }
+            if ($agency !== 'Toutes') {
+                $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+            }
+            $paginator = $query->paginate($perPage);
+            $items = $paginator->getCollection()->map(fn (Reservation $r) => [
+                'id' => $r->id,
+                'nom' => $r->user?->name ?? '—',
+                'detail' => $r->product?->name . ' · ' . $r->quantity . ' unité(s)',
+                'agence' => $r->agency?->name ?? '—',
+                'quantite' => $r->quantity,
+                'statut' => match ($r->status) {
+                    'reserved' => 'En préparation',
+                    'delivered' => 'Livrée',
+                    'cancelled' => 'Annulée',
+                    default => $r->status,
+                },
+                'reference' => $r->reference,
+                'client' => $r->client_name,
+                'produit' => $r->product?->name ?? '—',
+                'cancellation_reason' => $r->cancellation_reason,
+            ])->values();
+        } else {
+            $query = StockOperation::with('agency')->where('section', $section)->latest();
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('detail', 'like', "%{$search}%")
+                      ->orWhere('reference', 'like', "%{$search}%");
+                });
+            }
+            if ($agency !== 'Toutes') {
+                $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+            }
+            $paginator = $query->paginate($perPage);
+            $items = $paginator->getCollection()->map(fn ($op) => [
+                'id' => $op->id, 'nom' => $op->name, 'detail' => $op->detail,
+                'agence' => $op->agency?->name ?? '—', 'quantite' => $op->quantity, 'statut' => $op->status,
+                'type' => $op->metadata['type'] ?? null,
+            ])->values();
         }
-        if ($section === 'livraisons') {
-            return Reservation::with(['product', 'user', 'agency'])
-                ->latest()
-                ->get()
-                ->map(fn (Reservation $r) => [
-                    'id' => $r->id,
-                    'nom' => $r->user?->name ?? '—',
-                    'detail' => $r->product?->name . ' · ' . $r->quantity . ' unité(s)',
-                    'agence' => $r->agency?->name ?? '—',
-                    'quantite' => $r->quantity,
-                    'statut' => match ($r->status) {
-                        'reserved' => 'En préparation',
-                        'delivered' => 'Livrée',
-                        'cancelled' => 'Annulée',
-                        default => $r->status,
-                    },
-                    'reference' => $r->reference,
-                    'client' => $r->client_name,
-                    'produit' => $r->product?->name ?? '—',
-                    'cancellation_reason' => $r->cancellation_reason,
-                ]);
-        }
-        return StockOperation::with('agency')->where('section', $section)->latest()->get()->map(fn ($op) => [
-            'id' => $op->id, 'nom' => $op->name, 'detail' => $op->detail,
-            'agence' => $op->agency?->name ?? '—', 'quantite' => $op->quantity, 'statut' => $op->status,
-            'type' => $op->metadata['type'] ?? null,
-        ]);
+
+        return [
+            'items' => $items,
+            'currentPage' => $paginator->currentPage(),
+            'totalPages' => $paginator->lastPage(),
+        ];
     }
 
     private function agency(string $name): ?Agency

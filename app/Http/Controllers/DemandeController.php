@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DemandeService;
+use App\Services\StockService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -10,6 +11,7 @@ class DemandeController extends Controller
 {
     public function __construct(
         private DemandeService $demandeService,
+        private StockService $stockService,
     ) {}
 
     public function index(Request $request)
@@ -45,18 +47,7 @@ class DemandeController extends Controller
         $user = $request->user();
         $user->load(['role', 'agency']);
 
-        $products = \App\Models\Product::where('agency_id', $user->agency_id)
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'reference' => $p->reference,
-                'category' => $p->category,
-                'unit_price' => (float) $p->unit_price,
-                'quantity_in_stock' => $p->quantity_in_stock,
-                'minimum_stock' => $p->minimum_stock,
-            ]);
+        $products = $this->stockService->getAllProducts();
 
         return Inertia::render('Commercial/Demandes/Create', [
             'user' => [

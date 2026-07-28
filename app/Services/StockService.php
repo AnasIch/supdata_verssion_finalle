@@ -74,4 +74,25 @@ class StockService
     {
         return Agency::orderBy('name')->pluck('name')->toArray();
     }
+
+    public function getAllProducts(): array
+    {
+        return Product::with('agency')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'reference' => $p->reference,
+                'category' => $p->category,
+                'unit_price' => (float) $p->unit_price,
+                'quantity_in_stock' => $p->quantity_in_stock,
+                'reserved_quantity' => $p->reserved_quantity,
+                'minimum_stock' => $p->minimum_stock,
+                'available' => $p->quantity_in_stock - $p->reserved_quantity,
+                'status' => $p->quantity_in_stock <= 0 ? 'out_of_stock' : ($p->isLowStock() ? 'low' : 'available'),
+                'agency' => $p->agency?->name ?? '—',
+            ])
+            ->toArray();
+    }
 }

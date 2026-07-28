@@ -71,31 +71,48 @@ class AdministrativeDashboardController extends Controller
     public function operations(string $section, Request $request)
     {
         abort_unless(in_array($section, ['demandes', 'stock', 'validations'], true), 404);
-        $items = $section === 'stock' ? $this->stockItems() : $this->requestItems($section);
+
+        $result = $section === 'stock' ? $this->stockItems($request) : $this->requestItems($section, $request);
 
         return Inertia::render('Administrative/Workspace', [
-            'section' => $section, 'user' => $this->userPayload($request), 'initialItems' => $items,
+            'section' => $section,
+            'user' => $this->userPayload($request),
+            'initialItems' => $result['items'],
+            'initialPagination' => ['currentPage' => $result['currentPage'], 'totalPages' => $result['totalPages']],
         ]);
     }
 
     public function approved(Request $request)
     {
-        $items = Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
+        $search = $request->input('search', '');
+        $query = Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
             ->createdByRole('Responsable Commercial')
-            ->where('status', 'confirmed_local_admin')->latest('confirmed_at')->get()
-            ->map(fn ($d) => [
-                'id' => $d->id, 'title' => $d->title, 'requester' => $d->user?->name ?? '—',
-                'requesterEmail' => $d->user?->email, 'agency' => $d->agency?->name ?? '—',
-                'type' => 'Achat', 'priority' => $this->priority($d->priority),
-                'budget' => $this->rawAmount($d), 'status' => 'Acceptée',
-                'description' => $d->description,
-                'validatedAt' => $d->validated_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
-                'confirmedAt' => $d->confirmed_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
-                'validator' => $d->confirmedBy?->name ?? '—',
-            ]);
+            ->where('status', 'confirmed_local_admin');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('agency', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $paginator = $query->latest('confirmed_at')->paginate(15);
+        $items = $paginator->getCollection()->map(fn ($d) => [
+            'id' => $d->id, 'title' => $d->title, 'requester' => $d->user?->name ?? '—',
+            'requesterEmail' => $d->user?->email, 'agency' => $d->agency?->name ?? '—',
+            'type' => 'Achat', 'priority' => $this->priority($d->priority),
+            'budget' => $this->rawAmount($d), 'status' => 'Acceptée',
+            'description' => $d->description,
+            'validatedAt' => $d->validated_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
+            'confirmedAt' => $d->confirmed_at?->locale('fr')->isoFormat('DD MMM YYYY — HH:mm'),
+            'validator' => $d->confirmedBy?->name ?? '—',
+        ]);
 
         return Inertia::render('Administrative/SupplierOrders', [
-            'user' => $this->userPayload($request), 'approvedRequests' => $items,
+            'user' => $this->userPayload($request),
+            'approvedRequests' => $items,
+            'initialPagination' => ['currentPage' => $paginator->currentPage(), 'totalPages' => $paginator->lastPage()],
         ]);
     }
 
@@ -176,34 +193,80 @@ class AdministrativeDashboardController extends Controller
         return back()->with('success', $data['decision'] === 'approved' ? 'Demande transmise à l\u2019Administrateur Local.' : 'Demande rejetée.');
     }
 
-    private function requestItems(string $section)
+    private function requestItems(string $section, Request $request): array
     {
+        $search = $request->input('search', '');
+        $agency = $request->input('agency', 'Toutes');
         $statuses = $section === 'demandes'
             ? ['submitted']
             : ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'];
-        return Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
+
+        $query = Demande::with(['user', 'agency', 'validatedBy', 'confirmedBy'])
             ->createdByRole('Responsable Commercial')
-            ->whereIn('status', $statuses)->latest()->get()->map(fn ($d) => [
-                'id' => $d->id, 'nom' => $d->title, 'demandeur' => $d->user?->name ?? '—',
-                'agence' => $d->agency?->name ?? '—', 'montant' => $this->amount($d),
-                'date' => $d->created_at->locale('fr')->isoFormat('DD/MM/YYYY HH:mm'),
-                'auteur' => $d->validatedBy?->name ?? $d->confirmedBy?->name,
-                'historique' => $this->statusLabel($d->status, $section),
-                'statut' => $this->statusLabel($d->status, $section),
-                'produits' => $d->product_name ?: collect($d->products)->pluck('name')->join(', '),
-                'completude' => filled($d->title) && filled($d->agency_id) && (filled($d->product_name) || filled($d->products)) ? 100 : 75,
-                'priorite' => $this->priority($d->priority), 'motif' => $d->refusal_reason,
-            ]);
+            ->whereIn('status', $statuses);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"))
+                  ->orWhere('product_name', 'like', "%{$search}%");
+            });
+        }
+        if ($agency !== 'Toutes') {
+            $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+        }
+
+        $paginator = $query->latest()->paginate(15);
+        $items = $paginator->getCollection()->map(fn ($d) => [
+            'id' => $d->id, 'nom' => $d->title, 'demandeur' => $d->user?->name ?? '—',
+            'agence' => $d->agency?->name ?? '—', 'montant' => $this->amount($d),
+            'date' => $d->created_at->locale('fr')->isoFormat('DD/MM/YYYY HH:mm'),
+            'auteur' => $d->validatedBy?->name ?? $d->confirmedBy?->name,
+            'historique' => $this->statusLabel($d->status, $section),
+            'statut' => $this->statusLabel($d->status, $section),
+            'produits' => $d->product_name ?: collect($d->products)->pluck('name')->join(', '),
+            'completude' => filled($d->title) && filled($d->agency_id) && (filled($d->product_name) || filled($d->products)) ? 100 : 75,
+            'priorite' => $this->priority($d->priority), 'motif' => $d->refusal_reason,
+        ]);
+
+        return [
+            'items' => $items,
+            'currentPage' => $paginator->currentPage(),
+            'totalPages' => $paginator->lastPage(),
+        ];
     }
 
-    private function stockItems()
+    private function stockItems(Request $request): array
     {
-        return Product::with('agency')->latest()->get()->map(fn ($p) => [
+        $search = $request->input('search', '');
+        $agency = $request->input('agency', 'Toutes');
+
+        $query = Product::with('agency');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhereHas('agency', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
+            });
+        }
+        if ($agency !== 'Toutes') {
+            $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
+        }
+
+        $paginator = $query->latest()->paginate(15);
+        $items = $paginator->getCollection()->map(fn ($p) => [
             'id' => $p->reference, 'nom' => $p->name, 'categorie' => $p->category,
             'agence' => $p->agency?->name ?? '—', 'disponible' => max(0, $p->quantity_in_stock - $p->reserved_quantity),
             'reserve' => $p->reserved_quantity, 'seuil' => $p->minimum_stock, 'emplacement' => 'Stock principal',
             'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Critique' : 'Disponible'),
         ]);
+
+        return [
+            'items' => $items,
+            'currentPage' => $paginator->currentPage(),
+            'totalPages' => $paginator->lastPage(),
+        ];
     }
 
     private function dashboardRequest(Demande $d): array

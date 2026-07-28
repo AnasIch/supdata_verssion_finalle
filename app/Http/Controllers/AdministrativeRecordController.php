@@ -15,9 +15,24 @@ class AdministrativeRecordController extends Controller
     public function index(string $type, Request $request) {
         abort_unless(in_array($type, self::TYPES, true), 404);
         $user = $request->user()->loadMissing(['role', 'agency']);
+        $search = $request->input('search', '');
+
+        $query = AdministrativeRecord::with(['agency', 'creator'])->where('type', $type);
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $paginator = $query->latest()->paginate(15);
+
         return Inertia::render('Administrative/Records', [
-            'type' => $type, 'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role?->name, 'agency' => $user->agency?->name],
-            'records' => AdministrativeRecord::with(['agency', 'creator'])->where('type', $type)->latest()->get(),
+            'type' => $type,
+            'user' => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role?->name, 'agency' => $user->agency?->name],
+            'records' => $paginator->getCollection(),
+            'initialPagination' => ['currentPage' => $paginator->currentPage(), 'totalPages' => $paginator->lastPage()],
         ]);
     }
 

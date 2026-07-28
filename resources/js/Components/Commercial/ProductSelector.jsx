@@ -62,7 +62,7 @@ export default function ProductSelector({
                                     <option value="">Sélectionner un produit</option>
                                     {catalogProducts.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name}
+                                            {p.name}{p.agency ? ` (${p.agency})` : ""} — {p.quantity_in_stock} dispo.
                                         </option>
                                     ))}
                                 </select>

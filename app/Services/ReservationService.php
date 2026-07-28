@@ -16,6 +16,7 @@ class ReservationService
     public function __construct(
         private NotificationService $notificationService,
         private AuditLogService $auditLogService,
+        private StockService $stockService,
     ) {}
 
     public function create(array $data, Request $request): Reservation
@@ -256,19 +257,7 @@ class ReservationService
 
     public function getProducts(Request $request): array
     {
-        $user = $request->user();
-
-        return Product::where('agency_id', $user->agency_id)
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'reference' => $p->reference,
-                'category' => $p->category,
-                'available' => $p->quantity_in_stock - $p->reserved_quantity,
-            ])
-            ->toArray();
+        return $this->stockService->getAllProducts();
     }
 
     private function notifyResponsableStock(Reservation $reservation, User $creator, Product $product): void

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/Components/UI/Card";
 import { DataTable } from "@/Components/UI/DataTable";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/Components/UI/Dialog";
 import { Input } from "@/Components/UI/Input";
+import { TablePagination } from "@/Components/UI/TablePagination";
 import { useToast } from "@/Components/UI/Toast";
 
 const Detail = ({ label, value }) => (
@@ -90,7 +91,7 @@ export default function SupplierOrdersPanel({ operations }) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent><DataTable columns={columns} data={operations.approvals} emptyMessage="Aucune demande acceptée pour le moment."/></CardContent>
+            <CardContent><DataTable columns={columns} data={operations.approvals} emptyMessage="Aucune demande acceptée pour le moment."/><TablePagination currentPage={operations.page} totalPages={operations.totalPages} onPageChange={operations.setPage}/></CardContent>
         </Card>
 
         <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">

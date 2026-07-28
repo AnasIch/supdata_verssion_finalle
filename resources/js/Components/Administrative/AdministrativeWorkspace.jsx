@@ -31,7 +31,7 @@ export default function AdministrativeWorkspace({ dashboard }) {
     const columns = [
         { header: "Référence", accessorKey: "id", className: "font-semibold text-slate-900" },
         { header: "Demandeur / Client", cell: r => <div><p className="font-medium">{r.requester}</p><p className="text-xs text-slate-500">{r.client}</p></div> },
-        { header: "Agence", accessorKey: "agency" }, { header: "Montant", accessorKey: "amount" },
+        { header: "Agence", accessorKey: "agency" },
         { header: "Complétude", cell: r => <div className="w-24"><div className="h-1.5 rounded-full bg-slate-100"><div className={`h-1.5 rounded-full ${r.completeness === 100 ? "bg-emerald-500" : "bg-amber-500"}`} style={{ width: `${r.completeness}%` }}/></div><span className="text-xs text-slate-500">{r.completeness} %</span></div> },
         { header: "Statut", cell: r => <Badge variant={r.status === "Informations manquantes" ? "warning" : r.status === "Rejetée" ? "destructive" : r.status === "Validée et transmise" ? "success" : "secondary"}>{r.status}</Badge> },
         { header: "Action", cell: r => <Button size="sm" variant="outline" onClick={() => setSelected(r)}>{["Validée et transmise", "Rejetée"].includes(r.status) ? "Consulter" : "Vérifier"} <ArrowRight className="size-3.5"/></Button> },

@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from "@/Components/UI/Dialog";
 import { Input } from "@/Components/UI/Input";
+import { TablePagination } from "@/Components/UI/TablePagination";
 import { Textarea } from "@/Components/UI/Textarea";
 import { useToast } from "@/Components/UI/Toast";
 
@@ -83,7 +84,6 @@ export default function AdministrativeOperationsPanel({ operations }) {
             cell: (item) => <div><p className="font-medium">{item.nom}</p><p className="text-xs text-slate-500">{item.demandeur}</p></div>,
         },
         { header: "Agence", accessorKey: "agence" },
-        { header: "Montant", accessorKey: "montant" },
         { header: "Statut", cell: (item) => <Badge variant={statusVariant(item.statut)}>{item.statut}</Badge> },
         {
             header: "Action",
@@ -111,7 +111,6 @@ export default function AdministrativeOperationsPanel({ operations }) {
                         <Detail label="Client" value={selected.nom} />
                         <Detail label="Responsable Commercial" value={selected.demandeur} />
                         <Detail label="Agence" value={selected.agence} />
-                        <Detail label="Montant" value={selected.montant} />
                         <Detail label={isRequest ? "Produits demandés" : "Historique"} value={selected.produits || selected.historique} />
                         <Detail label="Date" value={selected.date} />
                         {isRequest && <>
@@ -182,9 +181,9 @@ export default function AdministrativeOperationsPanel({ operations }) {
                                 <Input className="pl-9" value={operations.search} onChange={(event) => operations.setSearch(event.target.value)} placeholder="Rechercher…" aria-label={`Rechercher dans ${operations.config.titre}`} />
                             </div>
                             <select className="rounded-md border border-slate-200 bg-white px-3 text-sm" value={operations.agency} onChange={(event) => operations.setAgency(event.target.value)} aria-label="Filtrer par agence">
-                                <option>Toutes</option>
-                                <option>Casablanca</option>
-                                <option>Marrakech</option>
+                                <option value="Toutes">Toutes</option>
+                                <option value="SUPDATA Casablanca">SUPDATA Casablanca</option>
+                                <option value="SUPDATA Marrakech">SUPDATA Marrakech</option>
                             </select>
                             <Button variant="ghost" size="icon" onClick={() => { operations.reset(); toast("Données réinitialisées.", "info"); }} aria-label="Réinitialiser">
                                 <RotateCcw className="size-4" />
@@ -194,6 +193,7 @@ export default function AdministrativeOperationsPanel({ operations }) {
                 </CardHeader>
                 <CardContent>
                     <DataTable columns={operations.section === "stock" ? stockColumns : requestColumns} data={operations.items} emptyMessage="Aucun résultat." />
+                    <TablePagination currentPage={operations.page} totalPages={operations.totalPages} onPageChange={operations.setPage} />
                 </CardContent>
             </Card>
         </div>

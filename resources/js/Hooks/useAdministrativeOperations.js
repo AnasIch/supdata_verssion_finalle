@@ -1,15 +1,31 @@
-import { useMemo, useState } from "react";
-import { router } from "@inertiajs/react";
+import { useEffect, useState } from "react";
+import { router, usePage } from "@inertiajs/react";
 import { administrativeSectionConfig } from "@/Mocks/administrativeOperations";
 
-export function useAdministrativeOperations(section, initialItems = []) {
+export function useAdministrativeOperations(section, initialItems = [], initialPagination = { currentPage: 1, totalPages: 1 }) {
     const config = administrativeSectionConfig[section] || administrativeSectionConfig.demandes;
     const [search, setSearch] = useState("");
     const [agency, setAgency] = useState("Toutes");
-    const items = useMemo(() => initialItems.filter((item) =>
-        (agency === "Toutes" || item.agence === agency || item.agence?.includes(agency))
-        && Object.values(item).filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase())
-    ), [agency, initialItems, search]);
+    const [page, setPage] = useState(initialPagination.currentPage);
+    const [totalPages, setTotalPages] = useState(initialPagination.totalPages);
+    const { url } = usePage();
+    const basePath = url.split("?")[0];
+
+    useEffect(() => { setPage(1); }, [search, agency]);
+
+    useEffect(() => {
+        setTotalPages(initialPagination.totalPages);
+        setPage(initialPagination.currentPage);
+    }, [initialPagination.currentPage, initialPagination.totalPages]);
+
+    useEffect(() => {
+        router.reload({
+            data: { search, agency, page },
+            only: ["initialItems", "initialPagination"],
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }, [search, agency, page]);
 
     const decide = (id, statut, motif = "") => {
         if (!id) return { ok: false, message: "Demande introuvable." };
@@ -22,7 +38,8 @@ export function useAdministrativeOperations(section, initialItems = []) {
     };
 
     return {
-        section, config, items, search, setSearch, agency, setAgency, decide,
-        reset: () => router.reload({ only: ["initialItems"] }),
+        section, config, items: initialItems, search, setSearch, agency, setAgency,
+        page, setPage, totalPages, decide,
+        reset: () => router.get(basePath, {}, { preserveScroll: true }),
     };
 }
