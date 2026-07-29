@@ -27,7 +27,7 @@ class LocalAdminDemandeController extends Controller
         $user = $request->user();
         $user->load(['role', 'agency']);
 
-        $query = Demande::whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
+        $query = Demande::whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
             ->with(['user', 'agency', 'confirmedBy']);
 
         if ($request->filled('search')) {
@@ -52,8 +52,8 @@ class LocalAdminDemandeController extends Controller
         $demandes = $query->paginate(10)->withQueryString();
 
         $stats = [
-            'total' => Demande::whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])->count(),
-            'pending' => Demande::where('status', 'pending_local_admin')->count(),
+            'total' => Demande::whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])->count(),
+            'pending' => Demande::whereIn('status', ['submitted', 'pending_local_admin'])->count(),
             'confirmed' => Demande::where('status', 'confirmed_local_admin')->count(),
             'rejected' => Demande::where('status', 'rejected_local_admin')->count(),
         ];
@@ -152,7 +152,7 @@ class LocalAdminDemandeController extends Controller
         $user = $request->user();
 
         $demande = Demande::where('id', $id)
-            ->where('status', 'pending_local_admin')
+            ->whereIn('status', ['submitted', 'pending_local_admin'])
             ->with(['user', 'agency'])
             ->first();
 
@@ -160,9 +160,13 @@ class LocalAdminDemandeController extends Controller
             return back()->withErrors(['demande' => 'Demande introuvable ou déjà traitée.']);
         }
 
-        DB::transaction(function () use ($demande, $user) {
+        $newStatus = ($demande->status === 'pending_local_admin' || $demande->validated_by)
+            ? 'confirmed_local_admin'
+            : 'submitted';
+
+        DB::transaction(function () use ($demande, $user, $newStatus) {
             $demande->update([
-                'status' => 'confirmed_local_admin',
+                'status' => $newStatus,
                 'confirmed_by' => $user->id,
                 'confirmed_at' => now(),
             ]);
@@ -173,8 +177,8 @@ class LocalAdminDemandeController extends Controller
                 module: 'Demandes',
                 description: "Confirmation de la demande d'achat {$demande->title}",
                 target: $demande->title,
-                oldValues: ['statut' => 'pending_local_admin'],
-                newValues: ['statut' => 'confirmed_local_admin'],
+                oldValues: ['statut' => $demande->status],
+                newValues: ['statut' => $newStatus],
                 ipAddress: request()->ip(),
                 userAgent: request()->userAgent(),
             );
@@ -202,7 +206,7 @@ class LocalAdminDemandeController extends Controller
         ]);
 
         $demande = Demande::where('id', $id)
-            ->where('status', 'pending_local_admin')
+            ->whereIn('status', ['submitted', 'pending_local_admin'])
             ->with(['user', 'agency'])
             ->first();
 
@@ -224,7 +228,7 @@ class LocalAdminDemandeController extends Controller
                 module: 'Demandes',
                 description: "Rejet de la demande d'achat {$demande->title} — Motif : {$request->reason}",
                 target: $demande->title,
-                oldValues: ['statut' => 'pending_local_admin'],
+                oldValues: ['statut' => $demande->status],
                 newValues: ['statut' => 'rejected_local_admin', 'motif' => $request->reason],
                 ipAddress: request()->ip(),
                 userAgent: request()->userAgent(),

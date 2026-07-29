@@ -1,4 +1,4 @@
-export const commercialStockProducts = [
+export const rawProducts = [
     { id: "STK-001", reference: "REF-SRV-001", name: "Serveur Dell PowerEdge R750", category: "Serveurs", agency: "Casablanca", quantity: 12, reservedQuantity: 2, minThreshold: 5, status: "available", unitPrice: "45 000" },
     { id: "STK-002", reference: "REF-PC-002", name: "Ordinateur Dell OptiPlex 7090", category: "Postes", agency: "Casablanca", quantity: 3, reservedQuantity: 1, minThreshold: 5, status: "low", unitPrice: "8 500" },
     { id: "STK-003", reference: "REF-ECR-003", name: "Écran LG 27\" 4K", category: "Écrans", agency: "Casablanca", quantity: 0, reservedQuantity: 0, minThreshold: 3, status: "out_of_stock", unitPrice: "6 200" },
@@ -27,6 +27,23 @@ export const commercialStockProducts = [
     { id: "STK-114", reference: "REF-SSD-014", name: "SSD Samsung 990 Pro 1To", category: "Stockage", agency: "Marrakech", quantity: 12, reservedQuantity: 0, minThreshold: 5, status: "available", unitPrice: "1 200" },
     { id: "STK-115", reference: "REF-TAB-015", name: "Tablette Samsung Galaxy Tab A9", category: "Tablettes", agency: "Marrakech", quantity: 3, reservedQuantity: 1, minThreshold: 2, status: "available", unitPrice: "3 400" },
 ];
+
+function computeAvailable(p) {
+    return (p.quantity || 0) - (p.reservedQuantity || 0);
+}
+
+function computeStatus(p) {
+    const available = computeAvailable(p);
+    if (available <= 0) return "out_of_stock";
+    if (available <= (p.minThreshold || 0)) return "low";
+    return "available";
+}
+
+export const commercialStockProducts = rawProducts.map((p) => ({
+    ...p,
+    available: computeAvailable(p),
+    status: computeStatus(p),
+}));
 
 export const initialReservations = [
     { id: "RES-001", clientName: "Hôtel Atlas", productName: "Clavier sans fil Logitech MX Keys", agency: "Casablanca", quantity: 2, date: "10 jul. 2026", status: "Réservé" },

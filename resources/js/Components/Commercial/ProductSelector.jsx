@@ -1,6 +1,7 @@
 import { Input } from "@/Components/UI/Input";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
+import ProductCombobox from "@/Components/Commercial/Reservations/ProductCombobox";
 
 export default function ProductSelector({
     products,
@@ -40,7 +41,7 @@ export default function ProductSelector({
             <div className="flex flex-col gap-3">
                 {products.map((item, index) => (
                     <div
-                        key={item.id}
+                        key={item.id ?? index}
                         className="flex flex-col gap-3 rounded-xl border border-slate-200/70 p-4 sm:flex-row sm:items-start"
                     >
                         <div className="flex items-center justify-center size-8 shrink-0 rounded-lg bg-slate-100 text-xs font-bold text-slate-500">
@@ -52,20 +53,11 @@ export default function ProductSelector({
                                 <label className="mb-1 block text-xs font-medium text-slate-500">
                                     Produit *
                                 </label>
-                                <select
+                                <ProductCombobox
+                                    products={catalogProducts}
                                     value={item.product}
-                                    onChange={(e) =>
-                                        onUpdate(item.id, "product", e.target.value)
-                                    }
-                                    className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                >
-                                    <option value="">Sélectionner un produit</option>
-                                    {catalogProducts.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.name}{p.agency ? ` (${p.agency})` : ""} — {p.quantity_in_stock} dispo.
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(id) => onUpdate(item.id, "product", id)}
+                                />
                             </div>
 
                             <div className="w-full sm:w-24">

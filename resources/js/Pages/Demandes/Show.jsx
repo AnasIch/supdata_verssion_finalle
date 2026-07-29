@@ -13,12 +13,14 @@ import RefuseDemandeDialog from "@/Components/Demandes/RefuseDemandeDialog";
 import { getDashboardPath } from "@/lib/mockAuth";
 
 const statusLabels = {
+    submitted: "Soumise",
     pending_local_admin: "En attente de décision",
     confirmed_local_admin: "Confirmée",
     rejected_local_admin: "Rejetée",
 };
 
 const statusVariants = {
+    submitted: "secondary",
     pending_local_admin: "warning",
     confirmed_local_admin: "success",
     rejected_local_admin: "destructive",
@@ -101,7 +103,7 @@ export default function DemandeShow({ user, demande, auditLogs }) {
                                 Retour à la liste
                             </Link>
                         </Button>
-                        {demande.status === "pending_local_admin" && (
+                        {(demande.status === "submitted" || demande.status === "pending_local_admin") && (
                             <>
                                 <Button
                                     className="bg-emerald-600 text-white hover:bg-emerald-700"
@@ -243,7 +245,7 @@ export default function DemandeShow({ user, demande, auditLogs }) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, delay: 0.15 }}
                 >
-                    {demande.status === "pending_local_admin" ? (
+                    {demande.status === "submitted" || demande.status === "pending_local_admin" ? (
                         <Card className="border-amber-200 bg-amber-50/30">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-900">

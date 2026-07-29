@@ -42,7 +42,7 @@ class LocalAdminDashboardController extends Controller
     private function getStats(int $agencyId): array
     {
         return [
-            'pendingLocalAdmin' => Demande::where('agency_id', $agencyId)->where('status', 'pending_local_admin')->count(),
+            'pendingLocalAdmin' => Demande::where('agency_id', $agencyId)->whereIn('status', ['submitted', 'pending_local_admin'])->count(),
             'confirmedLocalAdmin' => Demande::where('agency_id', $agencyId)->where('status', 'confirmed_local_admin')->count(),
             'rejectedLocalAdmin' => Demande::where('agency_id', $agencyId)->where('status', 'rejected_local_admin')->count(),
             'totalProcessed' => Demande::where('agency_id', $agencyId)->whereIn('status', ['confirmed_local_admin', 'rejected_local_admin'])->count(),
@@ -65,10 +65,11 @@ class LocalAdminDashboardController extends Controller
             : "DATE_FORMAT(created_at, '%Y-%m')";
 
         $demandes = Demande::where('agency_id', $agencyId)
-            ->whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
+            ->whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
             ->where('created_at', '>=', Carbon::now()->subMonths(12))
             ->select(
                 DB::raw("{$monthExpression} as month_key"),
+                DB::raw("SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted"),
                 DB::raw("SUM(CASE WHEN status = 'confirmed_local_admin' THEN 1 ELSE 0 END) as confirmed"),
                 DB::raw("SUM(CASE WHEN status = 'rejected_local_admin' THEN 1 ELSE 0 END) as rejected")
             )
@@ -78,6 +79,7 @@ class LocalAdminDashboardController extends Controller
 
         return $months->map(fn ($m) => [
             'mois' => $m['mois'],
+            'nouvelles' => $demandes[$m['month_key']]['submitted'] ?? 0,
             'confirmees' => $demandes[$m['month_key']]['confirmed'] ?? 0,
             'rejetees' => $demandes[$m['month_key']]['rejected'] ?? 0,
         ])->values()->toArray();
@@ -86,13 +88,14 @@ class LocalAdminDashboardController extends Controller
     private function getDecisionsData(int $agencyId): array
     {
         $counts = Demande::where('agency_id', $agencyId)
-            ->whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
+            ->whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status')
             ->toArray();
 
         return [
+            ['name' => 'Nouvelles', 'value' => $counts['submitted'] ?? 0, 'color' => '#3b82f6'],
             ['name' => 'En attente', 'value' => $counts['pending_local_admin'] ?? 0, 'color' => '#f59e0b'],
             ['name' => 'Confirmées', 'value' => $counts['confirmed_local_admin'] ?? 0, 'color' => '#10b981'],
             ['name' => 'Rejetées', 'value' => $counts['rejected_local_admin'] ?? 0, 'color' => '#ef4444'],
@@ -102,7 +105,7 @@ class LocalAdminDashboardController extends Controller
     private function getLastDemandes(int $agencyId): array
     {
         return Demande::where('agency_id', $agencyId)
-            ->whereIn('status', ['pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
+            ->whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
             ->with(['user', 'agency'])
             ->latest()
             ->take(5)
@@ -122,6 +125,7 @@ class LocalAdminDashboardController extends Controller
     private function mapStatus(string $status): string
     {
         return match ($status) {
+            'submitted' => 'Soumise',
             'pending_local_admin' => 'En attente',
             'confirmed_local_admin' => 'Confirmée',
             'rejected_local_admin' => 'Rejetée',

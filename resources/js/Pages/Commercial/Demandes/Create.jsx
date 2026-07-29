@@ -17,7 +17,7 @@ const emptyProductLine = () => ({
 });
 
 export default function CommercialDemandeCreate({ user, products }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         comment: "",
         priority: "medium",
         products: [emptyProductLine()],
@@ -103,11 +103,11 @@ export default function CommercialDemandeCreate({ user, products }) {
             return;
         }
 
-        setData({
+        transform(() => ({
             comment: data.comment,
             priority: data.priority,
             products: validProducts,
-        });
+        }));
 
         post(route("rc.demandes.store"), {
             onError: (errors) => {
@@ -116,6 +116,7 @@ export default function CommercialDemandeCreate({ user, products }) {
                     toast(firstError, "error");
                 }
             },
+            onSuccess: () => transform(null),
         });
     };
 

@@ -3,12 +3,14 @@ import { Eye, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/Components/UI/Badge";
 
 const statusLabels = {
+    submitted: "Soumise",
     pending_local_admin: "En attente de décision",
     confirmed_local_admin: "Confirmée",
     rejected_local_admin: "Rejetée",
 };
 
 const statusVariants = {
+    submitted: "secondary",
     pending_local_admin: "warning",
     confirmed_local_admin: "success",
     rejected_local_admin: "destructive",
@@ -65,7 +67,7 @@ export default function DemandeCard({ demande, onView, onConfirm, onReject, dela
                     <Eye className="size-3.5" />
                     Voir
                 </button>
-                {demande.status === "pending_local_admin" && (
+                {(demande.status === "submitted" || demande.status === "pending_local_admin") && (
                     <>
                         <button
                             type="button"

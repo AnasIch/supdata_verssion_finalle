@@ -125,7 +125,11 @@ class AdministrativeDashboardController extends Controller
         $demande = Demande::with(['user', 'agency'])->createdByRole('Responsable Commercial')->where('status', 'submitted')->findOrFail($id);
         $actor = $request->user();
 
-        $newStatus = $data['decision'] === 'approved' ? 'pending_local_admin' : 'rejected';
+        $newStatus = match (true) {
+            $data['decision'] === 'rejected' => 'rejected',
+            $demande->confirmed_by !== null => 'confirmed_local_admin',
+            default => 'pending_local_admin',
+        };
 
         DB::transaction(function () use ($demande, $data, $actor, $newStatus, $request) {
             $demande->update([
@@ -148,49 +152,60 @@ class AdministrativeDashboardController extends Controller
         });
 
         if ($demande->user) {
+            $message = match ($newStatus) {
+                'confirmed_local_admin' => 'Votre demande « ' . $demande->title . ' » a été confirmée par la Gestion Administrative et l\'Administrateur Local.',
+                'pending_local_admin' => 'Votre demande « ' . $demande->title . ' » a été validée administrativement.',
+                'rejected' => 'Votre demande « ' . $demande->title . ' » a été rejetée. Motif : ' . $data['reason'],
+                default => 'Votre demande « ' . $demande->title . ' » a été traitée.',
+            };
+
             $this->notifications->create(
                 user: $demande->user,
-                title: $data['decision'] === 'approved' ? 'Demande transmise' : 'Demande rejetée',
-                description: $data['decision'] === 'approved'
-                    ? "Votre demande « {$demande->title} » a été validée administrativement et transmise à l'Administrateur Local."
-                    : "Votre demande « {$demande->title} » a été rejetée. Motif : {$data['reason']}",
+                title: $data['decision'] === 'approved' ? 'Demande validée' : 'Demande rejetée',
+                description: $message,
                 type: $data['decision'] === 'approved' ? 'success' : 'warning',
                 source: 'demandes', actionUrl: "/dashboard-commercial/demandes/{$demande->id}",
             );
         }
 
+        $localAdminRole = \App\Models\Role::where('name', 'Administrateur Local')->value('id');
+        $localAdminUsers = User::where('role_id', $localAdminRole)
+            ->where('agency_id', $demande->agency_id)
+            ->where('status', 'active')
+            ->get();
+
         if ($data['decision'] === 'approved') {
-            $localAdminRole = \App\Models\Role::where('name', 'Administrateur Local')->value('id');
-            User::where('role_id', $localAdminRole)
-                ->where('agency_id', $demande->agency_id)
-                ->where('status', 'active')
-                ->each(function (User $user) use ($demande) {
-                    $this->notifications->create(
-                        user: $user,
-                        title: 'Demande à confirmer',
-                        description: "La demande « {$demande->title} » a été validée administrativement et attend votre confirmation.",
-                        type: 'info', source: 'demandes',
-                        actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
-                    );
-                });
+            $localAdminUsers->each(function (User $user) use ($demande) {
+                $this->notifications->create(
+                    user: $user,
+                    title: 'Demande à confirmer',
+                    description: "La demande « {$demande->title} » a été validée administrativement et attend votre confirmation.",
+                    type: 'info', source: 'demandes',
+                    actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
+                );
+            });
 
             try {
-                $localAdminUsers = User::where('role_id', $localAdminRole)
-                    ->where('agency_id', $demande->agency_id)
-                    ->where('status', 'active')
-                    ->get();
-
                 foreach ($localAdminUsers as $recipient) {
-                    Mail::to($recipient->email)->send(
-                        new NouvelleDemandeALMail($demande, $actor)
-                    );
+                    Mail::to($recipient->email)->send(new NouvelleDemandeALMail($demande, $actor));
                 }
             } catch (\Throwable $e) {
                 Log::error("Erreur envoi email AL demande {$demande->id}: {$e->getMessage()}");
             }
+        } else {
+            $localAdminUsers->each(function (User $user) use ($demande, $data) {
+                $this->notifications->create(
+                    user: $user,
+                    title: 'Demande rejetée',
+                    description: "La demande « {$demande->title} » a été rejetée par la Gestion Administrative. Motif : {$data['reason']}",
+                    type: 'warning', source: 'demandes',
+                    actionUrl: "/dashboard-admin-local/demandes/{$demande->id}",
+                );
+            });
         }
 
-        return back()->with('success', $data['decision'] === 'approved' ? 'Demande transmise à l\u2019Administrateur Local.' : 'Demande rejetée.');
+        return back()->with('success', $data['decision'] === 'approved'
+            ? 'Demande transmise à l\'Administrateur Local.' : 'Demande rejetée.');
     }
 
     private function requestItems(string $section, Request $request): array

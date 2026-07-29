@@ -16,6 +16,7 @@ const priorityOptions = [
 
 const statusOptions = [
     { value: "all", label: "Tous les statuts" },
+    { value: "submitted", label: "Soumise" },
     { value: "pending_local_admin", label: "En attente" },
     { value: "confirmed_local_admin", label: "Confirmée" },
     { value: "rejected_local_admin", label: "Rejetée" },

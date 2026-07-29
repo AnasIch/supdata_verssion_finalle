@@ -11,6 +11,7 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/Components/UI/Dialog";
+import ProductCombobox from "@/Components/Commercial/Reservations/ProductCombobox";
 
 export default function CreateReservationDialog({ open, onOpenChange, onConfirm, products }) {
     const [clientName, setClientName] = useState("");
@@ -73,18 +74,11 @@ export default function CreateReservationDialog({ open, onOpenChange, onConfirm,
                         <label className="text-xs font-medium text-slate-500">
                             Produit <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <ProductCombobox
+                            products={products}
                             value={productId}
-                            onChange={(e) => setProductId(e.target.value)}
-                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm transition-colors hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="">Sélectionnez un produit</option>
-                            {products?.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} ({p.available} disponible{p.available !== 1 ? "s" : ""})
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setProductId}
+                        />
                     </div>
 
                     <div className="flex flex-col gap-1">
