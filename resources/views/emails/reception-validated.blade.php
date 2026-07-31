@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nouveau mouvement de stock — SUPDATA ERP</title>
+    <title>Nouvelle réception validée — SUPDATA ERP</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
 
@@ -15,7 +15,7 @@
                 <tr>
                     <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 32px 40px; text-align: center;">
                         <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 700;">SUPDATA ERP</h1>
-                        <p style="margin: 6px 0 0; color: #94a3b8; font-size: 13px;">Nouveau mouvement de stock</p>
+                        <p style="margin: 6px 0 0; color: #94a3b8; font-size: 13px;">Nouvelle réception validée</p>
                     </td>
                 </tr>
 
@@ -23,60 +23,50 @@
                     <td style="padding: 36px 40px 20px;">
                         <p style="margin: 0 0 20px; color: #334155; font-size: 15px; line-height: 1.6;">Bonjour,</p>
                         <p style="margin: 0 0 28px; color: #475569; font-size: 14px; line-height: 1.7;">
-                            Un nouveau mouvement de stock a été enregistré par le Responsable Stock <strong>{{ $actor->name }}</strong>.
+                            La réception <strong>{{ $reception->reference }}</strong> (<strong>{{ $reception->name }}</strong>) a été validée par le Responsable Stock <strong>{{ $actor->name }}</strong>.
                         </p>
-
-                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-                            <tr>
-                                <td align="center">
-                                    <span style="display: inline-block; background-color: {{ $type === 'Entrée' ? '#d1fae5' : '#fef3c7' }}; color: {{ $type === 'Entrée' ? '#047857' : '#92400e' }}; font-size: 13px; font-weight: 700; padding: 8px 24px; border-radius: 20px; letter-spacing: 0.3px;">
-                                        {{ strtoupper($type) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </table>
 
                         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 28px;">
                             <tr>
                                 <td style="padding: 24px 28px;">
-                                    <p style="margin: 0 0 16px; color: #0f172a; font-size: 14px; font-weight: 700; letter-spacing: 0.3px;">DÉTAILS DU MOUVEMENT</p>
+                                    <p style="margin: 0 0 16px; color: #0f172a; font-size: 14px; font-weight: 700; letter-spacing: 0.3px;">DÉTAILS DE LA RÉCEPTION</p>
                                     <table width="100%" cellpadding="0" cellspacing="0">
                                         <tr>
-                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px; width: 140px;">Type</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $type }}</td>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px; width: 140px;">Référence</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->reference }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Produit</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $product->name }}</td>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Fournisseur</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->name }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Catégorie</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $product->category ?? '—' }}</td>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Détail</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->detail ?: $reception->quantity . ' unité(s)' }}</td>
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Quantité</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $type === 'Entrée' ? '+' : '−' }}{{ $quantity }}</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->quantity }} unité(s)</td>
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Agence</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $agency }}</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->agency?->name ?? '—' }}</td>
                                         </tr>
                                         <tr>
-                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Responsable Stock</td>
+                                            <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Validée par</td>
                                             <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $actor->name }}</td>
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Date</td>
                                             <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ now()->locale('fr')->isoFormat('DD MMM YYYY — HH:mm') }}</td>
                                         </tr>
-                                        @if(!empty($documentType))
+                                        @if(!empty($reception->document_type))
                                         <tr>
                                             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Type de document</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $documentType }}</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->document_type }}</td>
                                         </tr>
                                         <tr>
                                             <td style="padding: 8px 0; color: #64748b; font-size: 13px;">Document joint</td>
-                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $originalFileName }}</td>
+                                            <td style="padding: 8px 0; color: #0f172a; font-size: 13px; font-weight: 600;">{{ $reception->original_file_name }}</td>
                                         </tr>
                                         @endif
                                     </table>
@@ -88,7 +78,7 @@
                             <tr>
                                 <td style="padding: 16px 20px;">
                                     <p style="margin: 0; color: #1e40af; font-size: 13px; line-height: 1.6;">
-                                        <strong>Information :</strong> Le stock du produit <strong>{{ $product->name }}</strong> a été mis à jour automatiquement. Le bon de livraison est disponible <strong>en pièce jointe</strong> de cet email.
+                                        <strong>Information :</strong> Le bon de réception <strong>{{ $reception->reference }}</strong> est disponible <strong>en pièce jointe</strong> de cet email.
                                     </p>
                                 </td>
                             </tr>

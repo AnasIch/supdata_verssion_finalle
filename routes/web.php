@@ -14,6 +14,7 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\AdministrativeDashboardController;
 use App\Http\Controllers\StockDashboardController;
 use App\Http\Controllers\AdministrativeRecordController;
+use App\Http\Controllers\InventoryController;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -279,6 +280,16 @@ Route::patch('/dashboard-stock/receptions/{id}/valider', [StockDashboardControll
 Route::patch('/dashboard-stock/livraisons/{id}/livrer', [StockDashboardController::class, 'deliverLivraison'])->name('rs.livraisons.deliver');
 Route::patch('/dashboard-stock/livraisons/{id}/annuler', [StockDashboardController::class, 'cancelLivraison'])->name('rs.livraisons.cancel');
 Route::patch('/dashboard-stock/alertes/{productId}/traiter', [StockDashboardController::class, 'resolveAlert'])->name('rs.alerts.resolve');
+
+Route::get('/dashboard-stock/inventaires', [InventoryController::class, 'index'])->name('rs.inventaires.index');
+Route::post('/dashboard-stock/inventaires', [InventoryController::class, 'store'])->name('rs.inventaires.store');
+Route::get('/dashboard-stock/inventaires/{inventory}', [InventoryController::class, 'show'])->name('rs.inventaires.show');
+Route::put('/dashboard-stock/inventaires/{inventory}', [InventoryController::class, 'update'])->name('rs.inventaires.update');
+Route::patch('/dashboard-stock/inventaires/{inventory}/terminer', [InventoryController::class, 'terminate'])->name('rs.inventaires.terminate');
+Route::delete('/dashboard-stock/inventaires/{inventory}', [InventoryController::class, 'destroy'])->name('rs.inventaires.destroy');
+Route::get('/dashboard-stock/inventaires/{inventory}/export/{format}', [InventoryController::class, 'export'])
+    ->whereIn('format', ['csv', 'excel'])->name('rs.inventaires.export');
+
 Route::post('/dashboard-stock/{section}', [StockDashboardController::class, 'store'])->name('rs.operations.store');
 Route::put('/dashboard-stock/{section}/{id}', [StockDashboardController::class, 'update'])->name('rs.operations.update');
 Route::delete('/dashboard-stock/{section}/{id}', [StockDashboardController::class, 'destroy'])->name('rs.operations.destroy');

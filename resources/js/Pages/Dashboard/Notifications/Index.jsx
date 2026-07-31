@@ -11,8 +11,6 @@ import {
     XCircle,
     AlertTriangle,
     Clock,
-    ChevronRight,
-    ChevronLeft,
     RotateCcw,
     Settings,
     Mail,
@@ -28,6 +26,7 @@ import {
 } from "lucide-react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useNotifications } from "@/Hooks/useNotifications";
+import { PaginationBar } from "@/Components/UI/Pagination";
 import { cn } from "@/lib/utils";
 import { Button } from "@/Components/UI/Button";
 import { Input } from "@/Components/UI/Input";
@@ -358,6 +357,8 @@ export default function NotificationsIndex({
         setCurrentPage,
         totalPages,
         filteredCount,
+        perPage,
+        setPerPage,
         hasFilters,
         markAsRead,
         markAllAsRead,
@@ -468,29 +469,16 @@ export default function NotificationsIndex({
                     )}
                 </div>
 
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage <= 1}
-                            onClick={() => setCurrentPage(currentPage - 1)}
-                        >
-                            <ChevronLeft size={14} />
-                        </Button>
-                        <span className="px-3 text-sm text-slate-600">
-                            {currentPage} / {totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage >= totalPages}
-                            onClick={() => setCurrentPage(currentPage + 1)}
-                        >
-                            <ChevronRight size={14} />
-                        </Button>
-                    </div>
-                )}
+                <div className="rounded-xl border border-slate-100 bg-white">
+                    <PaginationBar
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        total={filteredCount}
+                        perPage={perPage}
+                        onPageChange={setCurrentPage}
+                        onPerPageChange={setPerPage}
+                    />
+                </div>
 
                 <Dialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
                     <DialogContent className="max-w-md">

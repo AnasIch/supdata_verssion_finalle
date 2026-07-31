@@ -1,16 +1,27 @@
-import { useState, useCallback, useMemo } from "react";
-import { router } from "@inertiajs/react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { router, usePage } from "@inertiajs/react";
+
+const DEBOUNCE_MS = 300;
+const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 export function useNotifications({
     initialNotifications = [],
     initialFilters = {},
-    initialPagination = { currentPage: 1, lastPage: 1, total: 0 },
+    initialPagination = { currentPage: 1, lastPage: 1, total: 0, perPage: 10 },
 } = {}) {
-    const [search, setSearch] = useState(initialFilters.search || "");
-    const [sourceFilter, setSourceFilter] = useState(initialFilters.source || "all");
-    const [typeFilter, setTypeFilter] = useState(initialFilters.type || "all");
-    const [readFilter, setReadFilter] = useState(initialFilters.read || "all");
-    const [currentPage, setCurrentPage] = useState(initialPagination.currentPage || 1);
+    const { url } = usePage();
+    const query = new URLSearchParams(url.split("?")[1] || "");
+    const rawPerPage = parseInt(query.get("perPage") || initialPagination.perPage || "10", 10);
+
+    const [search, setSearch] = useState(query.get("search") ?? (initialFilters.search || ""));
+    const [sourceFilter, setSourceFilter] = useState(query.get("source") ?? (initialFilters.source || "all"));
+    const [typeFilter, setTypeFilter] = useState(query.get("type") ?? (initialFilters.type || "all"));
+    const [readFilter, setReadFilter] = useState(query.get("read") ?? (initialFilters.read || "all"));
+    const [currentPage, setCurrentPage] = useState(Math.max(1, parseInt(query.get("page") || initialPagination.currentPage || "1", 10) || 1));
+    const [perPage, setPerPage] = useState(PER_PAGE_OPTIONS.includes(rawPerPage) ? rawPerPage : 10);
+    const timer = useRef(null);
+
+    useEffect(() => () => clearTimeout(timer.current), []);
 
     const buildParams = useCallback((overrides = {}) => {
         const params = {};
@@ -19,15 +30,17 @@ export function useNotifications({
         const type = overrides.type !== undefined ? overrides.type : typeFilter;
         const read = overrides.read !== undefined ? overrides.read : readFilter;
         const page = overrides.page !== undefined ? overrides.page : currentPage;
+        const pp = overrides.perPage !== undefined ? overrides.perPage : perPage;
 
         if (s) params.search = s;
         if (src && src !== "all") params.source = src;
         if (type && type !== "all") params.type = type;
         if (read && read !== "all") params.read = read;
         if (page > 1) params.page = page;
+        if (pp && pp !== 10) params.perPage = pp;
 
         return params;
-    }, [search, sourceFilter, typeFilter, readFilter, currentPage]);
+    }, [search, sourceFilter, typeFilter, readFilter, currentPage, perPage]);
 
     const navigate = useCallback((overrides = {}) => {
         const params = buildParams(overrides);
@@ -39,7 +52,8 @@ export function useNotifications({
 
     const handleSearch = useCallback((value) => {
         setSearch(value);
-        navigate({ search: value, page: 1 });
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => navigate({ search: value, page: 1 }), DEBOUNCE_MS);
     }, [navigate]);
 
     const handleSourceChange = useCallback((value) => {
@@ -60,6 +74,12 @@ export function useNotifications({
     const handlePageChange = useCallback((page) => {
         setCurrentPage(page);
         navigate({ page });
+    }, [navigate]);
+
+    const handlePerPageChange = useCallback((value) => {
+        setPerPage(value);
+        setCurrentPage(1);
+        navigate({ perPage: value, page: 1 });
     }, [navigate]);
 
     const getBasePath = useCallback(() => {
@@ -114,7 +134,8 @@ export function useNotifications({
         setTypeFilter("all");
         setReadFilter("all");
         setCurrentPage(1);
-        navigate({ search: "", source: "all", type: "all", read: "all", page: 1 });
+        setPerPage(10);
+        navigate({ search: "", source: "all", type: "all", read: "all", page: 1, perPage: 10 });
     }, [navigate]);
 
     const hasFilters = search || sourceFilter !== "all" || typeFilter !== "all" || readFilter !== "all";
@@ -133,6 +154,8 @@ export function useNotifications({
         setCurrentPage: handlePageChange,
         totalPages: initialPagination.lastPage,
         filteredCount: initialPagination.total,
+        perPage,
+        setPerPage: handlePerPageChange,
         hasFilters,
         markAsRead,
         markAllAsRead,

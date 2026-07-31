@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Product;
+use App\Models\StockOperation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -13,19 +13,13 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 
-class StockMovementMail extends Mailable
+class ReceptionMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public string $type,
-        public Product $product,
-        public int $quantity,
-        public string $agency,
+        public StockOperation $reception,
         public User $actor,
-        public ?string $documentPath = null,
-        public ?string $documentType = null,
-        public ?string $originalFileName = null,
     ) {}
 
     public function envelope(): Envelope
@@ -35,21 +29,22 @@ class StockMovementMail extends Mailable
                 config('mail.from.address'),
                 config('mail.from.name', 'SUPDATA ERP'),
             ),
-            subject: 'Nouveau mouvement de stock',
+            subject: 'Nouvelle réception validée',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.stock-movement',
+            view: 'emails.reception-validated',
         );
     }
 
     public function attachments(): array
     {
-        return $this->documentPath
-            ? [Attachment::fromPath(Storage::disk('public')->path($this->documentPath))->as($this->originalFileName ?? basename($this->documentPath))]
+        return $this->reception->document_path
+            ? [Attachment::fromPath(Storage::disk('public')->path($this->reception->document_path))
+                ->as($this->reception->original_file_name ?? basename($this->reception->document_path))]
             : [];
     }
 }

@@ -14,6 +14,7 @@ import {
     ShoppingCart,
     Bookmark,
     Shield,
+    ClipboardCheck,
 } from "lucide-react";
 
 const sidebarMenus = {
@@ -127,6 +128,7 @@ const sidebarMenus = {
                     { title: "Mouvements", href: "mouvements", icon: ArrowUpDown },
                     { title: "Réceptions", href: "receptions", icon: ClipboardList },
                     { title: "Livraisons", href: "livraisons", icon: ShoppingCart },
+                    { title: "Inventaires", href: "inventaires", icon: ClipboardCheck },
                     { title: "Alertes de stock", href: "alertes", icon: AlertTriangle },
                     { title: "Notifications", href: "notifications", icon: Bell },
                 ],

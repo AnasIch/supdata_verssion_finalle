@@ -56,7 +56,12 @@ class NotificationService
 
         $query->orderBy('created_at', 'desc');
 
-        return $query->paginate(10);
+        $perPage = (int) $request->input('perPage', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function getUnreadCount(User $user): int

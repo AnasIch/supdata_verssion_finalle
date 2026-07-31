@@ -42,6 +42,8 @@ it('persists a stock movement and updates product quantity', function () {
 
     $this->actingAs($this->stockUser)->post('/dashboard-stock/mouvement', [
         'type' => 'Sortie', 'quantity' => 3, 'product' => $product->name, 'agency' => 'Casablanca',
+        'document_type' => 'Bon de livraison',
+        'document_file' => \Illuminate\Http\UploadedFile::fake()->create('BL-test.pdf', 100, 'application/pdf'),
     ])->assertRedirect();
 
     expect($product->fresh()->quantity_in_stock)->toBe(7);

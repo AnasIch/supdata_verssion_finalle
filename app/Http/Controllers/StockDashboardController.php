@@ -11,18 +11,25 @@ use App\Models\User;
 use App\Models\Reservation;
 use App\Mail\ReservationDeliveredMail;
 use App\Mail\ReservationCancelledMail;
+use App\Mail\ReceptionMail;
 use App\Mail\StockMovementMail;
 use App\Services\NotificationService;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class StockDashboardController extends Controller
 {
     private const SECTIONS = ['produits', 'categories', 'mouvements', 'receptions', 'livraisons', 'alertes'];
+
+    private const DOCUMENT_TYPES = [
+        'Bon de livraison', 'Bon de réception', 'Bon de transfert', 'Bon de retour',
+        'Facture fournisseur', 'Bon de commande', 'Autre',
+    ];
 
     public function __construct(private NotificationService $notifications, private AuditLogService $auditLogs) {}
 
@@ -39,9 +46,21 @@ class StockDashboardController extends Controller
         $completedDeliveries = $reservations->where('status', 'delivered')->count();
 
         $movements = $operations->where('section', 'mouvements')->take(20);
-        $receptions = $operations->where('section', 'receptions')->take(8);
+        $agencyFilter = $request->input('agency', 'Toutes');
+        $receptionsAll = $operations->where('section', 'receptions');
+        $receptions = $agencyFilter === 'Toutes'
+            ? $receptionsAll
+            : $receptionsAll->filter(fn ($op) => $op->agency?->name === $agencyFilter);
+        $receptions = $receptions->take(8);
         $resolvedProductIds = $operations->where('section', 'alertes')->where('status', 'Traitée')->pluck('product_id');
-        $alerts = $products->filter(fn ($p) => $p->isLowStock() && !$resolvedProductIds->contains($p->id));
+
+        $alertQuery = Product::with('agency')
+            ->where(fn ($q) => $q->where('quantity_in_stock', '<', DB::raw('minimum_stock'))->orWhere('quantity_in_stock', 0))
+            ->whereNotIn('id', $resolvedProductIds);
+        if ($agencyFilter !== 'Toutes') {
+            $alertQuery->whereHas('agency', fn ($q) => $q->where('name', $agencyFilter));
+        }
+        $alerts = $alertQuery->get();
 
         $trend = collect(range(5, 0))->map(function ($daysAgo) use ($operations) {
             $date = now()->subDays($daysAgo);
@@ -62,7 +81,7 @@ class StockDashboardController extends Controller
                     ['id' => 'pending', 'label' => 'Livraisons en attente', 'value' => $pendingDeliveries, 'detail' => 'réservations à livrer'],
                     ['id' => 'delivered', 'label' => 'Livraisons effectuées', 'value' => $completedDeliveries, 'detail' => 'commandes livrées'],
                     ['id' => 'total_units', 'label' => 'Unités en stock', 'value' => number_format($totalUnits, 0, ',', ' '), 'detail' => 'unités disponibles'],
-                    ['id' => 'receptions', 'label' => 'Réceptions', 'value' => $receptions->whereNotIn('status', ['Validée'])->count(), 'detail' => 'à contrôler'],
+                    ['id' => 'receptions', 'label' => 'Réceptions', 'value' => $receptionsAll->whereNotIn('status', ['Validée'])->count(), 'detail' => 'à contrôler'],
                 ],
                 'health' => [
                     ['label' => 'Disponible', 'value' => $products->count() - $low - $out, 'color' => '#10b981'],
@@ -103,7 +122,12 @@ class StockDashboardController extends Controller
             'section' => $section,
             'user' => $this->userPayload($request),
             'initialItems' => $result['items'],
-            'initialPagination' => ['currentPage' => $result['currentPage'], 'totalPages' => $result['totalPages']],
+            'initialPagination' => [
+                'currentPage' => $result['currentPage'],
+                'totalPages' => $result['totalPages'],
+                'total' => $result['total'],
+                'perPage' => $result['perPage'],
+            ],
             'products' => Product::orderBy('name')->get(['id', 'name', 'category']),
             'categories' => StockCategory::where('active', true)->orderBy('name')->pluck('name'),
             'agencies' => Agency::orderBy('name')->get(['id', 'name']),
@@ -125,6 +149,11 @@ class StockDashboardController extends Controller
             $rules['quantite'] = ['required', 'integer', 'min:0', 'max:1000000'];
         }
 
+        if ($section === 'receptions') {
+            $rules['document_type'] = ['required', 'string', Rule::in(self::DOCUMENT_TYPES)];
+            $rules['document_file'] = ['required_with:document_type', 'file', 'mimes:pdf', 'max:10240'];
+        }
+
         $data = $request->validate($rules);
 
         if ($section === 'categories') {
@@ -138,6 +167,9 @@ class StockDashboardController extends Controller
                 'agency_id' => $agency?->id, 'status' => $data['quantite'] > 0 ? 'active' : 'out_of_stock',
             ]);
         } else {
+            if ($section === 'receptions' && $request->hasFile('document_file')) {
+                $data = array_merge($data, $this->persistDocument($request, 'receptions'));
+            }
             $this->createOperation($section, $data, $request);
         }
 
@@ -203,6 +235,8 @@ class StockDashboardController extends Controller
             'type' => ['required', Rule::in(['Entrée', 'Sortie'])],
             'quantity' => ['required', 'integer', 'min:1'],
             'product' => ['required', 'string'], 'agency' => ['required', 'string'],
+            'document_type' => ['required', 'string', Rule::in(self::DOCUMENT_TYPES)],
+            'document_file' => ['required_with:document_type', 'file', 'mimes:pdf', 'max:10240'],
         ]);
         $product = Product::where('name', $data['product'])->firstOrFail();
         if ($data['type'] === 'Sortie' && $product->quantity_in_stock < $data['quantity']) {
@@ -210,12 +244,16 @@ class StockDashboardController extends Controller
         }
         $actor = $request->user();
         $agency = $this->agency($data['agency']);
-        DB::transaction(function () use ($data, $product, $request, $actor) {
+        $document = $this->persistDocument($request, 'mouvements');
+        $operation = null;
+        DB::transaction(function () use ($data, $product, $request, $actor, $document, &$operation) {
             $product->increment('quantity_in_stock', $data['type'] === 'Entrée' ? $data['quantity'] : -$data['quantity']);
             $product->refresh()->update(['status' => $product->quantity_in_stock > 0 ? 'active' : 'out_of_stock']);
-            $this->createOperation('mouvements', [
+            $operation = $this->createOperation('mouvements', [
                 'nom' => $product->name, 'detail' => ($data['type'] === 'Entrée' ? '+' : '−') . $data['quantity'] . ' ' . $product->name,
                 'agence' => $data['agency'], 'quantite' => $data['quantity'], 'type' => $data['type'],
+                'document_type' => $document['document_type'], 'document_path' => $document['document_path'],
+                'original_file_name' => $document['original_file_name'],
             ], $request, $product);
         });
 
@@ -228,22 +266,16 @@ class StockDashboardController extends Controller
             '/dashboard-stock/mouvements',
         );
 
-        $rolesToNotify = ['responsable-commercial', 'gestion-administrative', 'admin-local'];
-        $recipients = User::whereHas('role', fn ($q) => $q->whereIn('slug', $rolesToNotify))
-            ->where('status', 'active')
-            ->where(function ($query) use ($agency) {
-                $query->where('agency_id', $agency?->id)
-                    ->orWhereHas('role', fn ($role) => $role->where('name', 'Gestion Administrative'));
-            })
-            ->get();
-
-        foreach ($recipients as $recipient) {
+        foreach ($this->mailRecipients(['responsable-commercial', 'gestion-administrative', 'admin-local'], $agency?->id) as $recipient) {
             Mail::to($recipient->email)->send(new StockMovementMail(
                 type: $data['type'],
                 product: $product,
                 quantity: $data['quantity'],
                 agency: $data['agency'],
                 actor: $actor,
+                documentPath: $document['document_path'],
+                documentType: $document['document_type'],
+                originalFileName: $document['original_file_name'],
             ));
         }
 
@@ -261,8 +293,11 @@ class StockDashboardController extends Controller
 
     public function validateReception(int $id, Request $request)
     {
-        $reception = StockOperation::with('agency')->where('section', 'receptions')->findOrFail($id);
+        $reception = StockOperation::with(['agency', 'creator'])->where('section', 'receptions')->findOrFail($id);
         $reception->update(['status' => 'Validée']);
+
+        $actor = $request->user();
+
         $this->notifyRoles(
             ['Gestion Administrative', 'Administrateur Local', 'Responsable Commercial'],
             $reception->agency_id,
@@ -270,6 +305,11 @@ class StockDashboardController extends Controller
             "La réception {$reception->reference} ({$reception->name}) est disponible à {$reception->agency?->name}.",
             '/dashboard-stock/receptions',
         );
+
+        foreach ($this->mailRecipients(['gestion-administrative', 'admin-local', 'responsable-commercial'], $reception->agency_id) as $recipient) {
+            Mail::to($recipient->email)->send(new ReceptionMail($reception, $actor));
+        }
+
         $this->audit($request, 'Validation', 'réceptions', $reception->reference);
         return back()->with('success', 'Réception validée.');
     }
@@ -432,14 +472,35 @@ class StockDashboardController extends Controller
                 'livraisons' => 'En préparation', default => 'Enregistré',
             },
             'metadata' => ['type' => $data['type'] ?? null],
+            'document_type' => $data['document_type'] ?? null,
+            'document_path' => $data['document_path'] ?? null,
+            'original_file_name' => $data['original_file_name'] ?? null,
         ]);
+    }
+
+    private function persistDocument(Request $request, string $folder): array
+    {
+        $file = $request->file('document_file');
+
+        return [
+            'document_type' => $request->input('document_type'),
+            'document_path' => $file->storeAs(
+                "documents/{$folder}",
+                now()->format('ymdHis') . '_' . Str::random(8) . '.pdf',
+                'public',
+            ),
+            'original_file_name' => $file->getClientOriginalName(),
+        ];
     }
 
     private function itemsFor(string $section, Request $request): array
     {
         $search = $request->input('search', '');
         $agency = $request->input('agency', 'Toutes');
-        $perPage = 15;
+        $perPage = (int) $request->input('perPage', 10);
+        if (!in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
 
         if ($section === 'produits') {
             $query = Product::with('agency')->latest();
@@ -447,13 +508,14 @@ class StockDashboardController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('category', 'like', "%{$search}%")
-                      ->orWhere('reference', 'like', "%{$search}%");
+                      ->orWhere('reference', 'like', "%{$search}%")
+                      ->orWhereHas('agency', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
                 });
             }
             if ($agency !== 'Toutes') {
                 $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
             }
-            $paginator = $query->paginate($perPage);
+            $paginator = $query->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->category,
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
@@ -462,12 +524,15 @@ class StockDashboardController extends Controller
         } elseif ($section === 'categories') {
             $query = StockCategory::query()->orderBy('name');
             if ($search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
             }
             if ($agency !== 'Toutes') {
                 $query->whereIn('name', Product::whereHas('agency', fn ($q) => $q->where('name', $agency))->distinct()->pluck('category'));
             }
-            $paginator = $query->paginate($perPage);
+            $paginator = $query->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn ($category) => [
                 'id' => $category->id, 'nom' => $category->name, 'detail' => $category->description ?: Product::where('category', $category->name)->count() . ' produits',
                 'agence' => 'Toutes', 'quantite' => Product::where('category', $category->name)->count(), 'statut' => $category->active ? 'Active' : 'Inactive',
@@ -478,12 +543,15 @@ class StockDashboardController extends Controller
                   ->orWhere('quantity_in_stock', 0);
             });
             if ($search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('reference', 'like', "%{$search}%");
+                });
             }
             if ($agency !== 'Toutes') {
                 $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
             }
-            $paginator = $query->latest()->paginate($perPage);
+            $paginator = $query->latest()->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->quantity_in_stock . ' disponible(s)',
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
@@ -501,7 +569,7 @@ class StockDashboardController extends Controller
             if ($agency !== 'Toutes') {
                 $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
             }
-            $paginator = $query->paginate($perPage);
+            $paginator = $query->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn (Reservation $r) => [
                 'id' => $r->id,
                 'nom' => $r->user?->name ?? '—',
@@ -520,18 +588,21 @@ class StockDashboardController extends Controller
                 'cancellation_reason' => $r->cancellation_reason,
             ])->values();
         } else {
-            $query = StockOperation::with('agency')->where('section', $section)->latest();
+            $query = StockOperation::with(['agency', 'product', 'creator'])->where('section', $section)->latest();
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('detail', 'like', "%{$search}%")
-                      ->orWhere('reference', 'like', "%{$search}%");
+                      ->orWhere('reference', 'like', "%{$search}%")
+                      ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', "%{$search}%")
+                          ->orWhere('reference', 'like', "%{$search}%"))
+                      ->orWhereHas('creator', fn ($cq) => $cq->where('name', 'like', "%{$search}%"));
                 });
             }
             if ($agency !== 'Toutes') {
                 $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
             }
-            $paginator = $query->paginate($perPage);
+            $paginator = $query->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn ($op) => [
                 'id' => $op->id, 'nom' => $op->name, 'detail' => $op->detail,
                 'agence' => $op->agency?->name ?? '—', 'quantite' => $op->quantity, 'statut' => $op->status,
@@ -543,6 +614,8 @@ class StockDashboardController extends Controller
             'items' => $items,
             'currentPage' => $paginator->currentPage(),
             'totalPages' => $paginator->lastPage(),
+            'total' => $paginator->total(),
+            'perPage' => $perPage,
         ];
     }
 
@@ -571,6 +644,17 @@ class StockDashboardController extends Controller
                 user: $user, title: $title, description: $description,
                 type: 'success', source: 'stock', actionUrl: $url,
             ));
+    }
+
+    private function mailRecipients(array $roleSlugs, ?int $agencyId)
+    {
+        return User::whereHas('role', fn ($q) => $q->whereIn('slug', $roleSlugs))
+            ->where('status', 'active')
+            ->where(function ($query) use ($agencyId) {
+                $query->where('agency_id', $agencyId)
+                    ->orWhereHas('role', fn ($role) => $role->where('name', 'Gestion Administrative'));
+            })
+            ->get();
     }
 
     private function audit(Request $request, string $action, string $section, string $target, array $values = []): void

@@ -1,12 +1,22 @@
-import { useMemo, useState } from "react";
-import { router } from "@inertiajs/react";
-import { stockUser } from "@/Mocks/stockDashboard";
+import { useState } from "react";
+import { router, usePage } from "@inertiajs/react";
 
 export function useStockDashboard(initial = {}) {
-    const [agency, setAgency] = useState("Toutes");
-    const filterAgency = (items = []) => items.filter((item) =>
-        agency === "Toutes" || item.agency === agency || item.agency?.includes(agency)
-    );
+    const { url } = usePage();
+    const basePath = url.split("?")[0];
+    const initialAgency = new URLSearchParams(url.split("?")[1] || "").get("agency") || "Toutes";
+    const [agency, setAgency] = useState(initialAgency);
+
+    const handleAgencyChange = (value) => {
+        setAgency(value);
+        router.reload({
+            data: { agency: value },
+            only: ["dashboardData"],
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
 
     const addMovement = (movement) => router.post("/dashboard-stock/mouvement", movement, { preserveScroll: true });
     const resolveAlert = (id) => {
@@ -19,17 +29,17 @@ export function useStockDashboard(initial = {}) {
     };
 
     return {
-        user: stockUser,
+        user: initial.user || null,
         stats: initial.stats || [],
         health: initial.health || [],
         trend: initial.trend || [],
-        alerts: useMemo(() => filterAgency(initial.alerts), [agency, initial.alerts]),
-        receptions: useMemo(() => filterAgency(initial.receptions), [agency, initial.receptions]),
+        alerts: initial.alerts || [],
+        receptions: initial.receptions || [],
         inventories: initial.inventories || [],
         activity: initial.activity || [],
         products: initial.products || [],
         agencies: initial.agencies || [],
-        agency, setAgency, addMovement, resolveAlert, validateReception,
-        resetDashboard: () => router.reload(),
+        agency, setAgency: handleAgencyChange, addMovement, resolveAlert, validateReception,
+        resetDashboard: () => router.get(basePath, {}, { preserveScroll: true }),
     };
 }

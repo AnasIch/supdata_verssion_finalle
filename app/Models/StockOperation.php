@@ -13,6 +13,7 @@ class StockOperation extends Model
     protected $fillable = [
         'reference', 'section', 'name', 'detail', 'agency_id',
         'product_id', 'created_by', 'quantity', 'status', 'metadata',
+        'document_type', 'document_path', 'original_file_name',
     ];
 
     protected function casts(): array

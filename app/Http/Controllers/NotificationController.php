@@ -29,6 +29,7 @@ class NotificationController extends Controller
                 'currentPage' => $paginator->currentPage(),
                 'lastPage' => $paginator->lastPage(),
                 'total' => $paginator->total(),
+                'perPage' => $paginator->perPage(),
             ],
             'stats' => $stats,
             'unreadCount' => $this->notificationService->getUnreadCount($user),
