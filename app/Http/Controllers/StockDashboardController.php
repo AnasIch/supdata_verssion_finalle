@@ -26,11 +26,6 @@ class StockDashboardController extends Controller
 {
     private const SECTIONS = ['produits', 'categories', 'mouvements', 'receptions', 'livraisons', 'alertes'];
 
-    private const DOCUMENT_TYPES = [
-        'Bon de livraison', 'Bon de réception', 'Bon de transfert', 'Bon de retour',
-        'Facture fournisseur', 'Bon de commande', 'Autre',
-    ];
-
     public function __construct(private NotificationService $notifications, private AuditLogService $auditLogs) {}
 
     public function index(Request $request)
@@ -150,7 +145,7 @@ class StockDashboardController extends Controller
         }
 
         if ($section === 'receptions') {
-            $rules['document_type'] = ['required', 'string', Rule::in(self::DOCUMENT_TYPES)];
+            $rules['document_type'] = ['required', 'string', 'max:255'];
             $rules['document_file'] = ['required_with:document_type', 'file', 'mimes:pdf', 'max:10240'];
         }
 
@@ -235,7 +230,7 @@ class StockDashboardController extends Controller
             'type' => ['required', Rule::in(['Entrée', 'Sortie'])],
             'quantity' => ['required', 'integer', 'min:1'],
             'product' => ['required', 'string'], 'agency' => ['required', 'string'],
-            'document_type' => ['required', 'string', Rule::in(self::DOCUMENT_TYPES)],
+            'document_type' => ['required', 'string', 'max:255'],
             'document_file' => ['required_with:document_type', 'file', 'mimes:pdf', 'max:10240'],
         ]);
         $product = Product::where('name', $data['product'])->firstOrFail();

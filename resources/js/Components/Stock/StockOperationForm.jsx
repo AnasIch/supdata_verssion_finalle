@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Input } from "@/Components/UI/Input";
 import { Label } from "@/Components/UI/Label";
 
-export const DOCUMENT_TYPES = ["Bon de livraison", "Bon de réception", "Bon de transfert", "Bon de retour", "Bon de commande", "Autre"];
 export const MAX_DOCUMENT_MB = 10;
 
 const unique = (values) => [...new Set(values.filter(Boolean))];
@@ -21,10 +20,7 @@ function DocumentFields({ prefix, values, onChange, fileError, onFileError }) {
     return <>
         <div>
             <Label htmlFor={`${prefix}-document-type`}>Type de document</Label>
-            <Select id={`${prefix}-document-type`} value={values.document_type || ""} aria-required="true" onChange={e=>onChange("document_type", e.target.value)}>
-                <option value="">Sélectionner un type</option>
-                {DOCUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </Select>
+            <Input id={`${prefix}-document-type`} className="mt-2" value={values.document_type || ""} aria-required="true" onChange={e=>onChange("document_type", e.target.value)} placeholder="Ex. Bon de livraison, Bon de commande…"/>
         </div>
         <div>
             <Label htmlFor={`${prefix}-document-file`}>Document PDF (10 Mo max)</Label>
