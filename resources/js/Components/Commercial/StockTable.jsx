@@ -5,17 +5,20 @@ const statusLabels = {
     available: "Disponible",
     low: "Stock faible",
     out_of_stock: "Rupture",
+    overstock: "Surabondant",
 };
 
 const statusVariants = {
     available: "success",
     low: "warning",
     out_of_stock: "destructive",
+    overstock: "orange",
 };
 
 function getAvailabilityStatus(row) {
     if (row.quantity_in_stock === 0) return "out_of_stock";
     if (row.quantity_in_stock <= row.minimum_stock) return "low";
+    if (row.maximum_stock && row.quantity_in_stock >= row.maximum_stock) return "overstock";
     return "available";
 }
 

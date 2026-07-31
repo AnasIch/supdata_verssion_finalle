@@ -6,6 +6,7 @@ import PageTitle from "@/Components/Layout/PageTitle";
 import LocalAdminStockStats from "@/Components/LocalAdmin/LocalAdminStockStats";
 import LocalAdminStockFilters from "@/Components/LocalAdmin/LocalAdminStockFilters";
 import LocalAdminStockTable from "@/Components/LocalAdmin/LocalAdminStockTable";
+import CategoryThresholdsCard from "@/Components/LocalAdmin/CategoryThresholdsCard";
 
 export default function LocalAdminStockIndex({
     user,
@@ -14,6 +15,7 @@ export default function LocalAdminStockIndex({
     stats,
     categories,
     agencies,
+    categoryThresholds,
     filters,
 }) {
     const [currentPage, setCurrentPage] = useState(productsMeta.currentPage || 1);
@@ -120,7 +122,9 @@ export default function LocalAdminStockIndex({
                                     className={
                                         p.quantity_in_stock <= p.minimum_stock
                                             ? "font-medium text-red-500"
-                                            : "text-slate-700"
+                                            : p.maximum_stock && p.quantity_in_stock >= p.maximum_stock
+                                              ? "font-medium text-orange-500"
+                                              : "text-slate-700"
                                     }
                                 >
                                     Qté {p.quantity_in_stock}
@@ -163,6 +167,8 @@ export default function LocalAdminStockIndex({
                 <div className="text-sm text-slate-500">
                     {productsMeta.total} produit{productsMeta.total !== 1 ? "s" : ""}
                 </div>
+
+                <CategoryThresholdsCard thresholds={categoryThresholds} />
             </div>
         </DashboardLayout>
     );

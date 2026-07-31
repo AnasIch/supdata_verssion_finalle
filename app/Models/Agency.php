@@ -18,9 +18,17 @@ class Agency extends Model
         'address',
         'phone',
         'email',
+        'storage_capacity',
         'director',
         'director_email',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'storage_capacity' => 'integer',
+        ];
+    }
 
     public function users(): HasMany
     {
@@ -30,5 +38,10 @@ class Agency extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function categoryThresholds(): HasMany
+    {
+        return $this->hasMany(CategoryThreshold::class);
     }
 }

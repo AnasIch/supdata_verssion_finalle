@@ -11,18 +11,18 @@ class StockService
 {
     public function index(Request $request): LengthAwarePaginator
     {
-        $query = Product::query()->with('agency');
+        $query = Product::query()->with('agency')->withCategoryThreshold();
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%");
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.reference', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('category') && $request->category !== 'all') {
-            $query->where('category', $request->category);
+            $query->where('products.category', $request->category);
         }
 
         if ($request->filled('agency') && $request->agency !== 'all') {
@@ -32,36 +32,32 @@ class StockService
         }
 
         if ($request->filled('disponibilite') && $request->disponibilite !== 'all') {
-            match ($request->disponibilite) {
-                'available' => $query->whereColumn('quantity_in_stock', '>', 'minimum_stock'),
-                'low' => $query->whereColumn('quantity_in_stock', '<=', 'minimum_stock')
-                                ->where('quantity_in_stock', '>', 0),
-                'out_of_stock' => $query->where('quantity_in_stock', 0),
-                default => null,
-            };
+            $query->filterByStatus($request->disponibilite);
         }
 
-        $query->orderBy('name', 'asc');
+        $query->orderBy('products.name', 'asc');
 
-        return $query->paginate(10);
+        $paginator = $query->paginate(10);
+
+        $rows = $paginator->getCollection()->map(
+            fn (Product $product) => $product->toStockPayload()
+        );
+
+        $paginator->setCollection(collect($rows));
+
+        return $paginator;
     }
 
     public function getStats(): array
     {
-        $all = Product::query();
-
-        $total = (clone $all)->count();
-        $available = (clone $all)->whereColumn('quantity_in_stock', '>', 'minimum_stock')->count();
-        $low = (clone $all)->whereColumn('quantity_in_stock', '<=', 'minimum_stock')
-                           ->where('quantity_in_stock', '>', 0)
-                           ->count();
-        $outOfStock = (clone $all)->where('quantity_in_stock', 0)->count();
+        $base = Product::query()->withCategoryThreshold();
 
         return [
-            'total' => $total,
-            'available' => $available,
-            'low' => $low,
-            'outOfStock' => $outOfStock,
+            'total' => Product::query()->count(),
+            'available' => (clone $base)->filterByStatus('available')->count(),
+            'low' => (clone $base)->filterByStatus('low')->count(),
+            'outOfStock' => (clone $base)->filterByStatus('out_of_stock')->count(),
+            'overstock' => (clone $base)->filterByStatus('overstock')->count(),
         ];
     }
 
@@ -77,22 +73,12 @@ class StockService
 
     public function getAllProducts(): array
     {
-        return Product::with('agency')
-            ->orderBy('name')
+        return Product::query()
+            ->with('agency')
+            ->withCategoryThreshold()
+            ->orderBy('products.name')
             ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'reference' => $p->reference,
-                'category' => $p->category,
-                'unit_price' => (float) $p->unit_price,
-                'quantity_in_stock' => $p->quantity_in_stock,
-                'reserved_quantity' => $p->reserved_quantity,
-                'minimum_stock' => $p->minimum_stock,
-                'available' => $p->quantity_in_stock - $p->reserved_quantity,
-                'status' => $p->quantity_in_stock <= 0 ? 'out_of_stock' : ($p->isLowStock() ? 'low' : 'available'),
-                'agency' => $p->agency?->name ?? '—',
-            ])
+            ->map(fn (Product $product) => $product->toStockPayload())
             ->toArray();
     }
 }

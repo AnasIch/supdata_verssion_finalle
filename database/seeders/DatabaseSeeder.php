@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             OperationalUsersSeeder::class,
             ProductSeeder::class,
+            CategoryThresholdSeeder::class,
             DemandeSeeder::class,
             AuditLogSeeder::class,
         ]);

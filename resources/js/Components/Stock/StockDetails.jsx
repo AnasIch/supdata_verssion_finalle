@@ -5,7 +5,14 @@ import StockStatusBadge from "./StockStatusBadge";
 function getAvailabilityStatus(product) {
     if (product.quantity_in_stock === 0) return "out_of_stock";
     if (product.quantity_in_stock <= product.minimum_stock) return "low";
+    if (product.maximum_stock && product.quantity_in_stock >= product.maximum_stock) return "overstock";
     return "available";
+}
+
+function stockLevelClass(product) {
+    if (product.quantity_in_stock <= product.minimum_stock) return "text-red-500";
+    if (product.maximum_stock && product.quantity_in_stock >= product.maximum_stock) return "text-orange-500";
+    return "text-slate-900";
 }
 
 export default function StockDetails({ product }) {
@@ -51,7 +58,7 @@ export default function StockDetails({ product }) {
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500">Quantité en stock</p>
-                                    <p className={`text-sm font-bold ${product.quantity_in_stock <= product.minimum_stock ? "text-red-500" : "text-slate-900"}`}>
+                                    <p className={`text-sm font-bold ${stockLevelClass(product)}`}>
                                         {product.quantity_in_stock} unités
                                     </p>
                                 </div>

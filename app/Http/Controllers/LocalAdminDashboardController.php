@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agency;
 use App\Models\Demande;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -22,6 +23,13 @@ class LocalAdminDashboardController extends Controller
         $lastDemandes = $this->getLastDemandes($agencyId);
         $unreadNotifications = $user->notifications()->whereNull('read_at')->count();
 
+        $capacities = Agency::orderBy('name')->get()->map(fn ($agency) => [
+            'id' => $agency->id,
+            'name' => $agency->name,
+            'capacity' => $agency->storage_capacity,
+            'used' => (int) $agency->products()->sum('quantity_in_stock'),
+        ])->values();
+
         return Inertia::render('Dashboard/LocalAdmin/Index', [
             'user' => [
                 'id' => $user->id,
@@ -36,6 +44,7 @@ class LocalAdminDashboardController extends Controller
             'decisionsData' => $decisionsData,
             'lastDemandes' => $lastDemandes,
             'unreadNotifications' => $unreadNotifications,
+            'capacities' => $capacities,
         ]);
     }
 

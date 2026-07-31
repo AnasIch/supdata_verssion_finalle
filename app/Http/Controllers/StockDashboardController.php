@@ -30,12 +30,13 @@ class StockDashboardController extends Controller
 
     public function index(Request $request)
     {
-        $products = Product::with('agency')->get();
+        $products = Product::query()->with('agency')->withCategoryThreshold()->get();
         $operations = StockOperation::with(['agency', 'product'])->latest()->get();
         $reservations = Reservation::all();
         $available = $products->sum(fn ($p) => max(0, $p->quantity_in_stock - $p->reserved_quantity));
         $low = $products->filter(fn ($p) => $p->quantity_in_stock > 0 && $p->isLowStock())->count();
         $out = $products->where('quantity_in_stock', 0)->count();
+        $overstock = $products->filter(fn ($p) => $p->isOverstock())->count();
         $totalUnits = $products->sum(fn ($p) => $p->quantity_in_stock);
         $pendingDeliveries = $reservations->where('status', 'reserved')->count();
         $completedDeliveries = $reservations->where('status', 'delivered')->count();
@@ -49,9 +50,11 @@ class StockDashboardController extends Controller
         $receptions = $receptions->take(8);
         $resolvedProductIds = $operations->where('section', 'alertes')->where('status', 'Traitée')->pluck('product_id');
 
-        $alertQuery = Product::with('agency')
-            ->where(fn ($q) => $q->where('quantity_in_stock', '<', DB::raw('minimum_stock'))->orWhere('quantity_in_stock', 0))
-            ->whereNotIn('id', $resolvedProductIds);
+        $alertQuery = Product::query()
+            ->with('agency')
+            ->withCategoryThreshold()
+            ->whereRaw('(products.quantity_in_stock < ' . Product::effectiveMinSql() . ' OR products.quantity_in_stock = 0)')
+            ->whereNotIn('products.id', $resolvedProductIds);
         if ($agencyFilter !== 'Toutes') {
             $alertQuery->whereHas('agency', fn ($q) => $q->where('name', $agencyFilter));
         }
@@ -79,15 +82,16 @@ class StockDashboardController extends Controller
                     ['id' => 'receptions', 'label' => 'Réceptions', 'value' => $receptionsAll->whereNotIn('status', ['Validée'])->count(), 'detail' => 'à contrôler'],
                 ],
                 'health' => [
-                    ['label' => 'Disponible', 'value' => $products->count() - $low - $out, 'color' => '#10b981'],
+                    ['label' => 'Disponible', 'value' => $products->count() - $low - $out - $overstock, 'color' => '#10b981'],
                     ['label' => 'Stock faible', 'value' => $low, 'color' => '#f59e0b'],
+                    ['label' => 'Surabondant', 'value' => $overstock, 'color' => '#f97316'],
                     ['label' => 'Rupture', 'value' => $out, 'color' => '#ef4444'],
                 ],
                 'trend' => $trend,
                 'alerts' => $alerts->map(fn ($p) => [
                     'id' => $p->id, 'product' => $p->name, 'category' => $p->category,
                     'agency' => $p->agency?->name ?? '—', 'available' => $p->quantity_in_stock,
-                    'reserved' => $p->reserved_quantity, 'threshold' => $p->minimum_stock,
+                    'reserved' => $p->reserved_quantity, 'threshold' => $p->effectiveMinimumStock(),
                     'status' => $p->quantity_in_stock === 0 ? 'Rupture' : 'Stock faible',
                     'impact' => 'Disponibilité opérationnelle',
                 ])->values(),
@@ -498,12 +502,12 @@ class StockDashboardController extends Controller
         }
 
         if ($section === 'produits') {
-            $query = Product::with('agency')->latest();
+            $query = Product::query()->with('agency')->withCategoryThreshold()->latest('products.created_at');
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('category', 'like', "%{$search}%")
-                      ->orWhere('reference', 'like', "%{$search}%")
+                    $q->where('products.name', 'like', "%{$search}%")
+                      ->orWhere('products.category', 'like', "%{$search}%")
+                      ->orWhere('products.reference', 'like', "%{$search}%")
                       ->orWhereHas('agency', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
                 });
             }
@@ -514,7 +518,7 @@ class StockDashboardController extends Controller
             $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->category,
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,
-                'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Stock faible' : 'Disponible'),
+                'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Stock faible' : ($p->isOverstock() ? 'Surabondant' : 'Disponible')),
             ])->values();
         } elseif ($section === 'categories') {
             $query = StockCategory::query()->orderBy('name');
@@ -533,20 +537,19 @@ class StockDashboardController extends Controller
                 'agence' => 'Toutes', 'quantite' => Product::where('category', $category->name)->count(), 'statut' => $category->active ? 'Active' : 'Inactive',
             ])->values();
         } elseif ($section === 'alertes') {
-            $query = Product::with('agency')->where(function ($q) {
-                $q->where('quantity_in_stock', '<', DB::raw('minimum_stock'))
-                  ->orWhere('quantity_in_stock', 0);
-            });
+            $query = Product::query()->with('agency')->withCategoryThreshold()->whereRaw(
+                '(products.quantity_in_stock < ' . Product::effectiveMinSql() . ' OR products.quantity_in_stock = 0)'
+            );
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('reference', 'like', "%{$search}%");
+                    $q->where('products.name', 'like', "%{$search}%")
+                      ->orWhere('products.reference', 'like', "%{$search}%");
                 });
             }
             if ($agency !== 'Toutes') {
                 $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
             }
-            $paginator = $query->latest()->paginate($perPage)->withQueryString();
+            $paginator = $query->latest('products.created_at')->paginate($perPage)->withQueryString();
             $items = $paginator->getCollection()->map(fn ($p) => [
                 'id' => $p->id, 'nom' => $p->name, 'detail' => $p->quantity_in_stock . ' disponible(s)',
                 'agence' => $p->agency?->name ?? '—', 'quantite' => $p->quantity_in_stock,

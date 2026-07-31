@@ -226,6 +226,10 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
 Route::middleware(['auth', 'role:admin_local'])->group(function () {
     Route::get('/dashboard-admin-local/stock', [\App\Http\Controllers\LocalAdminStockController::class, 'index'])->name('al.stock');
 
+    Route::patch('/dashboard-admin-local/stock/categories/seuils', [\App\Http\Controllers\LocalAdminStockController::class, 'updateCategoryThresholds'])->name('al.stock.categories.thresholds');
+
+    Route::patch('/dashboard-admin-local/stock/{id}/seuils', [\App\Http\Controllers\LocalAdminStockController::class, 'updateThresholds'])->name('al.stock.thresholds');
+
     Route::get('/dashboard-admin-local/stock/{id}', [\App\Http\Controllers\LocalAdminStockController::class, 'show'])->name('al.stock.show');
 
     Route::get('/dashboard-admin-local/notifications', [\App\Http\Controllers\NotificationController::class, 'localAdminIndex'])->name('al.notifications');

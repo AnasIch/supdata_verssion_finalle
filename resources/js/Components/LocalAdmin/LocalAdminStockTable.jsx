@@ -6,7 +6,14 @@ import StockStatusBadge from "@/Components/Stock/StockStatusBadge";
 function getAvailabilityStatus(row) {
     if (row.quantity_in_stock === 0) return "out_of_stock";
     if (row.quantity_in_stock <= row.minimum_stock) return "low";
+    if (row.maximum_stock && row.quantity_in_stock >= row.maximum_stock) return "overstock";
     return "available";
+}
+
+function stockLevelClass(row) {
+    if (row.quantity_in_stock <= row.minimum_stock) return "text-red-500";
+    if (row.maximum_stock && row.quantity_in_stock >= row.maximum_stock) return "text-orange-500";
+    return "text-slate-900";
 }
 
 function formatDate(dateStr) {
@@ -53,9 +60,22 @@ export default function LocalAdminStockTable({ data, onView }) {
         {
             header: "Quantité",
             cell: (row) => (
-                <span className={`font-medium ${row.quantity_in_stock <= row.minimum_stock ? "text-red-500" : "text-slate-900"}`}>
+                <span className={`font-medium ${stockLevelClass(row)}`}>
                     {row.quantity_in_stock}
                 </span>
+            ),
+        },
+        {
+            header: "Seuils (min → max)",
+            cell: (row) => (
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-600">
+                        {row.minimum_stock} → {row.maximum_stock ?? "—"}
+                    </span>
+                    {row.threshold_source === "category" && (
+                        <Badge variant="secondary" className="text-[10px]">Catégorie</Badge>
+                    )}
+                </div>
             ),
         },
         {

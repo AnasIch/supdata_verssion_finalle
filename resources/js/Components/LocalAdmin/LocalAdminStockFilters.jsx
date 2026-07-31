@@ -9,6 +9,7 @@ export default function LocalAdminStockFilters({ filters, categories, agencies, 
         { value: "all", label: "Tous les statuts" },
         { value: "available", label: "Disponible" },
         { value: "low", label: "Stock faible" },
+        { value: "overstock", label: "Surabondant" },
         { value: "out_of_stock", label: "Rupture" },
     ];
 

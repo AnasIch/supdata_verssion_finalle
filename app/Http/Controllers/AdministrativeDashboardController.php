@@ -256,12 +256,12 @@ class AdministrativeDashboardController extends Controller
         $search = $request->input('search', '');
         $agency = $request->input('agency', 'Toutes');
 
-        $query = Product::with('agency');
+        $query = Product::query()->with('agency')->withCategoryThreshold();
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
-                  ->orWhere('reference', 'like', "%{$search}%")
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.category', 'like', "%{$search}%")
+                  ->orWhere('products.reference', 'like', "%{$search}%")
                   ->orWhereHas('agency', fn ($aq) => $aq->where('name', 'like', "%{$search}%"));
             });
         }
@@ -269,12 +269,12 @@ class AdministrativeDashboardController extends Controller
             $query->whereHas('agency', fn ($q) => $q->where('name', $agency));
         }
 
-        $paginator = $query->latest()->paginate(15);
+        $paginator = $query->latest('products.created_at')->paginate(15);
         $items = $paginator->getCollection()->map(fn ($p) => [
             'id' => $p->reference, 'nom' => $p->name, 'categorie' => $p->category,
             'agence' => $p->agency?->name ?? '—', 'disponible' => max(0, $p->quantity_in_stock - $p->reserved_quantity),
-            'reserve' => $p->reserved_quantity, 'seuil' => $p->minimum_stock, 'emplacement' => 'Stock principal',
-            'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Critique' : 'Disponible'),
+            'reserve' => $p->reserved_quantity, 'seuil' => $p->effectiveMinimumStock(), 'emplacement' => 'Stock principal',
+            'statut' => $p->quantity_in_stock === 0 ? 'Rupture' : ($p->isLowStock() ? 'Critique' : ($p->isOverstock() ? 'Surabondant' : 'Disponible')),
         ]);
 
         return [

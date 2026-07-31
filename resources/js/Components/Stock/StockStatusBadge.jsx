@@ -4,6 +4,7 @@ const statusConfig = {
     available: { label: "Disponible", variant: "success" },
     low: { label: "Stock faible", variant: "warning" },
     out_of_stock: { label: "Rupture", variant: "destructive" },
+    overstock: { label: "Surabondant", variant: "orange" },
 };
 
 export default function StockStatusBadge({ status }) {

@@ -32,7 +32,7 @@ class DashboardController extends Controller
             'rejectedDemandes' => Demande::where('status', 'rejected')->count(),
             'inProgressDemandes' => Demande::where('status', 'in_progress')->count(),
             'totalStockValue' => Product::sum(\DB::raw('unit_price * quantity_in_stock')),
-            'lowStockProducts' => Product::whereRaw('quantity_in_stock <= minimum_stock')->count(),
+            'lowStockProducts' => Product::query()->withCategoryThreshold()->whereRaw('products.quantity_in_stock <= ' . Product::effectiveMinSql())->count(),
         ];
 
         // Recent users (last 5)
