@@ -9,7 +9,9 @@ const iconMap = {
     "Rapports": BarChart3,
 };
 
-export default function QuickActionsCard({ data }) {
+export default function QuickActionsCard({ data = [] }) {
+    const actions = Array.isArray(data) ? data : [];
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -24,7 +26,7 @@ export default function QuickActionsCard({ data }) {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 gap-3">
-                        {data.map((action) => {
+                        {actions.map((action) => {
                             const Icon = iconMap[action.label] || ClipboardList;
                             return (
                                 <button

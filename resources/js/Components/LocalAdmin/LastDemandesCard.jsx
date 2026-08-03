@@ -8,10 +8,25 @@ import { Badge } from "@/Components/UI/Badge";
 const statusVariant = (status) => {
     if (status === "Rejetée") return "destructive";
     if (status === "En attente") return "warning";
+    if (status === "Soumise") return "secondary";
     return "success";
 };
 
-export default function LastDemandesCard({ data }) {
+const priorityLabels = {
+    urgent: "Urgente",
+    high: "Haute",
+    medium: "Moyenne",
+    low: "Basse",
+};
+
+const priorityVariants = {
+    urgent: "destructive",
+    high: "destructive",
+    medium: "warning",
+    low: "secondary",
+};
+
+export default function LastDemandesCard({ data = [], basePath }) {
     const columns = [
         {
             header: "Référence",
@@ -23,27 +38,31 @@ export default function LastDemandesCard({ data }) {
             accessorKey: "product",
         },
         {
-            header: "Responsable Commercial",
+            header: "Demandeur",
             accessorKey: "requester",
         },
         {
-            header: "Agence",
-            accessorKey: "agency",
-        },
-        {
-            header: "Date",
-            accessorKey: "date",
+            header: "Priorité",
+            cell: (row) => (
+                <Badge variant={priorityVariants[row.priority] || "secondary"}>
+                    {priorityLabels[row.priority] || row.priority}
+                </Badge>
+            ),
         },
         {
             header: "Statut",
             cell: (row) => <Badge variant={statusVariant(row.status)}>{row.status}</Badge>,
         },
         {
+            header: "Date",
+            accessorKey: "date",
+        },
+        {
             header: "Action",
             cell: (row) => (
                 <button
                     type="button"
-                    onClick={() => router.get(`/demandes/${row.id}`)}
+                    onClick={() => router.get(`${basePath}/demandes/${row.id}`)}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100"
                     aria-label="Voir les détails de la demande"
                 >
@@ -64,7 +83,7 @@ export default function LastDemandesCard({ data }) {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-sm font-semibold text-slate-900">
-                        Dernières demandes reçues
+                        Demandes récentes
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

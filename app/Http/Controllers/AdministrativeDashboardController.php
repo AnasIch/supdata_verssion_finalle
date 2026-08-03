@@ -170,9 +170,15 @@ class AdministrativeDashboardController extends Controller
 
         $localAdminRole = \App\Models\Role::where('name', 'Administrateur Local')->value('id');
         $localAdminUsers = User::where('role_id', $localAdminRole)
-            ->where('agency_id', $demande->agency_id)
             ->where('status', 'active')
+            ->where('agency_id', $demande->agency_id)
             ->get();
+
+        if ($localAdminUsers->isEmpty()) {
+            $localAdminUsers = User::where('role_id', $localAdminRole)
+                ->where('status', 'active')
+                ->get();
+        }
 
         if ($data['decision'] === 'approved') {
             $localAdminUsers->each(function (User $user) use ($demande) {

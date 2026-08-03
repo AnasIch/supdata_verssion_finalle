@@ -18,7 +18,7 @@ const iconMap = {
     notifications: Bell,
 };
 
-export default function KpiCards({ data }) {
+export default function KpiCards({ data = [] }) {
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {data.map((kpi, i) => {

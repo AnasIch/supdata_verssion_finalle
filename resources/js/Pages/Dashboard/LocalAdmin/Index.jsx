@@ -1,10 +1,13 @@
 import { Head } from "@inertiajs/react";
 import DashboardLayout from "@/Layouts/DashboardLayout";
 import { useLocalAdminDashboard } from "@/Hooks/useLocalAdminDashboard";
+import { getDashboardPath } from "@/lib/mockAuth";
 import DashboardHeader from "@/Components/LocalAdmin/DashboardHeader";
 import KpiCards from "@/Components/LocalAdmin/KpiCards";
-import DashboardCharts from "@/Components/LocalAdmin/DashboardCharts";
 import LastDemandesCard from "@/Components/LocalAdmin/LastDemandesCard";
+import DashboardCharts from "@/Components/LocalAdmin/DashboardCharts";
+import NotificationsCard from "@/Components/LocalAdmin/NotificationsCard";
+import QuickActionsCard from "@/Components/LocalAdmin/QuickActionsCard";
 
 export default function LocalAdminDashboard({
     user,
@@ -12,8 +15,12 @@ export default function LocalAdminDashboard({
     evolutionData,
     decisionsData,
     lastDemandes,
+    recentNotifications,
     unreadNotifications,
+    quickActions,
 }) {
+    const basePath = getDashboardPath(user?.role);
+
     const {
         kpiData,
         evolutionData: chartEvolution,
@@ -26,6 +33,7 @@ export default function LocalAdminDashboard({
         evolutionData,
         decisionsData,
         lastDemandes,
+        recentNotifications,
         unreadNotifications,
     });
 
@@ -44,9 +52,14 @@ export default function LocalAdminDashboard({
 
                 <KpiCards data={kpiData} />
 
+                <LastDemandesCard data={tableDemandes} basePath={basePath} />
+
                 <DashboardCharts evolutionData={chartEvolution} decisionsData={chartDecisions} />
 
-                <LastDemandesCard data={tableDemandes} />
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <NotificationsCard data={recentNotifications} basePath={basePath} />
+                    <QuickActionsCard data={quickActions} />
+                </div>
             </div>
         </DashboardLayout>
     );

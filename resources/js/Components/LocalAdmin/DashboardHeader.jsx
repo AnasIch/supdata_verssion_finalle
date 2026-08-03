@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Calendar, RefreshCw } from "lucide-react";
 
-export default function DashboardHeader({ user, isRefreshing, onRefresh }) {
+export default function DashboardHeader({ user = {}, isRefreshing = false, onRefresh }) {
     const now = new Date();
     const dateStr = now.toLocaleDateString("fr-FR", {
         weekday: "long",

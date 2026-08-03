@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit3, Eye, FileDown, FileSpreadsheet, FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { Edit3, Eye, FileSpreadsheet, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/Components/UI/Button";
 import { DataTable } from "@/Components/UI/DataTable";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/Components/UI/Dialog";
@@ -33,14 +33,8 @@ export default function InventoryTable({ inventories, pagination, onPageChange, 
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => download(row, "pdf")}>
-                        <FileText className="size-4" />Télécharger PDF
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => download(row, "excel")}>
                         <FileSpreadsheet className="size-4" />Exporter Excel
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => download(row, "csv")}>
-                        <FileDown className="size-4" />Exporter CSV
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>

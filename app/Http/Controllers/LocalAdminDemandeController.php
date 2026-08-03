@@ -8,6 +8,7 @@ use App\Models\Demande;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AuditLogService;
+use App\Services\DemandeStatisticsService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class LocalAdminDemandeController extends Controller
     public function __construct(
         private AuditLogService $auditLogService,
         private NotificationService $notificationService,
+        private DemandeStatisticsService $demandeStatisticsService,
     ) {}
 
     public function index(Request $request)
@@ -27,36 +29,12 @@ class LocalAdminDemandeController extends Controller
         $user = $request->user();
         $user->load(['role', 'agency']);
 
-        $query = Demande::whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])
-            ->with(['user', 'agency', 'confirmedBy']);
+        $demandes = $this->demandeStatisticsService->adminLocalDemandesQuery($request)
+            ->with(['user', 'agency', 'confirmedBy'])
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('product_name', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"));
-            });
-        }
-
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('priority') && $request->priority !== 'all') {
-            $query->where('priority', $request->priority);
-        }
-
-        $query->orderBy('created_at', 'desc');
-
-        $demandes = $query->paginate(10)->withQueryString();
-
-        $stats = [
-            'total' => Demande::whereIn('status', ['submitted', 'pending_local_admin', 'confirmed_local_admin', 'rejected_local_admin'])->count(),
-            'pending' => Demande::whereIn('status', ['submitted', 'pending_local_admin'])->count(),
-            'confirmed' => Demande::where('status', 'confirmed_local_admin')->count(),
-            'rejected' => Demande::where('status', 'rejected_local_admin')->count(),
-        ];
+        $stats = $this->demandeStatisticsService->getAdminLocalStats();
 
         return Inertia::render('Demandes/Index', [
             'user' => [

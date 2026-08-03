@@ -31,7 +31,7 @@ export default function Header({ breadcrumbs = [], user, onMobileMenuOpen, showN
             <button onClick={toggleTheme} className="flex size-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" aria-label={dark ? "Activer le thème clair" : "Activer le thème sombre"}>{dark ? <Sun className="size-5" /> : <Moon className="size-5" />}</button>
 
             <div className="hidden border-l border-slate-200 pl-2 md:block">
-                <UserDropdown user={user} hideSettings={user?.role === "Super Admin" || user?.role === "Responsable Commercial" || user?.role === "Administrateur Local" || user?.role === "Responsable Stock" || user?.role === "Gestion Administrative"} />
+                <UserDropdown user={user} />
             </div>
         </header>
     );

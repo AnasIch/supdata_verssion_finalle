@@ -18,7 +18,7 @@ const badgeVariants = {
     Info: "secondary",
 };
 
-export default function NotificationsCard({ data }) {
+export default function NotificationsCard({ data = [] }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}

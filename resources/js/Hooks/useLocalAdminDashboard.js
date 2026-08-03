@@ -6,6 +6,7 @@ export function useLocalAdminDashboard({
     evolutionData = [],
     decisionsData = [],
     lastDemandes = [],
+    recentNotifications = [],
     unreadNotifications = 0,
 } = {}) {
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -61,7 +62,7 @@ export function useLocalAdminDashboard({
     const refresh = useCallback(() => {
         setIsRefreshing(true);
         router.reload({
-            only: ["stats", "evolutionData", "decisionsData", "lastDemandes", "unreadNotifications"],
+            only: ["stats", "evolutionData", "decisionsData", "lastDemandes", "recentNotifications", "unreadNotifications"],
             onFinish: () => setIsRefreshing(false),
         });
     }, []);
