@@ -274,8 +274,6 @@ Route::get('/dashboard-stock/categories', fn (Request $request) => app(StockDash
 
 Route::get('/dashboard-stock/mouvements', fn (Request $request) => app(StockDashboardController::class)->operations('mouvements', $request))->name('rs.movements');
 
-Route::get('/dashboard-stock/receptions', fn (Request $request) => app(StockDashboardController::class)->operations('receptions', $request))->name('rs.receptions');
-
 Route::get('/dashboard-stock/livraisons', fn (Request $request) => app(StockDashboardController::class)->operations('livraisons', $request))->name('rs.deliveries');
 
 Route::get('/dashboard-stock/alertes', fn (Request $request) => app(StockDashboardController::class)->operations('alertes', $request))->name('rs.alerts');

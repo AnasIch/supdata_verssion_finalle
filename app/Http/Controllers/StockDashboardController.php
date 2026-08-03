@@ -24,7 +24,7 @@ use Inertia\Inertia;
 
 class StockDashboardController extends Controller
 {
-    private const SECTIONS = ['produits', 'categories', 'mouvements', 'receptions', 'livraisons', 'alertes'];
+    private const SECTIONS = ['produits', 'categories', 'mouvements', 'livraisons', 'alertes'];
 
     public function __construct(private NotificationService $notifications, private AuditLogService $auditLogs) {}
 
@@ -236,6 +236,8 @@ class StockDashboardController extends Controller
             'product' => ['required', 'string'], 'agency' => ['required', 'string'],
             'document_type' => ['required', 'string', 'max:255'],
             'document_file' => ['required_with:document_type', 'file', 'mimes:pdf', 'max:10240'],
+            'fournisseur' => ['nullable', 'string', 'max:255'],
+            'bon_livraison' => ['nullable', 'string', 'max:255'],
         ]);
         $product = Product::where('name', $data['product'])->firstOrFail();
         if ($data['type'] === 'Sortie' && $product->quantity_in_stock < $data['quantity']) {
@@ -253,6 +255,7 @@ class StockDashboardController extends Controller
                 'agence' => $data['agency'], 'quantite' => $data['quantity'], 'type' => $data['type'],
                 'document_type' => $document['document_type'], 'document_path' => $document['document_path'],
                 'original_file_name' => $document['original_file_name'],
+                'fournisseur' => $data['fournisseur'] ?? null, 'bon_livraison' => $data['bon_livraison'] ?? null,
             ], $request, $product);
         });
 
@@ -302,7 +305,7 @@ class StockDashboardController extends Controller
             $reception->agency_id,
             'Réception validée',
             "La réception {$reception->reference} ({$reception->name}) est disponible à {$reception->agency?->name}.",
-            '/dashboard-stock/receptions',
+            '/dashboard-stock/mouvements',
         );
 
         foreach ($this->mailRecipients(['gestion-administrative', 'admin-local', 'responsable-commercial'], $reception->agency_id) as $recipient) {
@@ -470,7 +473,11 @@ class StockDashboardController extends Controller
                 'receptions' => 'À contrôler',
                 'livraisons' => 'En préparation', default => 'Enregistré',
             },
-            'metadata' => ['type' => $data['type'] ?? null],
+            'metadata' => [
+                'type' => $data['type'] ?? null,
+                'fournisseur' => $data['fournisseur'] ?? null,
+                'bon_livraison' => $data['bon_livraison'] ?? null,
+            ],
             'document_type' => $data['document_type'] ?? null,
             'document_path' => $data['document_path'] ?? null,
             'original_file_name' => $data['original_file_name'] ?? null,

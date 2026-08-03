@@ -35,22 +35,19 @@ export default function StockOperationForm({ section, values, onChange, productO
     const categories = unique([...categoryOptions, values.detail]);
     const [fileError, setFileError] = useState("");
 
-    if (section === "mouvements") return <div className="grid gap-4 sm:grid-cols-2">
-        <div><Label htmlFor="movement-type">Type de mouvement</Label><Select id="movement-type" value={values.type || "Entrée"} onChange={e=>onChange("type",e.target.value)}><option>Entrée</option><option>Sortie</option></Select></div>
-        <div><Label htmlFor="movement-product">Produit</Label><Select id="movement-product" value={values.nom} onChange={e=>onChange("nom",e.target.value)}><option value="">Sélectionner un produit</option>{products.map(p=><option key={p}>{p}</option>)}</Select></div>
-        <div><Label htmlFor="movement-agency">Agence</Label><Select id="movement-agency" value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option>Casablanca</option><option>Marrakech</option></Select></div>
-        <div><Label htmlFor="movement-quantity">Quantité</Label><Input id="movement-quantity" className="mt-2" type="number" min="1" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
-        <div className="sm:col-span-2"><Label htmlFor="movement-reason">Origine, destination ou motif</Label><Input id="movement-reason" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)} placeholder="Ex. Réception fournisseur, livraison client…"/></div>
-        <DocumentFields prefix="movement" values={values} onChange={onChange} fileError={fileError} onFileError={setFileError} />
-    </div>;
-
-    if (section === "receptions") return <div className="grid gap-4 sm:grid-cols-2">
-        <div><Label htmlFor="reception-supplier">Fournisseur</Label><Input id="reception-supplier" className="mt-2" value={values.nom} onChange={e=>onChange("nom",e.target.value)} placeholder="Nom du fournisseur"/></div>
-        <div><Label htmlFor="reception-reference">Bon de livraison / marchandises</Label><Input id="reception-reference" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)} placeholder="BL-2026-… · références reçues"/></div>
-        <div><Label htmlFor="reception-agency">Agence de réception</Label><Select id="reception-agency" value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option>Casablanca</option><option>Marrakech</option></Select></div>
-        <div><Label htmlFor="reception-quantity">Quantité reçue</Label><Input id="reception-quantity" className="mt-2" type="number" min="1" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
-        <DocumentFields prefix="reception" values={values} onChange={onChange} fileError={fileError} onFileError={setFileError} />
-    </div>;
+    if (section === "mouvements") {
+        const isEntree = (values.type || "Entrée") === "Entrée";
+        return <div className="grid gap-4 sm:grid-cols-2">
+            <div><Label htmlFor="movement-type">Type de mouvement</Label><Select id="movement-type" value={values.type || "Entrée"} onChange={e=>onChange("type",e.target.value)}><option>Entrée</option><option>Sortie</option></Select></div>
+            <div><Label htmlFor="movement-product">Produit</Label><Select id="movement-product" value={values.nom} onChange={e=>onChange("nom",e.target.value)}><option value="">Sélectionner un produit</option>{products.map(p=><option key={p}>{p}</option>)}</Select></div>
+            {isEntree && <div><Label htmlFor="movement-supplier">Fournisseur</Label><Input id="movement-supplier" className="mt-2" value={values.fournisseur || ""} onChange={e=>onChange("fournisseur",e.target.value)} placeholder="Nom du fournisseur"/></div>}
+            {isEntree && <div><Label htmlFor="movement-bon">Bon de livraison</Label><Input id="movement-bon" className="mt-2" value={values.bon_livraison || ""} onChange={e=>onChange("bon_livraison",e.target.value)} placeholder="BL-2026-… · références reçues"/></div>}
+            <div><Label htmlFor="movement-agency">Agence</Label><Select id="movement-agency" value={values.agence} onChange={e=>onChange("agence",e.target.value)}><option>Casablanca</option><option>Marrakech</option></Select></div>
+            <div><Label htmlFor="movement-quantity">Quantité</Label><Input id="movement-quantity" className="mt-2" type="number" min="1" value={values.quantite} onChange={e=>onChange("quantite",e.target.value)}/></div>
+            <div className="sm:col-span-2"><Label htmlFor="movement-reason">Origine, destination ou motif</Label><Input id="movement-reason" className="mt-2" value={values.detail} onChange={e=>onChange("detail",e.target.value)} placeholder="Ex. Réception fournisseur, livraison client…"/></div>
+            <DocumentFields prefix="movement" values={values} onChange={onChange} fileError={fileError} onFileError={setFileError} />
+        </div>;
+    }
 
     const isCategory = section === "categories";
 

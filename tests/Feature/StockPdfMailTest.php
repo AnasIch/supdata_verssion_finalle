@@ -66,6 +66,8 @@ it('attaches only the uploaded document to the movement email', function () {
         'product' => 'Dell Latitude 5540',
         'agency' => 'Casablanca',
         'document_type' => 'Bon de livraison',
+        'fournisseur' => 'Fournisseur Atlas',
+        'bon_livraison' => 'BL-2026-001',
         'document_file' => UploadedFile::fake()->create('BL-2026-001.pdf', 100, 'application/pdf'),
     ])->assertRedirect()->assertSessionHas('success');
 
@@ -73,6 +75,8 @@ it('attaches only the uploaded document to the movement email', function () {
 
     expect($operation->quantity)->toBe(3);
     expect($operation->metadata['type'])->toBe('Entrée');
+    expect($operation->metadata['fournisseur'])->toBe('Fournisseur Atlas');
+    expect($operation->metadata['bon_livraison'])->toBe('BL-2026-001');
     expect($operation->document_type)->toBe('Bon de livraison');
     expect($operation->original_file_name)->toBe('BL-2026-001.pdf');
     expect(Storage::disk('public')->exists($operation->document_path))->toBeTrue();
@@ -209,42 +213,18 @@ it('rejects a document file larger than 10 Mo', function () {
     expect(StockOperation::where('section', 'mouvements')->count())->toBe(0);
 });
 
-it('requires a document type and a PDF when creating a reception', function () {
-    $this->actingAs($this->stockUser)->post('/dashboard-stock/receptions', [
-        'nom' => 'Fournisseur Atlas',
-        'detail' => '10 unités de papier A4',
-        'agence' => 'Casablanca',
-        'quantite' => 10,
-    ])->assertSessionHasErrors('document_type');
-
-    $this->actingAs($this->stockUser)->post('/dashboard-stock/receptions', [
-        'nom' => 'Fournisseur Atlas',
-        'detail' => '10 unités de papier A4',
-        'agence' => 'Casablanca',
-        'quantite' => 10,
-        'document_type' => 'Bon de livraison',
-    ])->assertSessionHasErrors('document_file');
-
-    expect(StockOperation::where('section', 'receptions')->count())->toBe(0);
-});
-
-it('stores the uploaded document on a reception and attaches it to the validation email', function () {
+it('attaches the uploaded document to the reception validation email', function () {
     Mail::fake();
 
-    $this->actingAs($this->stockUser)->post('/dashboard-stock/receptions', [
-        'nom' => 'Fournisseur Atlas',
-        'detail' => '10 unités de papier A4',
-        'agence' => 'Casablanca',
-        'quantite' => 10,
+    $reception = StockOperation::create([
+        'reference' => 'REC-2026-0002', 'section' => 'receptions', 'name' => 'Fournisseur Atlas',
+        'detail' => '10 unités de papier A4', 'agency_id' => $this->agency->id,
+        'created_by' => $this->stockUser->id, 'quantity' => 10, 'status' => 'À contrôler',
         'document_type' => 'Bon de réception',
-        'document_file' => UploadedFile::fake()->create('BR-2026-001.pdf', 100, 'application/pdf'),
-    ])->assertRedirect()->assertSessionHas('success');
-
-    $reception = StockOperation::where('section', 'receptions')->firstOrFail();
-
-    expect($reception->document_type)->toBe('Bon de réception');
-    expect($reception->original_file_name)->toBe('BR-2026-001.pdf');
-    expect(Storage::disk('public')->exists($reception->document_path))->toBeTrue();
+        'document_path' => 'documents/mouvements/br-2026-001.pdf',
+        'original_file_name' => 'BR-2026-001.pdf',
+    ]);
+    Storage::disk('public')->put($reception->document_path, '%PDF-1.4 test');
 
     $this->actingAs($this->stockUser)->patch("/dashboard-stock/receptions/{$reception->id}/valider")
         ->assertRedirect()->assertSessionHas('success');

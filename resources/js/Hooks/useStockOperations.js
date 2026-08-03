@@ -79,12 +79,11 @@ export function useStockOperations(section, initialItems = [], initialPagination
     };
 
     const createItem = (values) => section === "mouvements"
-        ? router.post('/dashboard-stock/mouvement', { type: values.type, product: values.nom, agency: values.agence, quantity: values.quantite, document_type: values.document_type, document_file: values.document_file }, { preserveScroll: true })
+        ? router.post('/dashboard-stock/mouvement', { type: values.type, product: values.nom, agency: values.agence, quantity: values.quantite, document_type: values.document_type, document_file: values.document_file, fournisseur: values.fournisseur || null, bon_livraison: values.bon_livraison || null }, { preserveScroll: true })
         : router.post(`/dashboard-stock/${section}`, values, { preserveScroll: true });
     const updateItem = (id, values) => router.put(`/dashboard-stock/${section}/${id}`, values, { preserveScroll: true });
     const deleteItem = (id) => router.delete(`/dashboard-stock/${section}/${id}`, { preserveScroll: true });
     const transitionItem = (id) => {
-        if (section === "receptions") router.patch(`/dashboard-stock/receptions/${id}/valider`, {}, { preserveScroll: true });
         if (section === "livraisons") router.patch(`/dashboard-stock/livraisons/${id}/livrer`, {}, { preserveScroll: true });
         if (section === "alertes") router.patch(`/dashboard-stock/alertes/${id}/traiter`, {}, { preserveScroll: true });
         return { ok: true };
@@ -94,7 +93,6 @@ export function useStockOperations(section, initialItems = [], initialPagination
         return { ok: true };
     };
     const canTransition = (item) => {
-        if (section === "receptions") return !["Validée", "En transit"].includes(item.statut);
         if (section === "livraisons") return item.statut === "En préparation";
         if (section === "alertes") return item.statut !== "Traitée";
         return false;

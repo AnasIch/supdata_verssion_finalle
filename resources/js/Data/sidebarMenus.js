@@ -126,7 +126,6 @@ const sidebarMenus = {
                     { title: "Produits", href: "produits", icon: Package },
                     { title: "Catégories", href: "categories", icon: FileText },
                     { title: "Mouvements", href: "mouvements", icon: ArrowUpDown },
-                    { title: "Réceptions", href: "receptions", icon: ClipboardList },
                     { title: "Livraisons", href: "livraisons", icon: ShoppingCart },
                     { title: "Inventaires", href: "inventaires", icon: ClipboardCheck },
                     { title: "Alertes de stock", href: "alertes", icon: AlertTriangle },
